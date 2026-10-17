@@ -1,3 +1,19 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#211b26">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Kuh suchen">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
 <title>Wo ist die Kuh?</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="description" content="Ein Wimmelspiel: Finde die eine echte Kuh zwischen Schafen, Dalmatinern und Leuten im Kuhkostüm.">
@@ -177,7 +193,7 @@ body{
 .mods div{display:flex;gap:10px;align-items:center;font:600 .92rem/1.3 var(--body)}
 .mods .pill.mod{flex:none}
 
-#over h2,#pause h2{margin:0;font:400 clamp(2.3rem,8vw,3.3rem)/.95 var(--display);text-wrap:balance}
+#over h2,#pause h2,#board h2{margin:0;font:400 clamp(2.3rem,8vw,3.3rem)/.95 var(--display);text-wrap:balance}
 #over p.say-line,#pause p{margin:0;font:400 1.02rem/1.45 var(--body);text-wrap:pretty}
 .stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .stat{border:3px solid var(--ink);border-radius:16px;padding:10px 12px;display:grid;gap:4px;min-width:0}
@@ -191,6 +207,35 @@ body{
   position:absolute;top:-18px;right:-10px;background:var(--bell);border:3px solid var(--ink);border-radius:12px;
   padding:8px 12px;font:400 1rem/1 var(--display);transform:rotate(8deg);box-shadow:3px 3px 0 var(--ink);animation:pop .5s ease-out .2s both;
 }
+
+.toggles{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.tog{
+  font:700 .85rem/1 var(--body);color:var(--ink);background:var(--milk);border:2.5px solid var(--ink);border-radius:999px;
+  padding:8px 12px;cursor:pointer;box-shadow:2px 2px 0 var(--ink);display:inline-flex;gap:6px;align-items:center;text-decoration:none;
+}
+.tog[aria-pressed="false"]{background:var(--track)}
+.tog:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
+.tog.app{background:var(--bell)}
+.entry{display:grid;gap:8px;border-top:3px dashed var(--track);padding-top:14px}
+.entry label{font:800 .72rem/1 var(--body);letter-spacing:.14em;text-transform:uppercase;opacity:.7}
+.entry-row{display:flex;gap:10px}
+.entry input{flex:1;min-width:0;font:700 1.05rem/1 var(--body);color:var(--ink);background:#fff;border:3px solid var(--ink);border-radius:14px;padding:11px 12px}
+.entry .btn{flex:none}
+.entry-msg{margin:0;font:600 .88rem/1.35 var(--body);min-height:1.2em;text-wrap:pretty}
+.tabs{display:flex;gap:4px;background:var(--track);padding:4px;border-radius:999px;width:fit-content;max-width:100%}
+.tabs button{font:700 .88rem/1 var(--body);border:0;background:transparent;color:var(--ink);padding:9px 14px;border-radius:999px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--ink);color:var(--milk)}
+.ranks{list-style:none;margin:0;padding:0;display:grid;gap:6px;max-height:min(50vh,430px);overflow:auto;overscroll-behavior:contain}
+.ranks li{display:grid;grid-template-columns:2.1em minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:7px 10px;border:2.5px solid var(--ink);border-radius:14px;background:#fff}
+.ranks li.me{background:#ffe0e6}
+.ranks .pl{font:var(--num);font-size:.95rem;width:2.1em;height:2.1em;border-radius:50%;display:grid;place-items:center;background:var(--track);border:2px solid var(--ink)}
+.ranks li:nth-child(1) .pl{background:var(--bell)}
+.ranks li:nth-child(2) .pl{background:#e6e3ee}
+.ranks li:nth-child(3) .pl{background:#f2b98c}
+.ranks .nm{font:700 .98rem/1.2 var(--body);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ranks .cw{font:600 .8rem/1 var(--body);opacity:.7;white-space:nowrap}
+.ranks .sc{font:var(--num);font-size:1.05rem;font-variant-numeric:tabular-nums;text-align:right}
+.ranks li.empty{display:block;border-style:dashed;text-align:center;font:600 .92rem/1.4 var(--body);padding:16px;background:transparent}
 
 @keyframes pop{0%{transform:scale(.6)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
 @keyframes bannerIn{from{transform:rotate(-8deg) scale(.6);opacity:0}to{transform:rotate(-2deg) scale(1);opacity:1}}
@@ -268,8 +313,15 @@ body{
     </dl>
     <div class="actions">
       <button class="btn" id="startBtn">Los, suchen!</button>
-      <button class="btn alt small" id="soundBtn">Ton: an</button>
+      <button class="btn alt small" id="boardBtn">Bestenliste</button>
     </div>
+    <div class="toggles">
+      <button class="tog" id="soundBtn" aria-pressed="true">Ton: an</button>
+      <button class="tog" id="musicBtn" aria-pressed="true">Musik: an</button>
+      <button class="tog app" id="installBtn" hidden>App installieren</button>
+      <a class="tog app" id="appLink" href="#" target="_blank" rel="noopener" hidden>Als App holen</a>
+    </div>
+    <p class="fine" id="installHint" hidden></p>
     <p class="fine" id="howto">Maus bewegen = Lupe · Klick = Tipp · Leertaste = Muh-Radar · P = Pause</p>
     <p class="record" id="record"></p>
   </div>
@@ -282,8 +334,11 @@ body{
     <p>Sie hat alle Zeit der Welt. Du nicht, aber die Uhr steht gerade still.</p>
     <div class="actions">
       <button class="btn" id="resumeBtn">Weiter suchen</button>
-      <button class="btn alt small" id="pauseSoundBtn">Ton: an</button>
       <button class="btn alt small" id="quitBtn">Aufgeben</button>
+    </div>
+    <div class="toggles">
+      <button class="tog" id="pauseSoundBtn" aria-pressed="true">Ton: an</button>
+      <button class="tog" id="pauseMusicBtn" aria-pressed="true">Musik: an</button>
     </div>
   </div>
 </section>
@@ -301,10 +356,33 @@ body{
       <div class="stat"><small>Schnellste Kuh</small><b id="stFast">–</b></div>
     </div>
     <p class="record" id="overRecord"></p>
+    <form class="entry" id="entryForm" autocomplete="off">
+      <label for="nick">Dein Name für die Bestenliste</label>
+      <div class="entry-row">
+        <input id="nick" name="nick" maxlength="16" placeholder="z. B. Kuhflüsterin" enterkeyhint="done">
+        <button class="btn small" id="entryBtn" type="submit">Eintragen</button>
+      </div>
+      <p class="entry-msg" id="entryMsg" aria-live="polite"></p>
+    </form>
     <div class="actions">
       <button class="btn" id="againBtn">Nochmal!</button>
+      <button class="btn alt small" id="overBoardBtn">Bestenliste</button>
       <button class="btn alt small" id="menuBtn">Zum Menü</button>
     </div>
+  </div>
+</section>
+
+<section class="screen" id="board" hidden>
+  <div class="card">
+    <p class="eyebrow">Bestenliste</p>
+    <h2>Die schärfsten Augen</h2>
+    <div class="tabs" role="tablist" aria-label="Welche Bestenliste">
+      <button role="tab" id="tabAll" aria-selected="true">Alle Spieler</button>
+      <button role="tab" id="tabLocal" aria-selected="false">Dieses Gerät</button>
+    </div>
+    <ol class="ranks" id="rankList"></ol>
+    <p class="fine" id="boardNote"></p>
+    <div class="actions"><button class="btn alt small" id="boardClose">Zurück</button></div>
   </div>
 </section>
 
@@ -415,6 +493,8 @@ const SND = (() => {
     get on() { return on; },
     toggle() { on = !on; try { localStorage.setItem('wdk-sound', on ? '1' : '0'); } catch (_) {} if (on) ctx(); return on; },
     unlock() { ctx(); },
+    ctx,
+    master: () => master,
     moo(pan = 0, p = 1, len = 1) {
       const d = len, f = 118 * p;
       voice({ type: 'sawtooth', f: [[0, f * .82], [.16, f * 1.06], [d * .62, f], [d, f * .72]], dur: d, peak: .5, a: .09, rel: .32, vib: [5.2, f * .03], filt: { type: 'lowpass', Q: 6, f: [[0, 260], [.24, 980], [d * .7, 720], [d, 300]] }, pan });
@@ -458,6 +538,154 @@ const SND = (() => {
     }
   };
 })();
+
+/* ================================================================
+   Music: a small sequenced loop per world, quiet under the effects
+   ================================================================ */
+const MUSIC = (() => {
+  let on = true, armed = false, playing = false, gain = null, filt = null, noise = null, nextT = 0, step = 0, iv = 0, mode = 'weide', fast = false;
+  try { on = localStorage.getItem('wdk-music') !== '0'; } catch (_) {}
+  const VOL = .16;
+  // 8 bars of 8ths, offsets in semitones above the melody root; null = rest
+  const MEL = [7, null, 9, 7, 4, null, 2, 4, 7, null, null, 4, 2, null, 0, 2, 4, null, 7, 9, 12, null, 9, 7, 9, null, 7, 4, 7, null, null, null,
+    7, null, 9, 7, 4, null, 2, 4, 7, null, 12, 11, 7, null, 4, 2, 4, 5, 7, 9, 7, null, 4, 2, 2, null, 4, 2, 0, null, null, null];
+  const ROOTS = [0, 7, 9, 5, 0, 7, 5, 0];
+  const STYLE = {
+    weide: { key: 0, bpm: 112 }, strand: { key: 2, bpm: 116 }, stadt: { key: -2, bpm: 120 },
+    winter: { key: -3, bpm: 104, bell: true }, meer: { key: 5, bpm: 96, lp: 1100 }, all: { key: 4, bpm: 92, space: true }
+  };
+  const mf = m => 440 * Math.pow(2, (m - 69) / 12);
+  function ensure() {
+    const a = SND.ctx(); if (!a) return null;
+    if (!gain) {
+      gain = a.createGain(); gain.gain.value = VOL;
+      filt = a.createBiquadFilter(); filt.type = 'lowpass'; filt.frequency.value = 14000;
+      gain.connect(filt); filt.connect(SND.master());
+      const len = Math.floor(a.sampleRate * .1); noise = a.createBuffer(1, len, a.sampleRate);
+      const d = noise.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    }
+    return a;
+  }
+  function tone(a, t, f, dur, vol, type) {
+    const o = a.createOscillator(), g = a.createGain(); o.type = type || 'triangle'; o.frequency.value = f;
+    g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + .008); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    o.connect(g); g.connect(gain); o.start(t); o.stop(t + dur + .03);
+  }
+  function marimba(a, t, f, vol) { tone(a, t, f, .38, vol, 'sine'); tone(a, t, f * 4, .07, vol * .3, 'sine'); }
+  function bellish(a, t, f, vol) { tone(a, t, f, .7, vol * .8, 'sine'); tone(a, t, f * 2.76, .3, vol * .25, 'sine'); }
+  function shaker(a, t, vol) {
+    const src = a.createBufferSource(); src.buffer = noise; const hp = a.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 7000;
+    const g = a.createGain(); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + .045);
+    src.connect(hp); hp.connect(g); g.connect(gain); src.start(t); src.stop(t + .06);
+  }
+  function playStep(a, s, t) {
+    const st = STYLE[mode] || STYLE.weide, bar = Math.floor(s / 8) % 8, pos = s % 8, k = st.key, r = ROOTS[bar], third = r === 9 ? 3 : 4;
+    if (pos === 0) tone(a, t, mf(48 + k + r), .3, .42);
+    if (pos === 4) tone(a, t, mf(48 + k + r + (r + 7 >= 12 ? -5 : 7)), .3, .34);
+    if (pos === 2 || pos === 6) for (const iv of [0, third, 7]) tone(a, t, mf(60 + k + r + iv), .1, .05, st.space ? 'sine' : 'triangle');
+    if (pos % 2 === 1 && !st.space) shaker(a, t, pos === 3 || pos === 7 ? .045 : .022);
+    if (s < 64) { const m = MEL[s]; if (m != null) (st.bell ? bellish : marimba)(a, t, mf(72 + k + m), .2); }
+    else if (pos === 0 || pos === 3 || pos === 5) marimba(a, t, mf(60 + k + r + [0, third, 7, 12][(s >> 1) % 4]), .08);
+    if (s === 0 || s === 64) SND.bell(1 + k / 24, Math.max(0, t - a.currentTime), .045);
+  }
+  function tick() {
+    const a = ensure(); if (!a || !playing) return;
+    const st = STYLE[mode] || STYLE.weide, dt = 60 / (st.bpm * (fast ? 1.14 : 1)) / 2;
+    if (nextT < a.currentTime) nextT = a.currentTime + .06;
+    while (nextT < a.currentTime + .22) { playStep(a, step, nextT); nextT += dt; step = (step + 1) % 128; }
+  }
+  return {
+    get on() { return on; },
+    toggle() { on = !on; try { localStorage.setItem('wdk-music', on ? '1' : '0'); } catch (_) {} return on; },
+    play() {
+      if (!armed || !on || !SND.on || playing || document.hidden) return;
+      const a = ensure(); if (!a) return;
+      playing = true; step = 0; nextT = 0;
+      gain.gain.cancelScheduledValues(a.currentTime); gain.gain.setValueAtTime(.0001, a.currentTime); gain.gain.exponentialRampToValueAtTime(VOL, a.currentTime + .6);
+      clearInterval(iv); iv = setInterval(tick, 40); tick();
+    },
+    stop() { playing = false; clearInterval(iv); if (gain && SND.ctx()) { const t = SND.ctx().currentTime; gain.gain.cancelScheduledValues(t); gain.gain.setTargetAtTime(.0001, t, .08); } },
+    setWorld(w) {
+      if (w === mode) return; mode = w; step = 0;
+      if (filt && SND.ctx()) filt.frequency.setTargetAtTime((STYLE[w] && STYLE[w].lp) || 14000, SND.ctx().currentTime, .2);
+    },
+    setFast(f) { fast = f; },
+    arm() { armed = true; },
+    duck(sec) {
+      if (!gain || !playing) return; const a = SND.ctx(); if (!a) return; const t = a.currentTime;
+      gain.gain.cancelScheduledValues(t); gain.gain.setTargetAtTime(VOL * .2, t, .04); gain.gain.setTargetAtTime(VOL, t + sec, .35);
+    }
+  };
+})();
+
+/* ================================================================
+   Leaderboard: shared via the artifact store when available,
+   always mirrored on this device
+   ================================================================ */
+const BOARD = (() => {
+  let db = null, uid = null, shared = [], mine = null, writable = false, ready = false;
+  const subs = [];
+  const emit = () => subs.forEach(f => { try { f(); } catch (_) {} });
+  const clean = d => ({
+    nick: String((d && d.nick) || 'Anonym').replace(/\s+/g, ' ').trim().slice(0, 16) || 'Anonym',
+    score: clamp(Math.round(+(d && d.score) || 0), 0, 1e7),
+    cows: clamp(Math.round(+(d && d.cows) || 0), 0, 9999),
+    at: +(d && d.at) || 0
+  });
+  function local() { try { const a = JSON.parse(localStorage.getItem('wdk-board') || '[]'); return Array.isArray(a) ? a.map(clean) : []; } catch (_) { return []; } }
+  function saveLocal(a) { try { localStorage.setItem('wdk-board', JSON.stringify(a.slice(0, 10))); } catch (_) {} }
+  async function init() {
+    if (!window.claude || typeof window.claude.use !== 'function') return;
+    let user = null;
+    try { [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]); } catch (_) { db = null; }
+    if (!db) return;
+    uid = user ? await user.id() : null;
+    const cw = user ? await user.can('data.write') : null;
+    writable = !!uid && cw !== false;
+    try {
+      db.collection('scores').orderBy('score', 'desc').limit(50).onSnapshot(snap => {
+        shared = snap.docs.map(d => Object.assign({ id: d.id }, clean(d.data()))).filter(x => x.score > 0);
+        const m = shared.find(x => x.id === uid); if (m) mine = m;
+        ready = true; emit();
+      }, () => { ready = true; emit(); });
+    } catch (_) { db = null; return; }
+    if (uid) { try { const s = await db.doc('scores/' + uid).get(); if (s.exists) mine = Object.assign({ id: uid }, clean(s.data())); } catch (_) {} }
+    ready = true; emit();
+  }
+  return {
+    init, local,
+    onChange(f) { subs.push(f); },
+    get shared() { return shared; },
+    get available() { return !!db; },
+    get ready() { return ready; },
+    get writable() { return !!db && writable; },
+    get uid() { return uid; },
+    get mine() { return mine; },
+    addLocal(entry) { const a = local(); a.push(entry); a.sort((x, y) => y.score - x.score || x.at - y.at); saveLocal(a); return a.findIndex(x => x.at === entry.at && x.score === entry.score); },
+    renameLocal(at, nick) { const a = local(); const e = a.find(x => x.at === at); if (e) { e.nick = nick; saveLocal(a); } },
+    async submit(nick, score, cows) {
+      if (!this.writable) return 'readonly';
+      const ref = db.doc('scores/' + uid);
+      try {
+        if (mine && mine.score >= score) { if (mine.nick !== nick) { await ref.update({ nick }); mine = Object.assign({}, mine, { nick }); } return 'notbest'; }
+        const body = { nick, score, cows, at: Date.now() };
+        await ref.set(body); mine = Object.assign({ id: uid }, body); return 'ok';
+      } catch (e) {
+        if (e && e.code === 'invalid_argument') { writable = false; return 'readonly'; }
+        return 'error';
+      }
+    }
+  };
+})();
+
+/* ================================================================
+   Install as app (only where the page is served on its own)
+   ================================================================ */
+const APP_URL = '';
+const STANDALONE_HOST = !window.claude;
+const IS_IOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const IS_INSTALLED = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+let installEvt = null;
 
 /* ================================================================
    Canvas setup
@@ -1893,19 +2121,21 @@ function showBanner() {
 function loadLevel(lv) {
   scene = genScene(lv); fx = []; texts = []; marks = []; iris = null; radar = null; nightK = 1;
   light.x = W / 2; light.y = H * .55; G.levelT = 0; G.usedRadar = false;
-  updateLevelPills(); showBanner();
+  updateLevelPills(); showBanner(); MUSIC.setWorld(scene.world);
 }
 function showGameUi(on) { els.hud.hidden = !on; els.controls.hidden = !on; }
 function startGame() {
   SND.unlock(); SND.start();
   Object.assign(G, { lv: 1, score: 0, cows: 0, time: START_TIME, streak: 0, bestStreak: 0, fastest: null, radar: 3, misses: 0, levelT: 0, usedRadar: false, paused: false, lastTick: 99, nudged: false });
-  $('#title').hidden = true; $('#over').hidden = true; $('#pause').hidden = true;
+  $('#title').hidden = true; $('#over').hidden = true; $('#pause').hidden = true; $('#board').hidden = true;
+  MUSIC.play();
   G.state = 'trans';
   runTransition(() => { loadLevel(1); showGameUi(true); updateHud(); }, () => { G.state = 'play'; }, 2.1);
 }
 function toTitle() {
   G.state = 'title'; G.paused = false; showGameUi(false);
-  $('#over').hidden = true; $('#pause').hidden = true; $('#banner').hidden = true; trans = null;
+  $('#over').hidden = true; $('#pause').hidden = true; $('#banner').hidden = true; $('#board').hidden = true; trans = null;
+  MUSIC.setWorld('weide'); MUSIC.play();
   scene = genScene(1, { title: true, density: .75, plan: { world: 'weide', mods: new Set(), golden: false } });
   fx = []; texts = []; marks = []; iris = null; radar = null;
   const rec = loadRecord();
@@ -1932,7 +2162,7 @@ function onFound() {
   iris = { t0: T, r: Math.max(cow.s * 1.05, 60) };
   burst(cx, cy, RM ? 14 : 34, scene.golden ? ['star', 'spark', 'milk', 'heart'] : ['milk', 'spot', 'heart', 'milk']);
   if (!RM) for (const e of scene.ents) if (e !== cow && TYPES[e.type].walk) { e.hopT = T + Math.hypot(e.x - cx, e.y - cy) / Math.max(W, H) * .7 + .1; e.hopN = 1; }
-  SND.moo((cx / W) * 2 - 1, scene.golden ? 1.25 : 1); SND.fanfare(G.streak); if (scene.golden) SND.gold();
+  MUSIC.duck(1.6); SND.moo((cx / W) * 2 - 1, scene.golden ? 1.25 : 1); SND.fanfare(G.streak); if (scene.golden) SND.gold();
   const rating = scene.golden ? 'Goldkuh!' : RATINGS.find(([lim]) => secs < lim)[1];
   const parts = [`+${fmtInt(pts)} Punkte`, `+${bonus} s`, `${fmt1(secs)} s`];
   if (mult > 1) parts.splice(1, 0, `Serie ×${fmt1(mult).replace(',0', '')}`);
@@ -1952,7 +2182,7 @@ function onMiss(x, y, ent) {
   els.timer.classList.add('flash'); setTimeout(() => els.timer.classList.remove('flash'), 300);
 }
 function timeUp() {
-  G.state = 'reveal'; G.time = 0; updateHud(); SND.womp();
+  G.state = 'reveal'; G.time = 0; updateHud(); MUSIC.stop(); SND.womp();
   const cow = scene.cow; cow.hopT = T + .4; cow.hopN = 2;
   iris = { t0: T, r: Math.max(cow.s * 1.05, 60), lost: true };
   after(2.7, showOver);
@@ -1976,9 +2206,61 @@ function showOver() {
   if (isNew) saveRecord({ score: G.score, cows: G.cows });
   $('#stamp').hidden = !isNew;
   $('#overRecord').innerHTML = isNew ? (rec.score > 0 ? `Alter Rekord <b>${fmtInt(rec.score)} Punkte</b>` : 'Dein erster Rekord. Den holst du dir nochmal.') : `Rekord <b>${fmtInt(rec.score)} Punkte</b> <b>${rec.cows} ${rec.cows === 1 ? 'Kuh' : 'Kühe'}</b>`;
+  lastEntry = null; $('#entryMsg').textContent = ''; $('#entryBtn').disabled = false;
+  $('#entryForm').hidden = G.score <= 0;
+  if (G.score > 0) {
+    let nick = ''; try { nick = localStorage.getItem('wdk-nick') || ''; } catch (_) {}
+    $('#nick').value = nick;
+    lastEntry = { nick: nick || 'Du', score: G.score, cows: G.cows, at: Date.now() };
+    const idx = BOARD.addLocal(lastEntry);
+    if (BOARD.writable) {
+      const place = 1 + BOARD.shared.filter(x => x.id !== BOARD.uid && x.score > G.score).length;
+      $('#entryMsg').textContent = BOARD.mine && BOARD.mine.score >= G.score ? `Dein Bestwert in der Liste: ${fmtInt(BOARD.mine.score)} Punkte.` : `Das reicht für Platz ${place} in der Bestenliste.`;
+    } else if (idx >= 0 && idx < 10) $('#entryMsg').textContent = `Platz ${idx + 1} auf diesem Gerät.`;
+  }
   $('#over').hidden = false; setTimeout(() => $('#againBtn').focus({ preventScroll: true }), 50);
   if (isNew && G.score > 0) { SND.gold(); }
+  setTimeout(() => { if (G.state === 'over') MUSIC.play(); }, 1400);
 }
+let lastEntry = null, boardTab = 'all';
+async function submitEntry(ev) {
+  ev.preventDefault(); if (!lastEntry) return;
+  const nick = ($('#nick').value || '').replace(/\s+/g, ' ').trim().slice(0, 16) || 'Anonym';
+  try { localStorage.setItem('wdk-nick', nick); } catch (_) {}
+  BOARD.renameLocal(lastEntry.at, nick); lastEntry.nick = nick;
+  const msg = $('#entryMsg'), btn = $('#entryBtn'); btn.disabled = true;
+  if (!BOARD.writable) { msg.textContent = BOARD.available ? 'Auf diesem Gerät gespeichert. Für die gemeinsame Liste fehlen deinem Zugang die Schreibrechte.' : 'Auf diesem Gerät gespeichert.'; SND.bell(1.3); return; }
+  msg.textContent = 'Wird eingetragen …';
+  const r = await BOARD.submit(nick, G.score, G.cows);
+  if (r === 'ok') { const place = 1 + BOARD.shared.filter(x => x.id !== BOARD.uid && x.score > G.score).length; msg.textContent = `Eingetragen! Platz ${place} in der Bestenliste.`; SND.fanfare(3); }
+  else if (r === 'notbest') { msg.textContent = `Dein Bestwert von ${fmtInt(BOARD.mine.score)} Punkten steht schon drin. Name aktualisiert.`; SND.bell(1.3); }
+  else if (r === 'readonly') { msg.textContent = 'Auf diesem Gerät gespeichert. Für die gemeinsame Liste fehlen deinem Zugang die Schreibrechte.'; }
+  else { msg.textContent = 'Das hat nicht geklappt. Prüf deine Verbindung und versuch es nochmal.'; btn.disabled = false; }
+}
+function openBoard() { if (!BOARD.available) boardTab = 'local'; renderBoard(); $('#board').hidden = false; setTimeout(() => $('#boardClose').focus({ preventScroll: true }), 30); }
+function renderBoard() {
+  const shared = BOARD.available;
+  if (!shared) boardTab = 'local';
+  $('#tabAll').hidden = !shared;
+  $('#tabAll').setAttribute('aria-selected', String(boardTab === 'all')); $('#tabLocal').setAttribute('aria-selected', String(boardTab === 'local'));
+  const list = boardTab === 'all' ? BOARD.shared : BOARD.local(), ol = $('#rankList'); ol.textContent = '';
+  if (!list.length) {
+    const li = document.createElement('li'); li.className = 'empty';
+    li.textContent = boardTab === 'all' && !BOARD.ready ? 'Bestenliste wird geladen …' : 'Noch keine Einträge. Spiel eine Runde und trag dich ein.';
+    ol.appendChild(li);
+  }
+  list.forEach((e, i) => {
+    const li = document.createElement('li');
+    if (boardTab === 'all' ? e.id === BOARD.uid : (lastEntry && e.at === lastEntry.at)) li.className = 'me';
+    const add = (cls, text) => { const sp = document.createElement('span'); sp.className = cls; sp.textContent = text; li.appendChild(sp); };
+    add('pl', String(i + 1)); add('nm', e.nick); add('cw', `${e.cows} ${e.cows === 1 ? 'Kuh' : 'Kühe'}`); add('sc', fmtInt(e.score));
+    ol.appendChild(li);
+  });
+  $('#boardNote').textContent = !shared ? 'Hier stehen deine zehn besten Runden auf diesem Gerät.'
+    : boardTab === 'local' ? 'Deine zehn besten Runden auf diesem Gerät.'
+    : BOARD.writable ? 'Pro Person zählt die beste Runde.' : 'Ansehen kann die Liste jeder. Eintragen kann sich, wer das Spiel mit Schreibrechten geteilt bekommen hat.';
+}
+BOARD.onChange(() => { if (!$('#board').hidden) renderBoard(); });
 function useRadar() {
   if (G.state !== 'play' || G.radar <= 0) return;
   G.radar--; G.usedRadar = true; els.radarBtn.classList.remove('nudge');
@@ -2000,8 +2282,8 @@ function praise(big, small, gold) {
   const p = $('#praise'); $('#praiseBig').textContent = big; $('#praiseBig').classList.toggle('gold', !!gold); $('#praiseSmall').textContent = small;
   p.classList.remove('show'); void p.offsetWidth; p.classList.add('show');
 }
-function pauseGame() { if (G.state !== 'play' || G.paused) return; G.paused = true; $('#pause').hidden = false; syncSoundLabels(); setTimeout(() => $('#resumeBtn').focus({ preventScroll: true }), 30); }
-function resumeGame() { if (!G.paused) return; G.paused = false; $('#pause').hidden = true; last = performance.now(); }
+function pauseGame() { if (G.state !== 'play' || G.paused) return; G.paused = true; MUSIC.stop(); $('#pause').hidden = false; syncSoundLabels(); setTimeout(() => $('#resumeBtn').focus({ preventScroll: true }), 30); }
+function resumeGame() { if (!G.paused) return; G.paused = false; $('#pause').hidden = true; last = performance.now(); MUSIC.play(); }
 
 /* ---------- input ---------- */
 function guess(x, y) {
@@ -2040,22 +2322,53 @@ cv.addEventListener('pointercancel', () => { clearTimeout(ptr.lp); ptr.down = nu
 cv.addEventListener('pointerleave', ev => { if ((ev.pointerType || 'mouse') === 'mouse') ptr.inside = false; });
 cv.addEventListener('contextmenu', ev => ev.preventDefault());
 window.addEventListener('keydown', ev => {
+  if (ev.target && ev.target.tagName === 'INPUT') return;
   if (ev.key === ' ' && G.state === 'play' && !G.paused) { ev.preventDefault(); useRadar(); }
   else if ((ev.key === 'p' || ev.key === 'P' || ev.key === 'Escape') && G.state === 'play') { ev.preventDefault(); G.paused ? resumeGame() : pauseGame(); }
-  else if (ev.key === 'm' || ev.key === 'M') { SND.toggle(); syncSoundLabels(); }
+  else if ((ev.key === 'm' || ev.key === 'M') && ev.target.tagName !== 'INPUT') toggleMusic();
 });
-document.addEventListener('visibilitychange', () => { if (document.hidden) pauseGame(); });
-function syncSoundLabels() { const l = `Ton: ${SND.on ? 'an' : 'aus'}`; $('#soundBtn').textContent = l; $('#pauseSoundBtn').textContent = l; }
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { pauseGame(); MUSIC.stop(); }
+  else if (musicMayPlay()) MUSIC.play();
+});
+const musicMayPlay = () => !G.paused && G.state !== 'reveal';
+function toggleSound() { SND.toggle(); if (SND.on) { SND.bell(1); if (musicMayPlay()) MUSIC.play(); } else MUSIC.stop(); syncSoundLabels(); }
+function toggleMusic() { MUSIC.arm(); if (MUSIC.toggle()) { if (musicMayPlay()) MUSIC.play(); } else MUSIC.stop(); syncSoundLabels(); }
+const armAudio = () => { SND.unlock(); MUSIC.arm(); if (G.state === 'title' || G.state === 'over') MUSIC.play(); window.removeEventListener('pointerdown', armAudio, true); window.removeEventListener('keydown', armAudio, true); };
+window.addEventListener('pointerdown', armAudio, true); window.addEventListener('keydown', armAudio, true);
+function syncSoundLabels() {
+  for (const id of ['#soundBtn', '#pauseSoundBtn']) { const b = $(id); b.textContent = `Ton: ${SND.on ? 'an' : 'aus'}`; b.setAttribute('aria-pressed', String(SND.on)); }
+  for (const id of ['#musicBtn', '#pauseMusicBtn']) { const b = $(id); b.textContent = `Musik: ${MUSIC.on ? 'an' : 'aus'}`; b.setAttribute('aria-pressed', String(MUSIC.on)); }
+}
 $('#startBtn').addEventListener('click', startGame);
 $('#againBtn').addEventListener('click', startGame);
 $('#menuBtn').addEventListener('click', toTitle);
-$('#soundBtn').addEventListener('click', () => { SND.toggle(); syncSoundLabels(); if (SND.on) SND.bell(1); });
-$('#pauseSoundBtn').addEventListener('click', () => { SND.toggle(); syncSoundLabels(); });
+$('#soundBtn').addEventListener('click', toggleSound);
+$('#pauseSoundBtn').addEventListener('click', toggleSound);
+$('#musicBtn').addEventListener('click', toggleMusic);
+$('#pauseMusicBtn').addEventListener('click', toggleMusic);
+$('#boardBtn').addEventListener('click', openBoard);
+$('#overBoardBtn').addEventListener('click', openBoard);
+$('#boardClose').addEventListener('click', () => { $('#board').hidden = true; });
+$('#tabAll').addEventListener('click', () => { boardTab = 'all'; renderBoard(); });
+$('#tabLocal').addEventListener('click', () => { boardTab = 'local'; renderBoard(); });
+$('#entryForm').addEventListener('submit', submitEntry);
 $('#pauseBtn').addEventListener('click', pauseGame);
 $('#resumeBtn').addEventListener('click', resumeGame);
 $('#quitBtn').addEventListener('click', () => { G.paused = false; $('#pause').hidden = true; G.time = 0; timeUp(); });
 els.radarBtn.addEventListener('click', useRadar);
-$('#howto').textContent = COARSE ? 'Tippen = Tipp abgeben · Halten & ziehen = Lupe · Glocke = Muh-Radar' : 'Maus bewegen = Lupe · Klick = Tipp · Leertaste = Muh-Radar · P = Pause';
+$('#howto').textContent = COARSE ? 'Tippen = Tipp abgeben · Halten & ziehen = Lupe · Glocke = Muh-Radar' : 'Maus bewegen = Lupe · Klick = Tipp · Leertaste = Muh-Radar · P = Pause · M = Musik';
+function setupInstall() {
+  const btn = $('#installBtn'), link = $('#appLink'), hint = $('#installHint');
+  if (IS_INSTALLED) return;
+  if (STANDALONE_HOST) {
+    if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
+    window.addEventListener('beforeinstallprompt', ev => { ev.preventDefault(); installEvt = ev; btn.hidden = false; });
+    window.addEventListener('appinstalled', () => { installEvt = null; btn.hidden = true; });
+    btn.addEventListener('click', async () => { if (!installEvt) return; installEvt.prompt(); try { await installEvt.userChoice; } catch (_) {} installEvt = null; btn.hidden = true; });
+    if (IS_IOS) { hint.hidden = false; hint.textContent = 'Als App sichern: unten auf das Teilen-Symbol tippen, dann „Zum Home-Bildschirm“.'; }
+  } else if (APP_URL) { link.href = APP_URL; link.hidden = false; }
+}
 
 /* ---------- resize ---------- */
 function resize() {
@@ -2098,6 +2411,7 @@ function update(dt) {
     if (G.time <= 0) timeUp();
   }
   if (G.state !== 'title' && G.state !== 'boot' && G.state !== 'over') updateHud();
+  MUSIC.setFast(G.state === 'play' && G.time < 10);
   cv.style.cursor = G.state === 'play' && ptr.type === 'mouse' ? 'none' : 'default';
 }
 function frame(now) {
@@ -2109,7 +2423,7 @@ function frame(now) {
 
 /* ---------- boot ---------- */
 function start(data) {
-  resize(); syncSoundLabels();
+  resize(); syncSoundLabels(); setupInstall(); BOARD.init();
   if (data && data.G && ['play', 'found', 'trans'].includes(data.state)) {
     Object.assign(G, data.G, { paused: false, state: 'trans' });
     $('#title').hidden = true;
@@ -2121,3 +2435,5 @@ try { window.claude?.hot?.snapshot?.(() => ({ G: Object.assign({}, G), state: G.
 if (window.claude?.hot?.ready) window.claude.hot.ready(start); else start(window.claude?.hot?.data ?? {});
 })();
 </script>
+</body>
+</html>
