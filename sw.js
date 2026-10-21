@@ -1,5 +1,5 @@
 // Generated from src/sw.template.js by scripts/build.mjs. Do not edit sw.js by hand.
-const CACHE = 'wdk-2d852559da';
+const CACHE = 'wdk-56d4ae43b8';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
 const FONT_HOSTS = ['fonts.googleapis.com', 'fonts.gstatic.com'];
 
