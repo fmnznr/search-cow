@@ -1,4 +1,4 @@
-// Downloads the Google Fonts used by src/game.html (latin and latin-ext only) into fonts/,
+// Downloads the Google Fonts used by src/shell.html (latin and latin-ext only) into fonts/,
 // so the web app makes no requests to Google. Run once after changing the font link; commit the result.
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 
@@ -16,7 +16,7 @@ const get = async (url, as) => {
   return as === 'buf' ? Buffer.from(await res.arrayBuffer()) : res.text();
 };
 
-const game = readFileSync(new URL('src/game.html', root), 'utf8');
+const game = readFileSync(new URL('src/shell.html', root), 'utf8');
 const cssUrl = game.match(/href="(https:\/\/fonts\.googleapis\.com\/css2\?[^"]+)"/)[1].replace(/&amp;/g, '&');
 const css = await get(cssUrl);
 const dir = new URL('fonts/', root); mkdirSync(dir, { recursive: true });

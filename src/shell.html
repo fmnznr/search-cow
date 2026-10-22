@@ -1,0 +1,137 @@
+<title>Wo ist die Kuh?</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Ein Wimmelspiel: Finde die eine echte Kuh zwischen Schafen, Dalmatinern und Leuten im Kuhkostüm.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap">
+<style>
+/* @style */
+</style>
+
+<canvas id="cv" aria-label="Wimmelbild: Finde die Kuh"></canvas>
+
+<header class="hud" id="hud" hidden>
+  <div class="hud-row">
+    <div class="chip score"><small>Punkte</small><b id="score">0</b></div>
+    <div class="timer" id="timer">
+      <div class="clock"><b id="secs">45</b></div>
+      <div class="bar"><i id="barFill"></i></div>
+    </div>
+    <div class="chip cows" aria-label="Gefundene Kühe">
+      <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M9 11 3 6l3 9zM31 11l6-5-3 9z" fill="#f4e7c8" stroke="#211b26" stroke-width="2.5" stroke-linejoin="round"/><ellipse cx="20" cy="18" rx="13" ry="12" fill="#fffdf8" stroke="#211b26" stroke-width="2.5"/><path d="M10 10c5-3 10 0 8 5s-7 5-9 2-2-5 1-7z" fill="#211b26"/><ellipse cx="20" cy="28" rx="10" ry="7" fill="#ffb0c2" stroke="#211b26" stroke-width="2.5"/><circle cx="16" cy="28" r="1.7" fill="#211b26"/><circle cx="24" cy="28" r="1.7" fill="#211b26"/><circle cx="14.5" cy="18" r="2.1" fill="#211b26"/><circle cx="25.5" cy="18" r="2.1" fill="#211b26"/></svg>
+      <b id="cows">0</b>
+    </div>
+    <button class="icon-btn" id="pauseBtn" aria-label="Pause"><svg viewBox="0 0 18 18" aria-hidden="true"><rect x="3" y="2" width="4" height="14" rx="1.5" fill="currentColor"/><rect x="11" y="2" width="4" height="14" rx="1.5" fill="currentColor"/></svg></button>
+  </div>
+  <div class="hud-sub"><span class="pill" id="lvlPill">Level 1 · Die Weide</span><span id="modPills" style="display:contents"></span><span class="pill combo" id="combo" hidden>Serie ×2</span></div>
+</header>
+
+<div class="controls" id="controls" hidden>
+  <button class="radar" id="radarBtn" aria-label="Muh-Radar benutzen (Leertaste)">
+    <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M14 9h12l3 4v13c0 2 2 4 4 5H7c2-1 4-3 4-5V13z" fill="#ffc21a" stroke="#211b26" stroke-width="2.5" stroke-linejoin="round"/><rect x="16" y="4" width="8" height="6" rx="2" fill="#211b26"/><circle cx="20" cy="33.5" r="3.5" fill="#211b26"/><path d="M15.5 14v10" stroke="#fff6c8" stroke-width="2.5" stroke-linecap="round"/></svg>
+    <span class="lbl">Muh-Radar</span><span class="count" id="radarCount">3</span>
+  </button>
+</div>
+
+<div id="praise" aria-live="polite"><div class="big" id="praiseBig"></div><div class="small" id="praiseSmall"></div></div>
+
+<div id="banner" hidden>
+  <div class="card">
+    <p class="eyebrow" id="bnLevel">Level 1</p>
+    <h2 id="bnName">Die Weide</h2>
+    <p class="tag" id="bnTag"></p>
+    <div class="mods" id="bnMods"></div>
+  </div>
+</div>
+
+<section class="screen" id="title">
+  <div class="card">
+    <p class="eyebrow">Ein Wimmelspiel für Adleraugen</p>
+    <h1 class="logo"><span class="spot">Wo ist</span><span class="row"><span class="spot">die Kuh</span><span class="q">?</span></span></h1>
+    <p class="lede">Zwischen Schafen, Dalmatinern und Leuten im Kuhkostüm versteckt sich genau eine echte Kuh. Finde sie, bevor die Zeit abläuft.</p>
+    <dl class="rules">
+      <div><dt>+ Zeit</dt><dd>für jede gefundene Kuh</dd></div>
+      <div><dt>− 3 s</dt><dd>für jeden Fehlklick</dd></div>
+      <div><dt>Muh-Radar</dt><dd>verrät, wo es muht</dd></div>
+    </dl>
+    <div class="actions">
+      <button class="btn" id="startBtn">Los, suchen!</button>
+      <button class="btn alt small" id="boardBtn">Bestenliste</button>
+    </div>
+    <div class="toggles">
+      <button class="tog" id="soundBtn" aria-pressed="true">Ton: an</button>
+      <button class="tog" id="musicBtn" aria-pressed="true">Musik: an</button>
+      <button class="tog app" id="installBtn" hidden>App installieren</button>
+      <a class="tog app" id="appLink" href="#" target="_blank" rel="noopener" hidden>Als App holen</a>
+    </div>
+    <p class="fine" id="installHint" hidden></p>
+    <p class="fine" id="howto">Maus bewegen = Lupe · Klick = Tipp · Leertaste = Muh-Radar · P = Pause</p>
+    <p class="record" id="record"></p>
+    <p class="fine legal" id="legal" hidden><a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a></p>
+  </div>
+</section>
+
+<section class="screen" id="pause" hidden>
+  <div class="card">
+    <p class="eyebrow">Pause</p>
+    <h2>Die Kuh wartet.</h2>
+    <p>Sie hat alle Zeit der Welt. Du nicht, aber die Uhr steht gerade still.</p>
+    <div class="actions">
+      <button class="btn" id="resumeBtn">Weiter suchen</button>
+      <button class="btn alt small" id="quitBtn">Aufgeben</button>
+    </div>
+    <p class="fine scene-id" id="pauseScene"></p>
+    <div class="toggles">
+      <button class="tog" id="pauseSoundBtn" aria-pressed="true">Ton: an</button>
+      <button class="tog" id="pauseMusicBtn" aria-pressed="true">Musik: an</button>
+    </div>
+  </div>
+</section>
+
+<section class="screen" id="over" hidden>
+  <div class="card">
+    <span class="stamp" id="stamp" hidden>Neuer Rekord!</span>
+    <p class="eyebrow">Zeit um · Dein Titel</p>
+    <h2 id="rankName">Weide-Profi</h2>
+    <p class="say-line" id="rankText"></p>
+    <div class="stats">
+      <div class="stat"><small>Kühe gefunden</small><b id="stCows">0</b></div>
+      <div class="stat"><small>Punkte</small><b id="stScore">0</b></div>
+      <div class="stat"><small>Längste Serie</small><b id="stStreak">0</b></div>
+      <div class="stat"><small>Schnellste Kuh</small><b id="stFast">–</b></div>
+    </div>
+    <p class="record" id="overRecord"></p>
+    <form class="entry" id="entryForm" autocomplete="off">
+      <label for="nick">Dein Name für die Bestenliste</label>
+      <div class="entry-row">
+        <input id="nick" name="nick" maxlength="16" placeholder="z. B. Kuhflüsterin" enterkeyhint="done">
+        <button class="btn small" id="entryBtn" type="submit">Eintragen</button>
+      </div>
+      <p class="entry-msg" id="entryMsg" aria-live="polite"></p>
+    </form>
+    <div class="actions">
+      <button class="btn" id="againBtn">Nochmal!</button>
+      <button class="btn alt small" id="overBoardBtn">Bestenliste</button>
+      <button class="btn alt small" id="menuBtn">Zum Menü</button>
+    </div>
+    <p class="fine scene-id" id="overScene"></p>
+  </div>
+</section>
+
+<section class="screen" id="board" hidden>
+  <div class="card">
+    <p class="eyebrow">Bestenliste</p>
+    <h2>Die schärfsten Augen</h2>
+    <div class="tabs" role="tablist" aria-label="Welche Bestenliste">
+      <button role="tab" id="tabAll" aria-selected="true">Alle Spieler</button>
+      <button role="tab" id="tabLocal" aria-selected="false">Dieses Gerät</button>
+    </div>
+    <ol class="ranks" id="rankList"></ol>
+    <p class="fine" id="boardNote"></p>
+    <div class="actions"><button class="btn alt small" id="boardClose">Zurück</button></div>
+  </div>
+</section>
+
+<script>
+/* @script */
+</script>
