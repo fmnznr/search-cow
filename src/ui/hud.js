@@ -1,7 +1,8 @@
 // HUD during play and the level banner.
 import { $, clamp, fmt1, fmtInt } from '../core/util.js';
-import { MODS } from '../content/worlds.js';
-import { G, MAX_TIME, live } from '../game/state.js';
+import { MODS } from '../content/catalog.js';
+import { G, live } from '../game/state.js';
+import { currentMode } from '../modes/index.js';
 
 export function showGameUi(on) { els.hud.hidden = !on; els.controls.hidden = !on; }
 
@@ -12,12 +13,12 @@ export function updateHud() {
   setText(els.score, 'score', fmtInt(G.score));
   setText(els.cows, 'cows', String(G.cows));
   setText(els.secs, 'secs', String(Math.max(0, Math.ceil(G.time))));
-  const f = clamp(G.time / MAX_TIME, 0, 1).toFixed(3);
+  const f = clamp(G.time / currentMode().timer.full, 0, 1).toFixed(3);
   if (hudCache.bar !== f) { hudCache.bar = f; els.barFill.style.transform = `scaleX(${f})`; }
   els.timer.classList.toggle('low', G.time < 10 && G.state === 'play');
   setText(els.radarCount, 'radar', String(G.radar));
   els.radarBtn.disabled = G.radar <= 0 || G.state !== 'play';
-  if (G.streak >= 2) { els.combo.hidden = false; setText(els.combo, 'combo', `Serie ×${fmt1(1 + .5 * Math.min(G.streak - 1, 8)).replace(',0', '')}`); } else els.combo.hidden = true;
+  if (G.streak >= 2) { els.combo.hidden = false; setText(els.combo, 'combo', `Serie ×${fmt1(currentMode().mult(G)).replace(',0', '')}`); } else els.combo.hidden = true;
 }
 export function updateLevelPills() {
   els.lvl.textContent = `Level ${live.scene.lv} · ${live.scene.wd.name}`;

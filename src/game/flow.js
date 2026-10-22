@@ -6,7 +6,8 @@ import { MUSIC } from '../audio/music.js';
 import { SND } from '../audio/sfx.js';
 import { TYPES } from '../content/entities/rig.js';
 import { REPLAY, genScene, levelScene, paintBg } from '../scene/generate.js';
-import { G, START_TIME, after, light, live } from './state.js';
+import { G, after, light, live } from './state.js';
+import { currentMode } from '../modes/index.js';
 import { burst, floatText } from '../render/fx.js';
 import { cowCenter } from '../render/frame.js';
 import { runTransition } from '../render/transition.js';
@@ -17,8 +18,8 @@ import { praise, say } from './actions.js';
 
 export function startGame() {
   SND.unlock(); SND.start();
-  const lv0 = REPLAY ? REPLAY.lv : 1;
-  Object.assign(G, { lv: lv0, score: 0, cows: 0, time: START_TIME, streak: 0, bestStreak: 0, fastest: null, radar: 3, misses: 0, levelT: 0, usedRadar: false, paused: false, lastTick: 99, nudged: false });
+  const lv0 = REPLAY ? REPLAY.lv : 1, mode = currentMode();
+  Object.assign(G, { lv: lv0, score: 0, cows: 0, time: mode.timer.start, streak: 0, bestStreak: 0, fastest: null, radar: mode.radar.start, misses: 0, levelT: 0, usedRadar: false, paused: false, lastTick: 99, nudged: false });
   $('#title').hidden = true; $('#over').hidden = true; $('#pause').hidden = true; $('#board').hidden = true;
   MUSIC.play();
   G.state = 'trans';
@@ -30,7 +31,7 @@ export function toTitle() {
   MUSIC.setWorld('weide'); MUSIC.play();
   live.scene = genScene(1, { title: true, density: .75, plan: { world: 'weide', mods: new Set(), golden: false } }); paintBg(live.scene);
   live.fx = []; live.texts = []; live.marks = []; live.iris = null; live.radar = null;
-  const rec = loadRecord();
+  const rec = loadRecord(currentMode().records);
   if (REPLAY) $('#record').textContent = `Wiederholung von Szene ${REPLAY.lv}-${REPLAY.seed}. Zählt nicht für Rekord und Bestenliste.`;
   else $('#record').innerHTML = rec.score > 0 ? `Dein Rekord <b>${fmtInt(rec.score)} Punkte</b> <b>${rec.cows} ${rec.cows === 1 ? 'Kuh' : 'Kühe'}</b>` : 'Noch kein Rekord. Zeit, das zu ändern.';
   $('#title').hidden = false;
@@ -43,13 +44,7 @@ const RATINGS = [[1.5, 'Adlerauge!'], [3, 'Blitzschnell!'], [6, 'Gefunden!'], [1
 export function onFound() {
   G.state = 'found';
   const secs = G.levelT, cow = live.scene.cow;
-  G.streak++; G.bestStreak = Math.max(G.bestStreak, G.streak); G.cows++;
-  const mult = 1 + .5 * Math.min(G.streak - 1, 8), speed = 1 + clamp((8 - secs) / 8, 0, 1);
-  const pts = Math.round((100 + 20 * G.lv) * speed * mult * (live.scene.golden ? 3 : 1) * (G.usedRadar ? .5 : 1) / 5) * 5;
-  const bonus = Math.round(Math.max(6, 14 - G.lv * .5) + (live.scene.golden ? 8 : 0));
-  G.score += pts; G.time = Math.min(G.time + bonus, 99);
-  G.fastest = G.fastest == null ? secs : Math.min(G.fastest, secs);
-  const extraRadar = G.cows % 5 === 0; if (extraRadar) G.radar++;
+  const { points: pts, bonus, mult, extraRadar } = currentMode().found(G, { secs, golden: live.scene.golden });
   const [cx, cy] = cowCenter();
   cow.hopT = live.T; cow.hopN = 3;
   live.iris = { t0: live.T, r: Math.max(cow.s * 1.05, 60) };
@@ -66,8 +61,8 @@ export function onFound() {
   after(1.85, nextLevel);
 }
 export function onMiss(x, y, ent) {
-  G.time = Math.max(0, G.time - 3); G.streak = 0; G.misses++;
-  live.shake = .3; live.marks.push({ x, y, t0: live.T }); floatText(x, y - 24, '−3 s', '#ff5a4e', clamp(U * .48, 18, 28), .9);
+  const { penalty } = currentMode().miss(G);
+  live.shake = .3; live.marks.push({ x, y, t0: live.T }); floatText(x, y - 24, `−${penalty} s`, '#ff5a4e', clamp(U * .48, 18, 28), .9);
   let msg;
   if (ent) { const m = TYPES[ent.type].msg; msg = typeof m === 'function' ? m(ent) : pick(m); ent.hopT = live.T; ent.hopN = 1; SND.animal(TYPES[ent.type].snd, (x / W) * 2 - 1); }
   else { msg = live.scene.mods.has('night') && Math.random() < .4 ? 'Im Dunkeln getappt.' : pick(live.scene.wd.empty); SND.bonk(); }
@@ -82,7 +77,7 @@ export function timeUp() {
 }
 
 export function loadLevel(lv, seed) {
-  live.scene = levelScene(lv, live.scene && live.scene.world, seed); paintBg(live.scene); live.fx = []; live.texts = []; live.marks = []; live.iris = null; live.radar = null; live.nightK = 1;
+  live.scene = levelScene(lv, live.scene && live.scene.world, seed, currentMode().plan); paintBg(live.scene); live.fx = []; live.texts = []; live.marks = []; live.iris = null; live.radar = null; live.nightK = 1;
   light.x = W / 2; light.y = H * .55; G.levelT = 0; G.usedRadar = false;
   updateLevelPills(); showBanner(); MUSIC.setWorld(live.scene.world);
 }

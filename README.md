@@ -10,7 +10,8 @@ Spielen: https://fmnznr.github.io/search-cow/
 - `src/main.js` – Einstieg; importiert alle Module in fester Reihenfolge
 - `src/core/` – Zufall (seedbar), Hilfsfunktionen, Canvas und Bildgröße, Plattform-Erkennung
 - `src/content/` – Figuren (`entities/`, je Gruppe eine Datei) und Welten
-- `src/scene/` – Szenen-Erzeugung (ohne DOM nutzbar)
+- `src/scene/` – Szenen-Erzeugung
+- `src/modes/` – Regelwerke der Spielmodi (Zeit, Punkte, Levelplan); ohne DOM, per Unit-Test geprüft
 - `src/render/` – Zeichnen: Welt, Effekte, Bild pro Frame, Übergang
 - `src/audio/` – Geräusche und Musik, alles synthetisiert
 - `src/game/` – Spielzustand, Ablauf, Aktionen, Eingabe, Schleife, Test-Schnittstelle
@@ -30,12 +31,13 @@ npm install
 npm run build        # nach jeder Änderung an src/ oder fonts/
 npm run lint         # findet u. a. fehlende Importe
 npm run build:itch   # zusätzlich dist/itch.zip für itch.io
-npm test             # Lint, Smoke-, Fairness- und Schnappschuss-Test
+npm test             # Lint, Unit-, Smoke-, Fairness- und Schnappschuss-Test
 npm run og-image     # Vorschaubild icons/og.png neu rendern
 ```
 
 Playwright ist auf 1.56.1 festgelegt, damit lokal und in der CI dieselbe Chromium-Version rendert (wichtig für die Bildvergleiche). Mit anderem Chromium: `CHROMIUM_PATH=/pfad/zu/chrome npm test`.
 
+- **Unit-Tests** (`test/unit/`): Zufall und Regelwerk „Klassisch“ (Levelplan, Punkte, Zeit, Fehlklicks) direkt in Node.
 - **Smoke-Test:** keine Fehler, keine Anfragen an fremde Server, Schriften geladen, Rechtsseiten erreichbar, startet offline.
 - **Fairness-Test:** prüft tausende Szenen, ob die Kuh sichtbar, frei und groß genug ist.
 - **Schnappschuss-Test:** friert das Verhalten ein – 120 erzeugte Szenen, 8 gerenderte Bilder und 3 durchgespielte Runden auf manueller Uhr (`test/snapshots/`). Jede Abweichung schlägt an; Bild-Abweichungen landen in `test/snapshots/out/`.

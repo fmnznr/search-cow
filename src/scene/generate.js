@@ -1,25 +1,11 @@
 // Scene generation: level plan, placement of figures and cow, seeds and replays.
-import { R, mulberry, pick, rnd, withSeed, wpick } from '../core/rng.js';
+import { R, mulberry, rnd, withSeed, wpick } from '../core/rng.js';
 import { TAU, clamp } from '../core/util.js';
 import { DPR, H, U, W, bgCv, bgc } from '../core/view.js';
 import { TYPES } from '../content/entities/rig.js';
-import { ORDER, WORLDS } from '../content/worlds.js';
+import { WORLDS } from '../content/worlds.js';
+import { classic } from '../modes/classic.js';
 
-function planFor(lv) {
-  let world = ORDER[(lv - 1) % 6];
-  if (lv > 12) world = pick(ORDER);
-  const mods = new Set();
-  if (lv === 4) mods.add('twins');
-  if (lv === 7) mods.add('night');
-  if (lv === 8) mods.add('move');
-  if (lv === 9) mods.add('tiny');
-  if (lv >= 10) {
-    const pool = ['night', 'move', 'twins', 'tiny'];
-    const n = lv < 14 ? 1 : (rnd() < .5 ? 1 : 2);
-    while (mods.size < n) mods.add(pick(pool));
-  }
-  return { world, mods, golden: lv >= 3 && rnd() < .12 };
-}
 function setPos(e, nx, ny, sc) {
   e.nx = nx; e.ny = ny;
   if (sc.wd.ground) e.p = .5 + .65 * clamp((ny - sc.hy) / (1 - sc.hy), 0, 1.1);
@@ -64,7 +50,7 @@ export function genScene(lv, opts = {}) {
   return withSeed(seed, () => buildScene(lv, seed, opts));
 }
 function buildScene(lv, seed, opts) {
-  const plan = opts.plan || planFor(lv);
+  const plan = opts.plan || (opts.planner || classic.plan)(lv);
   const wd = WORLDS[plan.world];
   const sc = { lv, world: plan.world, wd, mods: plan.mods, golden: plan.golden, hy: wd.ground ? wd.horizon : 0, seed, ents: [], amb: {} };
   wd.initAmb && wd.initAmb(sc);
@@ -112,10 +98,11 @@ function buildScene(lv, seed, opts) {
   return sc;
 }
 // Rerolls until the cow has a fair spot and, from level 13 on, the world changes. A given seed is replayed as is.
-export function levelScene(lv, prevWorld, seed) {
-  if (seed != null) return genScene(lv, { seed });
+// planner is the mode's plan(lv); it runs on the seeded sequence, so a seed also reproduces the plan.
+export function levelScene(lv, prevWorld, seed, planner = classic.plan) {
+  if (seed != null) return genScene(lv, { seed, planner });
   let sc;
-  for (let i = 0; i < 12; i++) { sc = genScene(lv); if (sc.cowPlaced && !(lv > 12 && sc.world === prevWorld)) break; }
+  for (let i = 0; i < 12; i++) { sc = genScene(lv, { planner }); if (sc.cowPlaced && !(lv > 12 && sc.world === prevWorld)) break; }
   return sc;
 }
 export const sceneId = sc => `${sc.lv}-${sc.seed}`;
