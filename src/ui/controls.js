@@ -1,5 +1,6 @@
 // Sound and music toggles and the buttons of all screens.
 import { $, COARSE } from '../core/util.js';
+import { settings } from '../store/settings.js';
 import { MUSIC } from '../audio/music.js';
 import { SND } from '../audio/sfx.js';
 import { G } from '../game/state.js';
@@ -16,6 +17,18 @@ window.addEventListener('pointerdown', armAudio, true); window.addEventListener(
 export function syncSoundLabels() {
   for (const id of ['#soundBtn', '#pauseSoundBtn']) { const b = $(id); b.textContent = `Ton: ${SND.on ? 'an' : 'aus'}`; b.setAttribute('aria-pressed', String(SND.on)); }
   for (const id of ['#musicBtn', '#pauseMusicBtn']) { const b = $(id); b.textContent = `Musik: ${MUSIC.on ? 'an' : 'aus'}`; b.setAttribute('aria-pressed', String(MUSIC.on)); }
+  for (const r of document.querySelectorAll('input[data-vol]')) r.value = Math.round(settings[r.dataset.vol === 'music' ? 'musicVolume' : 'sfxVolume'] * 100);
+}
+// Volume sliders on the title and pause screens. Turning one up also switches its channel on.
+for (const r of document.querySelectorAll('input[data-vol]')) {
+  r.addEventListener('input', () => {
+    const kind = r.dataset.vol, v = +r.value / 100;
+    SND.setVolume(kind, v);
+    if (v > 0 && !SND.on) toggleSound();
+    if (kind === 'music' && v > 0 && !MUSIC.on) toggleMusic();
+    syncSoundLabels();
+  });
+  r.addEventListener('change', () => { if (r.dataset.vol === 'sfx') SND.bell(1); });
 }
 $('#startBtn').addEventListener('click', startGame);
 $('#againBtn').addEventListener('click', startGame);

@@ -231,6 +231,8 @@ export default {
 
 ### 2.4 Einstellungen und Mischpult
 
+**Umgesetzt:** Effekte und Musik laufen über getrennte Kanäle mit eigener Lautstärke (Schieberegler im Pause-Dialog und auf dem Startbildschirm unter „Lautstärke einstellen“; ein Regler über 0 schaltet seinen Kanal wieder ein). Einstellungen liegen versioniert in `wdk-settings` (`store/settings.js`); die alten Schlüssel `wdk-sound`/`wdk-music` werden einmalig übernommen und beim ersten Speichern entfernt. Datenschutzerklärung angepasst. Die Modus-Auswahl kommt mit dem Chill-Modus (2.5), weil es vorher nur einen Modus gibt.
+
 - Getrennte Lautstärke für Musik und Effekte (vom Notizzettel), dazu Modus-Auswahl auf dem Startbildschirm.
 - Einstellungen zentral in `store/settings` mit Versionsnummer, damit spätere Änderungen alte Speicherstände sauber übernehmen.
 

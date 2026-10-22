@@ -64,6 +64,12 @@
       <button class="tog app" id="installBtn" hidden>App installieren</button>
       <a class="tog app" id="appLink" href="#" target="_blank" rel="noopener" hidden>Als App holen</a>
     </div>
+    <details class="vol-more"><summary class="fine">Lautstärke einstellen</summary>
+      <div class="volumes">
+        <label>Effekte<input type="range" min="0" max="100" step="5" data-vol="sfx" aria-label="Lautstärke der Effekte"></label>
+        <label>Musik<input type="range" min="0" max="100" step="5" data-vol="music" aria-label="Lautstärke der Musik"></label>
+      </div>
+    </details>
     <p class="fine" id="installHint" hidden></p>
     <p class="fine" id="howto">Maus bewegen = Lupe · Klick = Tipp · Leertaste = Muh-Radar · P = Pause</p>
     <p class="record" id="record"></p>
@@ -84,6 +90,10 @@
     <div class="toggles">
       <button class="tog" id="pauseSoundBtn" aria-pressed="true">Ton: an</button>
       <button class="tog" id="pauseMusicBtn" aria-pressed="true">Musik: an</button>
+    </div>
+    <div class="volumes">
+      <label>Effekte<input type="range" min="0" max="100" step="5" data-vol="sfx" aria-label="Lautstärke der Effekte"></label>
+      <label>Musik<input type="range" min="0" max="100" step="5" data-vol="music" aria-label="Lautstärke der Musik"></label>
     </div>
   </div>
 </section>

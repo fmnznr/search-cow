@@ -227,6 +227,11 @@ body{
 .tog[aria-pressed="false"]{background:var(--track)}
 .tog:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
 .tog.app{background:var(--bell)}
+.volumes{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
+.volumes label{display:grid;gap:4px;font:700 .82rem/1.2 var(--body)}
+.volumes input{width:100%;margin:0;accent-color:var(--snout-deep)}
+.vol-more summary{cursor:pointer;width:max-content}
+.vol-more[open] summary{margin-bottom:10px}
 .entry{display:grid;gap:8px;border-top:3px dashed var(--track);padding-top:14px}
 .entry label{font:800 .72rem/1 var(--body);letter-spacing:.14em;text-transform:uppercase;opacity:.7}
 .entry-row{display:flex;gap:10px}
@@ -332,6 +337,12 @@ body{
       <button class="tog app" id="installBtn" hidden>App installieren</button>
       <a class="tog app" id="appLink" href="#" target="_blank" rel="noopener" hidden>Als App holen</a>
     </div>
+    <details class="vol-more"><summary class="fine">Lautstärke einstellen</summary>
+      <div class="volumes">
+        <label>Effekte<input type="range" min="0" max="100" step="5" data-vol="sfx" aria-label="Lautstärke der Effekte"></label>
+        <label>Musik<input type="range" min="0" max="100" step="5" data-vol="music" aria-label="Lautstärke der Musik"></label>
+      </div>
+    </details>
     <p class="fine" id="installHint" hidden></p>
     <p class="fine" id="howto">Maus bewegen = Lupe · Klick = Tipp · Leertaste = Muh-Radar · P = Pause</p>
     <p class="record" id="record"></p>
@@ -352,6 +363,10 @@ body{
     <div class="toggles">
       <button class="tog" id="pauseSoundBtn" aria-pressed="true">Ton: an</button>
       <button class="tog" id="pauseMusicBtn" aria-pressed="true">Musik: an</button>
+    </div>
+    <div class="volumes">
+      <label>Effekte<input type="range" min="0" max="100" step="5" data-vol="sfx" aria-label="Lautstärke der Effekte"></label>
+      <label>Musik<input type="range" min="0" max="100" step="5" data-vol="music" aria-label="Lautstärke der Musik"></label>
     </div>
   </div>
 </section>
@@ -593,6 +608,35 @@ body{
   var TEST = query.has("test");
   var MANUAL_CLOCK = TEST && query.get("clock") === "manual";
 
+  // src/store/settings.js
+  var KEY = "wdk-settings";
+  var VERSION = 1;
+  var DEFAULTS = { v: VERSION, sound: true, music: true, sfxVolume: 1, musicVolume: 1 };
+  function load() {
+    try {
+      const s2 = JSON.parse(localStorage.getItem(KEY) || "null");
+      if (s2 && s2.v === VERSION) return { ...DEFAULTS, ...s2 };
+    } catch (_) {
+    }
+    const s = { ...DEFAULTS };
+    try {
+      s.sound = localStorage.getItem("wdk-sound") !== "0";
+      s.music = localStorage.getItem("wdk-music") !== "0";
+    } catch (_) {
+    }
+    return s;
+  }
+  var settings = load();
+  function saveSettings(patch) {
+    Object.assign(settings, patch);
+    try {
+      localStorage.setItem(KEY, JSON.stringify(settings));
+      localStorage.removeItem("wdk-sound");
+      localStorage.removeItem("wdk-music");
+    } catch (_) {
+    }
+  }
+
   // src/store/board.js
   var BOARD = /* @__PURE__ */ (() => {
     let db = null, uid = null, shared = [], mine = null, writable = false, ready = false;
@@ -727,11 +771,8 @@ body{
 
   // src/audio/sfx.js
   var SND = (() => {
-    let ac = null, master = null, on = true;
-    try {
-      on = localStorage.getItem("wdk-sound") !== "0";
-    } catch (_) {
-    }
+    let ac = null, master = null, sfxBus = null, musicBus = null, on = settings.sound;
+    const gainOf = (v) => v * v;
     function ctx() {
       if (!on) return null;
       if (!ac) {
@@ -747,19 +788,25 @@ body{
         const comp = ac.createDynamicsCompressor();
         master.connect(comp);
         comp.connect(ac.destination);
+        sfxBus = ac.createGain();
+        sfxBus.gain.value = gainOf(settings.sfxVolume);
+        sfxBus.connect(master);
+        musicBus = ac.createGain();
+        musicBus.gain.value = gainOf(settings.musicVolume);
+        musicBus.connect(master);
       }
       if (ac.state === "suspended") ac.resume().catch(() => {
       });
       return ac;
     }
-    function dest(pan) {
+    function dest(pan, bus = sfxBus) {
       const g = ac.createGain();
       if (pan && ac.createStereoPanner) {
         const p = ac.createStereoPanner();
         p.pan.value = clamp(pan, -1, 1);
         g.connect(p);
-        p.connect(master);
-      } else g.connect(master);
+        p.connect(bus);
+      } else g.connect(bus);
       return g;
     }
     function ramp(param, pts, t) {
@@ -802,11 +849,11 @@ body{
       osc.start(t);
       osc.stop(t + o.dur + 0.05);
     }
-    function bell(p = 1, delay = 0, vol = 0.3) {
+    function bell(p = 1, delay = 0, vol = 0.3, music = false) {
       const a = ctx();
       if (!a) return;
       const t = a.currentTime + delay + 5e-3;
-      const g = dest(0);
+      const g = dest(0, music ? musicBus : sfxBus);
       g.gain.setValueAtTime(vol, t);
       g.gain.exponentialRampToValueAtTime(vol * 0.25, t + 0.05);
       g.gain.exponentialRampToValueAtTime(1e-4, t + 0.55);
@@ -831,10 +878,7 @@ body{
       },
       toggle() {
         on = !on;
-        try {
-          localStorage.setItem("wdk-sound", on ? "1" : "0");
-        } catch (_) {
-        }
+        saveSettings({ sound: on });
         if (on) ctx();
         return on;
       },
@@ -842,7 +886,13 @@ body{
         ctx();
       },
       ctx,
-      master: () => master,
+      musicBus: () => musicBus,
+      // kind: 'sfx' or 'music', v: 0..1
+      setVolume(kind, v) {
+        saveSettings({ [kind === "music" ? "musicVolume" : "sfxVolume"]: v });
+        const bus = kind === "music" ? musicBus : sfxBus;
+        if (bus) bus.gain.setTargetAtTime(gainOf(v), ac.currentTime, 0.05);
+      },
       moo(pan = 0, p = 1, len = 1) {
         const d = len, f = 118 * p;
         voice({ type: "sawtooth", f: [[0, f * 0.82], [0.16, f * 1.06], [d * 0.62, f], [d, f * 0.72]], dur: d, peak: 0.5, a: 0.09, rel: 0.32, vib: [5.2, f * 0.03], filt: { type: "lowpass", Q: 6, f: [[0, 260], [0.24, 980], [d * 0.7, 720], [d, 300]] }, pan });
@@ -947,10 +997,7 @@ body{
   // src/audio/music.js
   var MUSIC = (() => {
     let on = true, armed = false, playing = false, gain = null, filt = null, noise = null, nextT = 0, step = 0, iv = 0, mode = "weide", fast = false;
-    try {
-      on = localStorage.getItem("wdk-music") !== "0";
-    } catch (_) {
-    }
+    on = settings.music;
     const VOL = 0.16;
     const MEL = [
       7,
@@ -1038,7 +1085,7 @@ body{
         filt.type = "lowpass";
         filt.frequency.value = 14e3;
         gain.connect(filt);
-        filt.connect(SND.master());
+        filt.connect(SND.musicBus());
         const len = Math.floor(a.sampleRate * 0.1);
         noise = a.createBuffer(1, len, a.sampleRate);
         const d = noise.getChannelData(0);
@@ -1091,7 +1138,7 @@ body{
         const m = MEL[s];
         if (m != null) (st.bell ? bellish : marimba)(a, t, mf(72 + k + m), 0.2);
       } else if (pos === 0 || pos === 3 || pos === 5) marimba(a, t, mf(60 + k + r + [0, third, 7, 12][(s >> 1) % 4]), 0.08);
-      if (s === 0 || s === 64) SND.bell(1 + k / 24, Math.max(0, t - a.currentTime), 0.045);
+      if (s === 0 || s === 64) SND.bell(1 + k / 24, Math.max(0, t - a.currentTime), 0.045, true);
     }
     function tick() {
       const a = ensure();
@@ -1110,10 +1157,7 @@ body{
       },
       toggle() {
         on = !on;
-        try {
-          localStorage.setItem("wdk-music", on ? "1" : "0");
-        } catch (_) {
-        }
+        saveSettings({ music: on });
         return on;
       },
       play() {
@@ -4969,6 +5013,19 @@ body{
       b.textContent = `Musik: ${MUSIC.on ? "an" : "aus"}`;
       b.setAttribute("aria-pressed", String(MUSIC.on));
     }
+    for (const r of document.querySelectorAll("input[data-vol]")) r.value = Math.round(settings[r.dataset.vol === "music" ? "musicVolume" : "sfxVolume"] * 100);
+  }
+  for (const r of document.querySelectorAll("input[data-vol]")) {
+    r.addEventListener("input", () => {
+      const kind = r.dataset.vol, v = +r.value / 100;
+      SND.setVolume(kind, v);
+      if (v > 0 && !SND.on) toggleSound();
+      if (kind === "music" && v > 0 && !MUSIC.on) toggleMusic();
+      syncSoundLabels();
+    });
+    r.addEventListener("change", () => {
+      if (r.dataset.vol === "sfx") SND.bell(1);
+    });
   }
   $("#startBtn").addEventListener("click", startGame);
   $("#againBtn").addEventListener("click", startGame);
