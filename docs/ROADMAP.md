@@ -1,14 +1,15 @@
 # Roadmap: Wo ist die Kuh?
 
-Drei Phasen, jede für sich veröffentlichbar. Phase 1 ist ausgearbeitet und direkt umsetzbar, Phase 2 und 3 sind Grobpläne mit den Entscheidungen, die vorher fallen müssen.
+Vier Phasen, jede für sich veröffentlichbar. Leitlinie: **Sicherheit geht vor Wachstum** – erst ein stabiler, getesteter Unterbau, dann neue Spielinhalte, dann Reichweite.
 
 | Phase | Ziel | Aufwand | Server |
 |---|---|---|---|
 | 1 Soft Launch | Öffentlich, rechtlich sauber, faire Szenen, auf itch.io | 1–2 Tage | nein |
-| 2 Kuh des Tages | Grund zum Wiederkommen und Teilen, Englisch | 1–2 Wochen | nein |
-| 3 Community | Globale Bestenliste, Spieleportale | 2–3 Wochen | ja |
+| 2 Umbau und Spielmodi | Modularer Code mit Sicherheitsnetz; Chill- und Challenge-Modus | 3–5 Wochen | nein |
+| 3 Kuh des Tages | Grund zum Wiederkommen und Teilen, Englisch | 1–2 Wochen | nein |
+| 4 Community | Globale Bestenliste, Spieleportale | 2–3 Wochen | ja |
 
-Zwischen den Phasen steht jeweils eine Go/No-go-Entscheidung (siehe Ende von Phase 2).
+Am Ende jeder Phase steht eine Go/No-go-Entscheidung für die nächste.
 
 ---
 
@@ -20,7 +21,7 @@ Reihenfolge einhalten: 1.1 ist Voraussetzung für 1.2, 1.7 setzt 1.1 bis 1.3 vor
 
 **Umgesetzt:** `rnd` statt `Math.random` in der Szenen-Erzeugung, `genScene(lv, { seed })`, `levelScene` würfelt neu, bis die Kuh einen fairen Platz hat und sich ab Level 13 die Welt ändert. Szenen-Kennung „Szene 14-777“ in Pause- und Endbildschirm; `index.html?szene=14-777` spielt sie nach (zählt nicht für Rekord und Bestenliste).
 
-**Warum:** Fairness-Test (1.2), Fehlerberichte („Szene 48213 ist kaputt“) und Phase 2 brauchen deterministische Szenen.
+**Warum:** Fairness-Test (1.2), Fehlerberichte („Szene 48213 ist kaputt“), die Schnappschuss-Tests in Phase 2 und die Kuh des Tages brauchen deterministische Szenen.
 
 **Ist-Zustand:** `R`, `RI`, `pick`, `wpick`, `mkBlob`, `mkSpots`, alle `init()`-Funktionen der Typen und `genScene` nutzen direkt `Math.random`. Nur der Hintergrund ist schon geseedet (`mulberry(sc.seed)` in `paintBg`).
 
@@ -38,7 +39,7 @@ Reihenfolge einhalten: 1.1 ist Voraussetzung für 1.2, 1.7 setzt 1.1 bis 1.3 vor
 4. URL-Parameter für Reproduktion: `?szene=7-12345` startet direkt dieses Level mit diesem Seed (nur Einstiegspunkt, kein UI).
 5. Seed sichtbar machen: im Pause-Dialog klein „Szene 7-12345“ (Level-Seed), damit Spieler Fehler melden können.
 
-**Hinweis:** Die Szene hängt weiterhin von der Fenstergröße ab (`W`, `H`, `U` bestimmen Anzahl und Position). Gleicher Seed + gleiche Fenstergröße = gleiche Szene. Das reicht für Phase 1; Phase 2 muss das lösen.
+**Hinweis:** Die Szene hängt weiterhin von der Fenstergröße ab (`W`, `H`, `U` bestimmen Anzahl und Position). Gleicher Seed + gleiche Fenstergröße = gleiche Szene. Das reicht für Phase 1; Phase 3 (Kuh des Tages) muss das lösen.
 
 **Fertig, wenn:** Zwei Aufrufe von `genScene(5, { seed: 42 })` bei gleicher Fenstergröße identische `ents` (Typ, Position, Farben) liefern.
 
@@ -162,76 +163,169 @@ GitHub Pages veröffentlicht weiter direkt aus dem Repo-Stamm von `master`. Sinn
 
 ---
 
-## Phase 2: Kuh des Tages (Grobplan)
+## Phase 2: Umbau und Spielmodi
 
-### 2.1 Code aufteilen
-- `src/` in Module: `rng`, `audio`, `music`, `entities/*`, `worlds/*`, `scene`, `render`, `ui`, `board`, `main`.
-- esbuild (oder Vite + Single-File-Plugin) baut daraus wieder **eine** HTML-Datei für Artifact, Web-App und itch.
-- `scene` als reine Funktion ohne DOM und Canvas, damit sie in Tests und später auf dem Server (Phase 3) läuft.
-- Unit-Tests (z. B. `node --test`) für `rng`, `planFor`, `genScene`, Punkteberechnung.
+**Warum zuerst:** Die Technik (Canvas 2D, Web Audio) ist nicht die Grenze; sie trägt deutlich mehr Figuren, Effekte und Modi. Die Grenze ist die Struktur: Regeln, Punkte, Ablauf, Zeichnen und Oberfläche stecken verflochten in einer Datei mit 2.400 Zeilen. Jede neue Spielidee würde dort Risiko und Aufwand vervielfachen. Deshalb: erst umbauen, ohne dass Spieler etwas merken, dann darauf die Modi bauen.
 
-### 2.2 Gleiche Szene auf allen Geräten
+**Voraussetzung:** Phase 1 ist abgeschlossen und als `v1.0.0` getaggt. Das ist der Referenzstand, gegen den der Umbau geprüft wird.
+
+### 2.1 Sicherheitsnetz vor dem ersten Umbau-Schritt
+
+Bevor Code verschoben wird, wird das heutige Verhalten eingefroren, sodass jede Abweichung automatisch auffällt.
+
+- **Szenen-Schnappschüsse:** Für feste Seeds × Level × Fenstergrößen die erzeugte Szene (Typ, Position gerundet, Farben, Modifikatoren) als JSON einchecken. Nach dem Umbau müssen sie identisch sein.
+- **Bild-Schnappschüsse:** Ausgewählte Szenen bei Zeit 0 als PNG rendern und mit kleiner Toleranz vergleichen. Fängt Fehler beim Zeichnen.
+- **Simulierte Spielrunden:** Spieluhr per Test steuerbar machen; vorgegebene Abfolge (Kuh nach 2 s, Fehlklick, Radar, Zeitablauf) durchspielen und Punkte, Zeit und Serie mit einem Schnappschuss vergleichen.
+- **Arbeitsweise:** Ab hier nur noch über Branches und Pull Requests; Branch-Schutz auf `master` mit Pflicht-Check `ci`. Während des Umbaus keine neuen Funktionen.
+
+**Fertig, wenn:** Alle drei Prüfungen in der CI laufen und eine absichtlich eingebaute kleine Änderung (z. B. andere Schafsfarbe) sie rot macht.
+
+### 2.2 Umbau in Module (ohne sichtbare Änderung)
+
+- **Build:** esbuild bündelt `src/**/*.js` wieder zu einer einzigen HTML-Datei. Artifact, Web-App und itch-Version bleiben so wie heute.
+- **Aufteilung:**
+  ```
+  src/
+    core/      rng, Geometrie, Zeit
+    content/   entities/* (je Tierart/Figur: Daten + Zeichnen), worlds/*
+    scene/     plan, generate – rein, ohne DOM und Canvas
+    render/    Hintergrund, Figuren, Effekte, Lupe/Taschenlampe
+    audio/     Effekte, Musik, Mischpult (getrennte Lautstärken)
+    modes/     Regelwerk-Schnittstelle + Modi
+    game/      Ablauf als Zustandsmaschine (Titel → Intro → Spiel → Fund → … → Ende)
+    ui/        Bildschirme, HUD, Einstellungen
+    store/     Einstellungen, Rekorde, Bestenliste (localStorage + Artifact-Datenbank)
+  ```
+- **Schritte:** zuerst die reinen Teile (`rng`, `scene`, `content`), dann `audio`, `render`, zuletzt `game` und `ui`. Nach jedem Schritt CI grün und veröffentlichbar.
+- **Unit-Tests** (`node --test`) für `rng`, Szenen-Plan, Punkteberechnung und Zustandsmaschine.
+
+**Fertig, wenn:** Alle Schnappschüsse aus 2.1 unverändert sind und keine Quelldatei länger als ca. 400 Zeilen ist.
+
+### 2.3 Regelwerk pro Modus
+
+Kern des Umbaus. Alles, was ein Modus anders machen kann, steckt in einem Objekt; der Spielablauf fragt nur noch das Regelwerk.
+
+```js
+// modes/endless.js – das heutige Spiel als erstes Regelwerk
+export default {
+  id: 'endless', name: 'Klassisch',
+  timer: { start: 45, max: 99 },            // null = keine Uhr
+  nextLevel(run) {},                        // Level-Plan inkl. Boss-Level
+  onFound(run, { secs, misses, radar }) {}, // → Punkte, Zeitbonus, Effekte
+  onMiss(run) {},                           // → Zeitstrafe, Serie zurücksetzen?
+  between(run) {},                          // optionale Wahl zwischen Leveln
+  isOver(run) {},
+  hud: ['score', 'timer', 'cows'],
+  records: 'wdk-record', leaderboard: true
+};
+```
+
+- Das heutige Spiel wird zum Modus „Klassisch“ und muss die Schnappschüsse aus 2.1 bestehen.
+- Neue Modi, Boss-Level und Regeln sind danach Konfiguration statt Umbau.
+
+### 2.4 Einstellungen und Mischpult
+
+- Getrennte Lautstärke für Musik und Effekte (vom Notizzettel), dazu Modus-Auswahl auf dem Startbildschirm.
+- Einstellungen zentral in `store/settings` mit Versionsnummer, damit spätere Änderungen alte Speicherstände sauber übernehmen.
+
+### 2.5 Chill-Modus
+
+Erster neuer Nutzer des Regelwerks – bewusst einfach, damit er die Schnittstelle prüft.
+
+- Keine Uhr, keine Punkte, kein Druck; endlos, ruhigere Musik.
+- **Kuh-Album:** Jede gefundene Kuh-Variante (Fellmuster, Glocke, Accessoire, Welt) wird gesammelt. Fortschritt „23 von 60“ als Motivation ohne Zeitdruck.
+- Kein Eintrag in die Bestenliste.
+
+### 2.6 Challenge-Modus
+
+Ziel: Können lohnt sich spürbar, Raten wird bestraft, gutes Spiel bringt hohe Multiplikatoren.
+
+- **Kein Raten:** Fehlklicks werden in Folge teurer (3 s → 5 s → 8 s); erst ein Fund setzt zurück.
+- **Multiplikatoren:** Serie ohne Fehlklick und Tempo multiplizieren sich stärker als heute; eine fehlerfreie, schnelle Serie ist um ein Vielfaches mehr wert als ein langsames Durchkommen.
+- **Medaillen pro Level:** Gold/Silber/Bronze nach Zeit und Fehlklicks, als klares Feedback.
+- **Entscheidungen zwischen Leveln** (`between`): z. B. „Doppelt oder nichts“ (nächstes Level schwerer, Multiplikator ×2), Radar gegen Zeit tauschen, einen Modifikator abwählen gegen weniger Punkte.
+- **Boss-Level alle 5 Level** (vom Notizzettel), z. B.:
+  - *Kuhbande:* drei Kühe nacheinander in derselben Szene
+  - *Ausreißerin:* die Kuh flieht nach jedem Fehlklick an eine neue Stelle
+  - *Steckbrief:* lauter Doppelgänger, nur eine passt zur Beschreibung (Glocke, Fleck, Accessoire)
+- Bestenliste nur für diesen Modus (und Klassisch).
+- **Offene Entscheidung:** Was zuerst – Entscheidungen zwischen Leveln oder mehr Spannung innerhalb eines Levels (Boss-Level, Medaillen)?
+
+### 2.7 Balancing mit Werkzeug
+
+- Simulierte Runden aus 2.1 mit „Bot-Spielern“ unterschiedlicher Stärke (Trefferquote, Suchzeit) laufen lassen und Punkteverteilung pro Modus auswerten.
+- Ziel: Ein starker Spieler soll deutlich mehr Punkte holen als ein mittlerer, und kein Modus darf durch Dauerklicken schlagbar sein.
+
+### Go/No-go für Phase 3
+Phase 3 erst, wenn Klassisch, Chill und Challenge stabil laufen, die Schnappschuss- und Fairness-Tests grün sind und Testspieler die Modi als klar unterschiedlich erleben.
+
+---
+
+## Phase 3: Kuh des Tages (Grobplan)
+
+Baut auf dem Regelwerk aus Phase 2 auf: Die Kuh des Tages ist ein weiterer Modus.
+
+### 3.1 Gleiche Szene auf allen Geräten
 Größtes technisches Thema: Heute hängt die Szene von der Fenstergröße ab.
 - **Empfehlung:** Tagesszene in fester virtueller Fläche erzeugen, je eine für Hoch- und Querformat (z. B. 400×800 und 1280×720), und aufs Fenster skalieren, Ränder mit Hintergrund füllen.
 - Hoch- und Querformat sind dann zwei Layouts derselben Tageskuh; die Bestenliste trennt sie nicht, die Schwierigkeit muss aber vergleichbar sein (Fairness-Test aus 1.2 auf beide anwenden).
 
-### 2.3 Tagesmodus
+### 3.2 Tagesmodus
 - Seed = Hash aus Datum; Tageswechsel um 00:00 Europe/Berlin (oder UTC – entscheiden).
 - Schwierigkeit nach Wochentag (Mo leicht → So schwer).
 - Ein gewerteter Versuch pro Tag, danach Übungsmodus. Ergebnis: Zeit, Fehlklicks, Radar ja/nein.
 - Teilen: `navigator.share`, sonst Zwischenablage. Text z. B. „Wo ist die Kuh? #127 🐄 3,2 s · ❌❌ · wo-ist-die-kuh.de“.
 - Lokale Statistik: Serie, Verteilung der Zeiten, Countdown bis zur nächsten Kuh.
-- Startbildschirm: zwei Einstiege „Kuh des Tages“ und „Endlos“.
 
-### 2.4 Englisch
+### 3.3 Englisch
 - Alle Texte in ein `STR`-Objekt pro Sprache; Sprache aus `navigator.language`, umschaltbar.
 - Witze und Ränge übertragen statt übersetzen (Wortspiele neu schreiben).
 - Titel: „Where's the Cow?“; eigene `og`-Tags pro Sprache.
 
-### 2.5 Eigene Domain (optional)
+### 3.4 Eigene Domain (optional)
 - Kurze Domain für den Teilen-Text; GitHub Pages mit Custom Domain und HTTPS.
 - Impressum/Datenschutz anpassen.
 
-### 2.6 Messen (optional)
-- Ohne Messung ist die Go/No-go-Entscheidung für Phase 3 Bauchgefühl. Wenn überhaupt: cookielos und datensparsam (z. B. Plausible oder selbst gehostetes Umami), Datenschutz ergänzen.
+### 3.5 Messen (optional)
+- Ohne Messung ist die Go/No-go-Entscheidung für Phase 4 Bauchgefühl. Wenn überhaupt: cookielos und datensparsam (z. B. Plausible oder selbst gehostetes Umami), Datenschutz ergänzen.
 
-### Go/No-go für Phase 3
-Phase 3 nur, wenn nach ca. 4 Wochen Tagesmodus zum Beispiel ≥ 100 tägliche Spieler oder spürbares Teilen ohne eigenes Zutun. Sonst bei Phase 2 bleiben – das Spiel ist dann trotzdem rund.
+### Go/No-go für Phase 4
+Phase 4 nur, wenn nach ca. 4 Wochen Tagesmodus zum Beispiel ≥ 100 tägliche Spieler oder spürbares Teilen ohne eigenes Zutun. Sonst bei Phase 3 bleiben – das Spiel ist dann trotzdem rund.
 
 ---
 
-## Phase 3: Community (Grobplan)
+## Phase 4: Community (Grobplan)
 
-### 3.1 Backend
+### 4.1 Backend
 - Cloudflare Workers + D1 (kostenloser Plan reicht lange). Alternative: Supabase.
-- Endpunkte: `POST /score`, `GET /board/day/:date`, `GET /board/alltime`.
+- Endpunkte: `POST /score`, `GET /board/day/:date`, `GET /board/alltime`, getrennt nach Modus.
 - Identität: zufällige Geräte-ID im `localStorage` plus Spitzname; kein Login.
 - Rate-Limit pro IP und Geräte-ID.
 - Das claude.ai-Artifact behält seine eigene Bestenliste über `window.claude`; die Web-App nutzt das Backend.
 
-### 3.2 Schummeln eindämmen
-- Der Server kennt den Tages-Seed und kann mit dem `scene`-Modul aus 2.1 die Szene nachrechnen: Lag der gemeldete Klick (Position + Zeitpunkt) in der Kuh-Box?
-- Plausibilität: Mindestzeit, maximale Punkte pro Kuh im Endlosmodus.
+### 4.2 Schummeln eindämmen
+- Der Server kennt den Tages-Seed und kann mit dem reinen `scene`-Modul aus 2.2 die Szene nachrechnen: Lag der gemeldete Klick (Position + Zeitpunkt) in der Kuh-Box?
+- Plausibilität: Mindestzeit, maximale Punkte pro Kuh je Modus.
 - Restliches Schummeln akzeptieren; Ausreißer manuell löschen können.
 
-### 3.3 Spitznamen
+### 4.3 Spitznamen
 - Sperrliste (de/en), Länge und Zeichen begrenzen, „Melden“-Knopf, einfache Admin-Ansicht zum Löschen.
 
-### 3.4 Datenschutz
+### 4.4 Datenschutz
 - Neu: Server verarbeitet IP und Geräte-ID (pseudonym), Speicherdauer festlegen, Cloudflare als Auftragsverarbeiter nennen, Löschmöglichkeit anbieten.
 
-### 3.5 Spieleportale
+### 4.5 Spieleportale
 - CrazyGames (Einstieg über „Basic Launch“, Ausbau abhängig von Kennzahlen), alternativ GameDistribution; Poki ist sehr selektiv.
 - Voraussetzungen: Englisch, Portal-SDK (Lade-Events, Werbepausen), oft keine externen Links, teils Exklusivität.
-- Eigener Build-Ziel `--portal`; Werbung nur dort, nicht in der eigenen Web-App.
+- Eigenes Build-Ziel `--portal`; Werbung nur dort, nicht in der eigenen Web-App.
 - Erwartung: Einnahmen eher klein; Hauptnutzen ist Reichweite.
 
-### 3.6 Betrieb
+### 4.6 Betrieb
 - Fehler-Logging minimal (Worker-Logs), Backup der D1-Datenbank, Kostenalarm.
 
 ---
 
 ## Notizzettel: Ideen für später
 
-- **Lautstärke getrennt einstellen:** Musik relativ zu den Tier- und Kuhgeräuschen regeln (Schieberegler in den Einstellungen statt nur an/aus).
-- **Boss-Level:** in festen Abständen (z. B. jedes 5. Level) ein besonderes Level, etwa mehrere Kühe in Folge, eine Kuh, die sich versteckt oder flieht, oder eine Welt mit eigener Regel.
+- ~~Lautstärke getrennt einstellen~~ → Phase 2.4
+- ~~Boss-Level~~ → Phase 2.6
