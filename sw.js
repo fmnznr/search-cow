@@ -1,5 +1,5 @@
 // Generated from src/sw.template.js by scripts/build.mjs. Do not edit sw.js by hand.
-const CACHE = 'wdk-a824a7587f';
+const CACHE = 'wdk-993f7247e2';
 const SHELL = ["./","./index.html","./manifest.webmanifest","./icons/icon-192.png","./icons/icon-512.png","./icons/icon-maskable-512.png","./icons/apple-touch-icon.png","./fonts/fonts.css","./fonts/bagel-fat-one-latin-ext.woff2","./fonts/bagel-fat-one-latin.woff2","./fonts/bricolage-grotesque-latin-ext.woff2","./fonts/bricolage-grotesque-latin.woff2","./datenschutz.html","./impressum.html"];
 
 self.addEventListener('install', e => {
