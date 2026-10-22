@@ -31,6 +31,7 @@
 <meta name="description" content="Ein Wimmelspiel: Finde die eine echte Kuh zwischen Schafen, Dalmatinern und Leuten im Kuhkostüm.">
 <style>
 /* Layout: full-bleed canvas Wimmelbild; sticker-cut HUD (ink outline + hard offset shadow) floats on top; Holstein spots are the brand pattern. Single deliberate look in both host themes. */
+[hidden]{display:none!important}
 :root{
   --ink:#211b26;
   --milk:#fffdf8;
@@ -227,6 +228,11 @@ body{
 .tog[aria-pressed="false"]{background:var(--track)}
 .tog:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
 .tog.app{background:var(--bell)}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mode{display:grid;gap:2px;text-align:left;padding:9px 12px;border:3px solid var(--ink);border-radius:16px;background:var(--milk);color:var(--ink);cursor:pointer;font:400 1.05rem/1.1 var(--display);box-shadow:3px 3px 0 var(--ink)}
+.mode small{font:600 .78rem/1.25 var(--body);opacity:.8}
+.mode[aria-checked="true"]{background:var(--snout)}
+.mode:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
 .volumes{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
 .volumes label{display:grid;gap:4px;font:700 .82rem/1.2 var(--body)}
 .volumes input{width:100%;margin:0;accent-color:var(--snout-deep)}
@@ -276,6 +282,9 @@ body{
   .radar{padding:7px 9px 7px 8px}
 }
 @media (max-width:380px){.chip.score small{display:none}}
+/* Low screens (laptops, phones in landscape): smaller logo and tighter card so the title card fits without scrolling. */
+@media (max-height:820px){.logo{font-size:clamp(2.6rem,8.5vh,5.4rem)}#title .card{gap:12px}}
+@media (max-height:700px){.mode small{display:none}}
 @media (prefers-reduced-motion:reduce){
   .logo .q,.radar.nudge,.timer.low .clock{animation:none}
 }
@@ -321,8 +330,13 @@ body{
   <div class="card">
     <p class="eyebrow">Ein Wimmelspiel für Adleraugen</p>
     <h1 class="logo"><span class="spot">Wo ist</span><span class="row"><span class="spot">die Kuh</span><span class="q">?</span></span></h1>
-    <p class="lede">Zwischen Schafen, Dalmatinern und Leuten im Kuhkostüm versteckt sich genau eine echte Kuh. Finde sie, bevor die Zeit abläuft.</p>
-    <dl class="rules">
+    <p class="lede" data-for="classic">Zwischen Schafen, Dalmatinern und Leuten im Kuhkostüm versteckt sich genau eine echte Kuh. Finde sie, bevor die Zeit abläuft.</p>
+    <p class="lede" data-for="chill" hidden>Zwischen Schafen, Dalmatinern und Leuten im Kuhkostüm versteckt sich genau eine echte Kuh. Keine Uhr, keine Punkte: Such, so lange du magst.</p>
+    <div class="modes" role="radiogroup" aria-label="Spielmodus">
+      <button class="mode" role="radio" data-mode="classic" aria-checked="true"><b>Klassisch</b><small>Auf Zeit, mit Punkten</small></button>
+      <button class="mode" role="radio" data-mode="chill" aria-checked="false"><b>Chill</b><small>Ohne Uhr, ganz in Ruhe</small></button>
+    </div>
+    <dl class="rules" data-for="classic">
       <div><dt>+ Zeit</dt><dd>für jede gefundene Kuh</dd></div>
       <div><dt>− 3 s</dt><dd>für jeden Fehlklick</dd></div>
       <div><dt>Muh-Radar</dt><dd>verrät, wo es muht</dd></div>
@@ -374,7 +388,7 @@ body{
 <section class="screen" id="over" hidden>
   <div class="card">
     <span class="stamp" id="stamp" hidden>Neuer Rekord!</span>
-    <p class="eyebrow">Zeit um · Dein Titel</p>
+    <p class="eyebrow" id="overEyebrow">Zeit um · Dein Titel</p>
     <h2 id="rankName">Weide-Profi</h2>
     <p class="say-line" id="rankText"></p>
     <div class="stats">
@@ -611,7 +625,7 @@ body{
   // src/store/settings.js
   var KEY = "wdk-settings";
   var VERSION = 1;
-  var DEFAULTS = { v: VERSION, sound: true, music: true, sfxVolume: 1, musicVolume: 1 };
+  var DEFAULTS = { v: VERSION, sound: true, music: true, sfxVolume: 1, musicVolume: 1, mode: "classic" };
   function load() {
     try {
       const s2 = JSON.parse(localStorage.getItem(KEY) || "null");
@@ -996,7 +1010,7 @@ body{
 
   // src/audio/music.js
   var MUSIC = (() => {
-    let on = true, armed = false, playing = false, gain = null, filt = null, noise = null, nextT = 0, step = 0, iv = 0, mode = "weide", fast = false;
+    let on = true, armed = false, playing = false, gain = null, filt = null, noise = null, nextT = 0, step = 0, iv = 0, mode = "weide", fast = false, calm = false;
     on = settings.music;
     const VOL = 0.16;
     const MEL = [
@@ -1143,7 +1157,7 @@ body{
     function tick() {
       const a = ensure();
       if (!a || !playing) return;
-      const st = STYLE[mode] || STYLE.weide, dt = 60 / (st.bpm * (fast ? 1.14 : 1)) / 2;
+      const st = STYLE[mode] || STYLE.weide, dt = 60 / (st.bpm * (fast ? 1.14 : 1) * (calm ? 0.88 : 1)) / 2;
       if (nextT < a.currentTime) nextT = a.currentTime + 0.06;
       while (nextT < a.currentTime + 0.22) {
         playStep(a, step, nextT);
@@ -1191,6 +1205,10 @@ body{
       },
       setFast(f) {
         fast = f;
+      },
+      // Chill mode plays the same music a bit slower.
+      setCalm(c2) {
+        calm = c2;
       },
       arm() {
         armed = true;
@@ -4322,7 +4340,7 @@ body{
     const wd = WORLDS[plan.world];
     const sc = { lv, world: plan.world, wd, mods: plan.mods, golden: plan.golden, hy: wd.ground ? wd.horizon : 0, seed, ents: [], amb: {} };
     wd.initAmb && wd.initAmb(sc);
-    const density = opts.density || Math.min(1.5, 0.62 + lv * 0.07);
+    const density = opts.density || plan.density || Math.min(1.5, 0.62 + lv * 0.07);
     const n = Math.round(density * W * H / (U * U * 2.7));
     const pool = wd.pool.map(([k, w]) => [k, w * (plan.mods.has("twins") && wd.twins.includes(k) ? 6 : 1)]);
     const topN = (opts.title ? 20 : HUD_TOP()) / H;
@@ -4377,8 +4395,12 @@ body{
     sc.ents.sort((a, b) => a.y - b.y);
     return sc;
   }
-  function levelScene(lv, prevWorld, seed, planner = classic.plan) {
-    if (seed != null) return genScene(lv, { seed, planner });
+  function levelScene(lv, prevWorld, seed, mode = classic) {
+    const sc = seed != null ? genScene(lv, { seed, planner: mode.plan }) : reroll(lv, prevWorld, mode.plan);
+    sc.mode = mode.id;
+    return sc;
+  }
+  function reroll(lv, prevWorld, planner) {
     let sc;
     for (let i = 0; i < 12; i++) {
       sc = genScene(lv, { planner });
@@ -4386,14 +4408,15 @@ body{
     }
     return sc;
   }
-  var sceneId = (sc) => `${sc.lv}-${sc.seed}`;
+  var PREFIX = { chill: "c" };
+  var sceneId = (sc) => `${PREFIX[sc.mode] || ""}${sc.lv}-${sc.seed}`;
   var REPLAY = (() => {
     let m = null;
     try {
-      m = /^(\d{1,3})-(\d{1,10})$/.exec(new URLSearchParams(location.search).get("szene") || "");
+      m = /^(c?)(\d{1,3})-(\d{1,10})$/.exec(new URLSearchParams(location.search).get("szene") || "");
     } catch (_) {
     }
-    return m && +m[1] >= 1 ? { lv: +m[1], seed: +m[2] | 0 } : null;
+    return m && +m[2] >= 1 ? { mode: m[1] === "c" ? "chill" : "classic", lv: +m[2], seed: +m[3] | 0 } : null;
   })();
   function paintBg(sc) {
     bgCv.width = Math.round(W * DPR);
@@ -4413,8 +4436,45 @@ body{
   var ptr = { x: -999, y: -999, inside: false, type: "mouse", down: null, inspect: false, lp: 0 };
   var light = { x: 0, y: 0 };
 
+  // src/modes/chill.js
+  var chill = {
+    id: "chill",
+    name: "Chill",
+    timer: null,
+    radar: { start: Infinity, bonusEvery: 0 },
+    records: null,
+    leaderboard: false,
+    hud: { score: false, timer: false },
+    // All worlds and modifiers show up, but at most one modifier and never more crowded than early classic levels.
+    plan(lv) {
+      let world = ORDER[(lv - 1) % 6];
+      if (lv > 6) world = pick(ORDER);
+      const mods = /* @__PURE__ */ new Set();
+      if (lv >= 4 && rnd() < 0.4) mods.add(pick(["night", "move", "twins", "tiny"]));
+      return { world, mods, golden: lv >= 2 && rnd() < 0.2, density: Math.min(1.05, 0.62 + lv * 0.05) };
+    },
+    mult() {
+      return 1;
+    },
+    found(run, { secs }) {
+      run.streak++;
+      run.bestStreak = Math.max(run.bestStreak, run.streak);
+      run.cows++;
+      run.fastest = run.fastest == null ? secs : Math.min(run.fastest, secs);
+      return { points: null, bonus: null, mult: 1, extraRadar: false };
+    },
+    miss(run) {
+      run.misses++;
+      run.streak = 0;
+      return { penalty: 0 };
+    },
+    isOver() {
+      return false;
+    }
+  };
+
   // src/modes/index.js
-  var MODES = { classic };
+  var MODES = { classic, chill };
   var currentMode = () => MODES[G.mode] || classic;
 
   // src/render/world.js
@@ -4786,6 +4846,9 @@ body{
   function showGameUi(on) {
     els.hud.hidden = !on;
     els.controls.hidden = !on;
+    const hud = currentMode().hud || {};
+    els.score.parentElement.hidden = hud.score === false;
+    els.timer.hidden = hud.timer === false;
   }
   var els = { hud: $("#hud"), controls: $("#controls"), score: $("#score"), secs: $("#secs"), barFill: $("#barFill"), cows: $("#cows"), timer: $("#timer"), radarBtn: $("#radarBtn"), radarCount: $("#radarCount"), lvl: $("#lvlPill"), modPills: $("#modPills"), combo: $("#combo") };
   var hudCache = {};
@@ -4799,13 +4862,13 @@ body{
     setText(els.score, "score", fmtInt(G.score));
     setText(els.cows, "cows", String(G.cows));
     setText(els.secs, "secs", String(Math.max(0, Math.ceil(G.time))));
-    const f = clamp(G.time / currentMode().timer.full, 0, 1).toFixed(3);
+    const timer = currentMode().timer, f = timer ? clamp(G.time / timer.full, 0, 1).toFixed(3) : "1.000";
     if (hudCache.bar !== f) {
       hudCache.bar = f;
       els.barFill.style.transform = `scaleX(${f})`;
     }
     els.timer.classList.toggle("low", G.time < 10 && G.state === "play");
-    setText(els.radarCount, "radar", String(G.radar));
+    setText(els.radarCount, "radar", G.radar === Infinity ? "∞" : String(G.radar));
     els.radarBtn.disabled = G.radar <= 0 || G.state !== "play";
     if (G.streak >= 2) {
       els.combo.hidden = false;
@@ -4860,14 +4923,18 @@ body{
     for (const r of RANKS) if (G.cows >= r[0]) rank = r;
     $("#rankName").textContent = rank[1];
     $("#rankText").textContent = rank[2];
+    const mode = currentMode();
+    $("#overEyebrow").textContent = mode.timer ? "Zeit um · Dein Titel" : "Feierabend · Dein Titel";
+    $("#stScore").parentElement.hidden = !mode.records;
     $("#stCows").textContent = G.cows;
     $("#stScore").textContent = fmtInt(G.score);
     $("#stStreak").textContent = G.bestStreak;
     $("#stFast").textContent = G.fastest == null ? "–" : `${fmt1(G.fastest)} s`;
-    const mode = currentMode(), rec = loadRecord(mode.records), isNew = !REPLAY && G.score > rec.score;
+    const rec = mode.records ? loadRecord(mode.records) : null, isNew = !!rec && !REPLAY && G.score > rec.score;
     if (isNew) saveRecord(mode.records, { score: G.score, cows: G.cows });
     $("#stamp").hidden = !isNew;
-    $("#overRecord").innerHTML = isNew ? rec.score > 0 ? `Alter Rekord <b>${fmtInt(rec.score)} Punkte</b>` : "Dein erster Rekord. Den holst du dir nochmal." : `Rekord <b>${fmtInt(rec.score)} Punkte</b> <b>${rec.cows} ${rec.cows === 1 ? "Kuh" : "Kühe"}</b>`;
+    if (!rec) $("#overRecord").textContent = G.cows ? `${G.cows} ${G.cows === 1 ? "Kuh" : "Kühe"} in aller Ruhe gefunden.` : "Manchmal ist Suchen schon genug.";
+    else $("#overRecord").innerHTML = isNew ? rec.score > 0 ? `Alter Rekord <b>${fmtInt(rec.score)} Punkte</b>` : "Dein erster Rekord. Den holst du dir nochmal." : `Rekord <b>${fmtInt(rec.score)} Punkte</b> <b>${rec.cows} ${rec.cows === 1 ? "Kuh" : "Kühe"}</b>`;
     lastEntry = null;
     $("#entryMsg").textContent = "";
     $("#entryBtn").disabled = false;
@@ -5044,11 +5111,23 @@ body{
   $("#entryForm").addEventListener("submit", submitEntry);
   $("#pauseBtn").addEventListener("click", pauseGame);
   $("#resumeBtn").addEventListener("click", resumeGame);
-  $("#quitBtn").addEventListener("click", () => {
+  function quitRun() {
     G.paused = false;
     $("#pause").hidden = true;
     G.time = 0;
     timeUp();
+  }
+  $("#quitBtn").addEventListener("click", quitRun);
+  function showModeChoice() {
+    for (const b of document.querySelectorAll(".mode")) b.setAttribute("aria-checked", String(b.dataset.mode === G.mode));
+    for (const el of document.querySelectorAll("#title [data-for]")) el.hidden = el.dataset.for !== G.mode;
+  }
+  for (const b of document.querySelectorAll(".mode")) b.addEventListener("click", () => {
+    if (REPLAY || G.state !== "title") return;
+    G.mode = b.dataset.mode;
+    saveSettings({ mode: G.mode });
+    showModeChoice();
+    SND.bell(G.mode === "chill" ? 0.8 : 1);
   });
   els.radarBtn.addEventListener("click", useRadar);
   $("#howto").textContent = COARSE ? "Tippen = Tipp abgeben · Halten & ziehen = Lupe · Glocke = Muh-Radar" : "Maus bewegen = Lupe · Klick = Tipp · Leertaste = Muh-Radar · P = Pause · M = Musik";
@@ -5123,9 +5202,9 @@ body{
     if (live.texts.length > 20) live.texts.splice(0, live.texts.length - 20);
     if ((G.state === "found" || G.state === "reveal") && live.nightK > 0) live.nightK = Math.max(0, live.nightK - dt * 2.5);
     if (G.state === "play") {
-      G.time -= dt;
       G.levelT += dt;
-      if (G.time < 5.5) {
+      if (currentMode().timer) G.time -= dt;
+      if (currentMode().timer && G.time < 5.5) {
         const sec = Math.ceil(G.time);
         if (sec < G.lastTick && sec > 0) {
           G.lastTick = sec;
@@ -5139,7 +5218,7 @@ body{
       if (currentMode().isOver(G)) timeUp();
     }
     if (G.state !== "title" && G.state !== "boot" && G.state !== "over") updateHud();
-    MUSIC.setFast(G.state === "play" && G.time < 10);
+    MUSIC.setFast(G.state === "play" && !!currentMode().timer && G.time < 10);
     cv.style.cursor = G.state === "play" && ptr.type === "mouse" ? "none" : "default";
   }
   function frame(now) {
@@ -5215,12 +5294,15 @@ body{
   function startGame() {
     SND.unlock();
     SND.start();
+    G.mode = REPLAY ? REPLAY.mode : settings.mode;
     const lv0 = REPLAY ? REPLAY.lv : 1, mode = currentMode();
-    Object.assign(G, { lv: lv0, score: 0, cows: 0, time: mode.timer.start, streak: 0, bestStreak: 0, fastest: null, radar: mode.radar.start, misses: 0, levelT: 0, usedRadar: false, paused: false, lastTick: 99, nudged: false });
+    Object.assign(G, { lv: lv0, score: 0, cows: 0, time: mode.timer ? mode.timer.start : 0, streak: 0, bestStreak: 0, fastest: null, radar: mode.radar.start, misses: 0, levelT: 0, usedRadar: false, paused: false, lastTick: 99, nudged: false });
     $("#title").hidden = true;
     $("#over").hidden = true;
     $("#pause").hidden = true;
     $("#board").hidden = true;
+    $("#quitBtn").textContent = mode.timer ? "Aufgeben" : "Beenden";
+    MUSIC.setCalm(!mode.timer);
     MUSIC.play();
     G.state = "trans";
     runTransition(() => {
@@ -5249,8 +5331,11 @@ body{
     live.marks = [];
     live.iris = null;
     live.radar = null;
-    const rec = loadRecord(currentMode().records);
-    if (REPLAY) $("#record").textContent = `Wiederholung von Szene ${REPLAY.lv}-${REPLAY.seed}. Zählt nicht für Rekord und Bestenliste.`;
+    G.mode = REPLAY ? REPLAY.mode : settings.mode;
+    MUSIC.setCalm(false);
+    showModeChoice();
+    const rec = loadRecord(classic.records);
+    if (REPLAY) $("#record").textContent = `Wiederholung von Szene ${sceneId({ ...REPLAY })}. Zählt nicht für Rekord und Bestenliste.`;
     else $("#record").innerHTML = rec.score > 0 ? `Dein Rekord <b>${fmtInt(rec.score)} Punkte</b> <b>${rec.cows} ${rec.cows === 1 ? "Kuh" : "Kühe"}</b>` : "Noch kein Rekord. Zeit, das zu ändern.";
     $("#title").hidden = false;
   }
@@ -5285,8 +5370,7 @@ body{
     SND.fanfare(G.streak);
     if (live.scene.golden) SND.gold();
     const rating = live.scene.golden ? "Goldkuh!" : RATINGS.find(([lim]) => secs < lim)[1];
-    const parts = [`+${fmtInt(pts)} Punkte`, `+${bonus} s`, `${fmt1(secs)} s`];
-    if (mult > 1) parts.splice(1, 0, `Serie ×${fmt1(mult).replace(",0", "")}`);
+    const parts = [pts != null && `+${fmtInt(pts)} Punkte`, mult > 1 && `Serie ×${fmt1(mult).replace(",0", "")}`, bonus != null && `+${bonus} s`, `${fmt1(secs)} s`].filter(Boolean);
     if (extraRadar) parts.push("+1 Radar");
     praise(rating, parts.join(" · "), live.scene.golden);
     els.timer.classList.add("gain");
@@ -5298,7 +5382,7 @@ body{
     const { penalty } = currentMode().miss(G);
     live.shake = 0.3;
     live.marks.push({ x, y, t0: live.T });
-    floatText(x, y - 24, `−${penalty} s`, "#ff5a4e", clamp(U * 0.48, 18, 28), 0.9);
+    if (penalty) floatText(x, y - 24, `−${penalty} s`, "#ff5a4e", clamp(U * 0.48, 18, 28), 0.9);
     let msg;
     if (ent) {
       const m = TYPES[ent.type].msg;
@@ -5311,23 +5395,26 @@ body{
       SND.bonk();
     }
     say(msg, x, y);
-    els.timer.classList.add("flash");
-    setTimeout(() => els.timer.classList.remove("flash"), 300);
+    if (penalty) {
+      els.timer.classList.add("flash");
+      setTimeout(() => els.timer.classList.remove("flash"), 300);
+    }
   }
   function timeUp() {
+    const timed = !!currentMode().timer;
     G.state = "reveal";
     G.time = 0;
     updateHud();
     MUSIC.stop();
-    SND.womp();
+    if (timed) SND.womp();
     const cow = live.scene.cow;
     cow.hopT = live.T + 0.4;
     cow.hopN = 2;
-    live.iris = { t0: live.T, r: Math.max(cow.s * 1.05, 60), lost: true };
+    live.iris = { t0: live.T, r: Math.max(cow.s * 1.05, 60), lost: timed };
     after(2.7, showOver);
   }
   function loadLevel(lv, seed) {
-    live.scene = levelScene(lv, live.scene && live.scene.world, seed, currentMode().plan);
+    live.scene = levelScene(lv, live.scene && live.scene.world, seed, currentMode());
     paintBg(live.scene);
     live.fx = [];
     live.texts = [];
@@ -5487,6 +5574,7 @@ body{
     return {
       levelScene,
       genScene,
+      MODES,
       entBox,
       resize,
       HUD_TOP,
@@ -5518,6 +5606,10 @@ body{
       },
       startGame,
       useRadar,
+      quit: quitRun,
+      setMode(id) {
+        saveSettings({ mode: id });
+      },
       advance(sec, dt = 1 / 60) {
         for (let i = Math.round(sec / dt); i > 0; i--) if (!G.paused) update(dt);
       },

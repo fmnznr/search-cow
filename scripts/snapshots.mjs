@@ -90,17 +90,19 @@ for (const img of IMAGES) {
 }
 
 /* ---------- runs ---------- */
-// Steps: wait (until playable), find after s seconds, miss, radar, out (let the clock run down).
+// Steps: wait (until playable), find after s seconds, miss, radar, out (let the clock run down), quit (end from the pause menu).
 const RUNS = {
   desktop: { viewport: { width: 1366, height: 768 }, pointer: 'mouse', steps: ['find 2', 'find 0.5', 'miss', 'find 1', 'radar', 'find 4', 'miss', 'miss', 'miss', 'find 1', 'find 7', 'find 0.3', 'out'] },
   phone: { viewport: { width: 390, height: 844 }, pointer: 'touch', steps: ['find 1.5', 'miss', 'find 3', 'radar', 'find 2', 'find 9', 'out'] },
-  idle: { viewport: { width: 800, height: 600 }, pointer: 'mouse', steps: ['out'] }
+  idle: { viewport: { width: 800, height: 600 }, pointer: 'mouse', steps: ['out'] },
+  chill: { viewport: { width: 390, height: 844 }, pointer: 'touch', mode: 'chill', steps: ['find 3', 'miss', 'radar', 'find 5', 'find 1', 'find 20', 'quit'] }
 };
 const runs = {};
 for (const [name, run] of Object.entries(RUNS)) {
   const page = await open(run.viewport, '&clock=manual');
-  runs[name] = await page.evaluate(({ steps, pointer }) => {
+  runs[name] = await page.evaluate(({ steps, pointer, mode }) => {
     const K = window.__WDK__, log = [];
+    if (mode) K.setMode(mode);
     const until = (cond, max = 30) => { for (let t = 0; t < max && !cond(); t += .05) K.advance(.05); };
     const playable = () => until(() => K.state().state === 'play');
     K.startGame(); playable(); log.push(['start', K.state()]);
@@ -110,6 +112,7 @@ for (const [name, run] of Object.entries(RUNS)) {
       else if (kind === 'miss') { const [x, y] = K.cowCenter(); K.guess(x > K.W / 2 ? K.W * .08 : K.W * .92, Math.min(y, K.H * .9), pointer); log.push([step, K.state()]); }
       else if (kind === 'radar') { K.useRadar(); log.push([step, K.state()]); }
       else if (kind === 'out') { until(() => K.state().state === 'over', 400); log.push([step, K.state()]); }
+      else if (kind === 'quit') { K.quit(); until(() => K.state().state === 'over'); log.push([step, K.state()]); }
     }
     return log;
   }, run);

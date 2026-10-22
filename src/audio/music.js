@@ -3,7 +3,7 @@ import { saveSettings, settings } from '../store/settings.js';
 import { SND } from './sfx.js';
 
 export const MUSIC = (() => {
-  let on = true, armed = false, playing = false, gain = null, filt = null, noise = null, nextT = 0, step = 0, iv = 0, mode = 'weide', fast = false;
+  let on = true, armed = false, playing = false, gain = null, filt = null, noise = null, nextT = 0, step = 0, iv = 0, mode = 'weide', fast = false, calm = false;
   on = settings.music;
   const VOL = .16;
   // 8 bars of 8ths, offsets in semitones above the melody root; null = rest
@@ -50,7 +50,7 @@ export const MUSIC = (() => {
   }
   function tick() {
     const a = ensure(); if (!a || !playing) return;
-    const st = STYLE[mode] || STYLE.weide, dt = 60 / (st.bpm * (fast ? 1.14 : 1)) / 2;
+    const st = STYLE[mode] || STYLE.weide, dt = 60 / (st.bpm * (fast ? 1.14 : 1) * (calm ? .88 : 1)) / 2;
     if (nextT < a.currentTime) nextT = a.currentTime + .06;
     while (nextT < a.currentTime + .22) { playStep(a, step, nextT); nextT += dt; step = (step + 1) % 128; }
   }
@@ -70,6 +70,8 @@ export const MUSIC = (() => {
       if (filt && SND.ctx()) filt.frequency.setTargetAtTime((STYLE[w] && STYLE[w].lp) || 14000, SND.ctx().currentTime, .2);
     },
     setFast(f) { fast = f; },
+    // Chill mode plays the same music a bit slower.
+    setCalm(c) { calm = c; },
     arm() { armed = true; },
     duck(sec) {
       if (!gain || !playing) return; const a = SND.ctx(); if (!a) return; const t = a.currentTime;

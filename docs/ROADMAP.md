@@ -238,6 +238,8 @@ export default {
 
 ### 2.5 Chill-Modus
 
+**Umgesetzt (Teil 1):** `src/modes/chill.js`: keine Uhr, keine Punkte, Radar unbegrenzt (∞), Fehlklicks ohne Strafe, alle Welten und Modifikatoren (höchstens einer, ab Level 4), Dichte gedeckelt, Goldkuh 20 %. Modus-Wahl „Klassisch / Chill“ auf dem Startbildschirm (gemerkt in `wdk-settings`), eigener Einleitungstext, HUD ohne Punkte und Uhr, „Beenden“ statt „Aufgeben“, Endbildschirm „Feierabend“ ohne Punkte und Rekord, Musik etwas langsamer. Szenen-Kennungen im Chill-Modus mit „c“ davor (`?szene=c5-123`). Fairness-Test prüft beide Modi, neue Spielrunde „chill“ in den Schnappschüssen, 2 Unit-Tests. **Offen (Teil 2):** Kuh-Album.
+
 Erster neuer Nutzer des Regelwerks – bewusst einfach, damit er die Schnittstelle prüft.
 
 - Keine Uhr, keine Punkte, kein Druck; endlos, ruhigere Musik.

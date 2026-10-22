@@ -1,4 +1,5 @@
 /* Layout: full-bleed canvas Wimmelbild; sticker-cut HUD (ink outline + hard offset shadow) floats on top; Holstein spots are the brand pattern. Single deliberate look in both host themes. */
+[hidden]{display:none!important}
 :root{
   --ink:#211b26;
   --milk:#fffdf8;
@@ -195,6 +196,11 @@ body{
 .tog[aria-pressed="false"]{background:var(--track)}
 .tog:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
 .tog.app{background:var(--bell)}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mode{display:grid;gap:2px;text-align:left;padding:9px 12px;border:3px solid var(--ink);border-radius:16px;background:var(--milk);color:var(--ink);cursor:pointer;font:400 1.05rem/1.1 var(--display);box-shadow:3px 3px 0 var(--ink)}
+.mode small{font:600 .78rem/1.25 var(--body);opacity:.8}
+.mode[aria-checked="true"]{background:var(--snout)}
+.mode:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
 .volumes{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
 .volumes label{display:grid;gap:4px;font:700 .82rem/1.2 var(--body)}
 .volumes input{width:100%;margin:0;accent-color:var(--snout-deep)}
@@ -244,6 +250,9 @@ body{
   .radar{padding:7px 9px 7px 8px}
 }
 @media (max-width:380px){.chip.score small{display:none}}
+/* Low screens (laptops, phones in landscape): smaller logo and tighter card so the title card fits without scrolling. */
+@media (max-height:820px){.logo{font-size:clamp(2.6rem,8.5vh,5.4rem)}#title .card{gap:12px}}
+@media (max-height:700px){.mode small{display:none}}
 @media (prefers-reduced-motion:reduce){
   .logo .q,.radar.nudge,.timer.low .clock{animation:none}
 }

@@ -4,7 +4,11 @@ import { MODS } from '../content/catalog.js';
 import { G, live } from '../game/state.js';
 import { currentMode } from '../modes/index.js';
 
-export function showGameUi(on) { els.hud.hidden = !on; els.controls.hidden = !on; }
+export function showGameUi(on) {
+  els.hud.hidden = !on; els.controls.hidden = !on;
+  const hud = currentMode().hud || {};
+  els.score.parentElement.hidden = hud.score === false; els.timer.hidden = hud.timer === false;
+}
 
 export const els = { hud: $('#hud'), controls: $('#controls'), score: $('#score'), secs: $('#secs'), barFill: $('#barFill'), cows: $('#cows'), timer: $('#timer'), radarBtn: $('#radarBtn'), radarCount: $('#radarCount'), lvl: $('#lvlPill'), modPills: $('#modPills'), combo: $('#combo') };
 const hudCache = {};
@@ -13,10 +17,10 @@ export function updateHud() {
   setText(els.score, 'score', fmtInt(G.score));
   setText(els.cows, 'cows', String(G.cows));
   setText(els.secs, 'secs', String(Math.max(0, Math.ceil(G.time))));
-  const f = clamp(G.time / currentMode().timer.full, 0, 1).toFixed(3);
+  const timer = currentMode().timer, f = timer ? clamp(G.time / timer.full, 0, 1).toFixed(3) : '1.000';
   if (hudCache.bar !== f) { hudCache.bar = f; els.barFill.style.transform = `scaleX(${f})`; }
   els.timer.classList.toggle('low', G.time < 10 && G.state === 'play');
-  setText(els.radarCount, 'radar', String(G.radar));
+  setText(els.radarCount, 'radar', G.radar === Infinity ? '∞' : String(G.radar));
   els.radarBtn.disabled = G.radar <= 0 || G.state !== 'play';
   if (G.streak >= 2) { els.combo.hidden = false; setText(els.combo, 'combo', `Serie ×${fmt1(currentMode().mult(G)).replace(',0', '')}`); } else els.combo.hidden = true;
 }

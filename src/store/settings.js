@@ -1,6 +1,6 @@
 // Player settings in one versioned localStorage entry. Older separate keys are taken over once.
 const KEY = 'wdk-settings', VERSION = 1;
-const DEFAULTS = { v: VERSION, sound: true, music: true, sfxVolume: 1, musicVolume: 1 };
+const DEFAULTS = { v: VERSION, sound: true, music: true, sfxVolume: 1, musicVolume: 1, mode: 'classic' };
 
 function load() {
   try {

@@ -11,7 +11,7 @@ const load = async init => { globalThis.localStorage = fakeStorage(init); return
 
 test('defaults without anything stored', async () => {
   const { settings } = await load({});
-  assert.deepEqual(settings, { v: 1, sound: true, music: true, sfxVolume: 1, musicVolume: 1 });
+  assert.deepEqual(settings, { v: 1, sound: true, music: true, sfxVolume: 1, musicVolume: 1, mode: 'classic' });
 });
 
 test('takes over the old on/off keys and drops them on the first save', async () => {
@@ -19,7 +19,7 @@ test('takes over the old on/off keys and drops them on the first save', async ()
   assert.equal(settings.sound, true); assert.equal(settings.music, false);
   saveSettings({ musicVolume: .4 });
   const stored = globalThis.localStorage.dump();
-  assert.deepEqual(JSON.parse(stored['wdk-settings']), { v: 1, sound: true, music: false, sfxVolume: 1, musicVolume: .4 });
+  assert.deepEqual(JSON.parse(stored['wdk-settings']), { v: 1, sound: true, music: false, sfxVolume: 1, musicVolume: .4, mode: 'classic' });
   assert.equal(stored['wdk-music'], undefined);
 });
 
