@@ -6,7 +6,7 @@ import { TYPES } from '../content/entities/rig.js';
 import { WORLDS } from '../content/worlds.js';
 import { classic } from '../modes/classic.js';
 
-function setPos(e, nx, ny, sc) {
+export function setPos(e, nx, ny, sc) {
   e.nx = nx; e.ny = ny;
   if (sc.wd.ground) e.p = .5 + .65 * clamp((ny - sc.hy) / (1 - sc.hy), 0, 1.1);
   else if (!e.p) e.p = R(.75, 1.1);
@@ -77,23 +77,35 @@ function buildScene(lv, seed, opts) {
   if (!plan.mods.has('tiny') && lv > 6) cow.k *= clamp(1 - (lv - 6) * .025, .78, 1);
   const top = opts.title ? 30 : HUD_TOP() + 6;
   const lo = wd.ground ? sc.hy + .08 : (top + 50) / H, hi = wd.ground ? .97 : .84;
-  let placed = false;
-  for (let i = 0; i < 400; i++) {
-    let nx = R(.05, .95), ny = R(lo, hi);
-    if (opts.title) { if (W > 700) nx = R(.62, .92); else ny = R(lo, Math.min(hi, .52)); }
-    setPos(cow, nx, ny, sc);
-    const b = entBox(cow, 0);
-    if (b[0] < 8 || b[2] > W - 8 || b[1] < top || b[3] > H - 8) continue;
-    if (!opts.title && b[2] > W - 220 && b[3] > H - 100) continue;
-    // On phones the back rows shrink the cow to a few pixels; keep it where it can still be seen.
-    if (!opts.title && Math.min(b[2] - b[0], b[3] - b[1]) < (plan.mods.has('tiny') ? COW_MIN_TINY : COW_MIN)) continue;
-    placed = true; break;
+  // Tries spots until the cow is inside the view, clear of HUD and radar button, big enough and away from the cows in avoid.
+  const place = (c, avoid = []) => {
+    for (let i = 0; i < 400; i++) {
+      let nx = R(.05, .95), ny = R(lo, hi);
+      if (opts.title) { if (W > 700) nx = R(.62, .92); else ny = R(lo, Math.min(hi, .52)); }
+      setPos(c, nx, ny, sc);
+      const b = entBox(c, 0);
+      if (b[0] < 8 || b[2] > W - 8 || b[1] < top || b[3] > H - 8) continue;
+      if (!opts.title && b[2] > W - 220 && b[3] > H - 100) continue;
+      // On phones the back rows shrink the cow to a few pixels; keep it where it can still be seen.
+      if (!opts.title && Math.min(b[2] - b[0], b[3] - b[1]) < (plan.mods.has('tiny') ? COW_MIN_TINY : COW_MIN)) continue;
+      if (avoid.some(o => overlap(entBox(o, 0), b))) continue;
+      return true;
+    }
+    return false;
+  };
+  sc.cowPlaced = place(cow);
+  sc.cows = [cow];
+  // Boss levels: the herd hides two more cows to find, the wanted poster adds lookalikes without the accessory.
+  sc.boss = plan.boss || null;
+  const extra = [];
+  if (sc.boss === 'herd') for (let i = 0; i < 2; i++) { const c = makeEnt('cow', .5, .6, sc); sc.cowPlaced = place(c, [cow, ...extra]) && sc.cowPlaced; extra.push(c); sc.cows.push(c); }
+  if (sc.boss === 'wanted') for (let i = 0; i < 5; i++) { const c = makeEnt('cow', .5, .6, sc); c.acc = null; c.decoy = true; place(c, [cow]); extra.push(c); }
+  for (const c of sc.cows) {
+    const cb = entBox(c, 0), cw = cb[2] - cb[0], ch = cb[3] - cb[1];
+    const core = [cb[0] + cw * .18, cb[1] + ch * .12, cb[2] - cw * .18, cb[3] - ch * .08];
+    sc.ents = sc.ents.filter(e => !(e.y >= c.y - 2 && overlap(entBox(e, 0), core)) && !(e.float && overlap(entBox(e, 0), core)));
   }
-  sc.cowPlaced = placed;
-  const cb = entBox(cow, 0), cw = cb[2] - cb[0], ch = cb[3] - cb[1];
-  const core = [cb[0] + cw * .18, cb[1] + ch * .12, cb[2] - cw * .18, cb[3] - ch * .08];
-  sc.ents = sc.ents.filter(e => !(e.y >= cow.y - 2 && overlap(entBox(e, 0), core)) && !(e.float && overlap(entBox(e, 0), core)));
-  sc.ents.push(cow); sc.cow = cow;
+  sc.ents.push(cow, ...extra); sc.cow = cow;
   sc.ents.sort((a, b) => a.y - b.y);
   return sc;
 }

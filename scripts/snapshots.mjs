@@ -96,11 +96,15 @@ const RUNS = {
   phone: { viewport: { width: 390, height: 844 }, pointer: 'touch', steps: ['find 1.5', 'miss', 'find 3', 'radar', 'find 2', 'find 9', 'out'] },
   idle: { viewport: { width: 800, height: 600 }, pointer: 'mouse', steps: ['out'] },
   challenge: { viewport: { width: 1366, height: 768 }, pointer: 'mouse', mode: 'challenge', steps: ['find 1.5', 'find 4', 'miss', 'miss', 'miss', 'find 1', 'radar', 'find 2', 'out'] },
+  // Boss levels of the challenge mode, entered through a replay id.
+  'boss-herd': { viewport: { width: 1366, height: 768 }, pointer: 'mouse', query: '&szene=h5-11', steps: ['find 1', 'miss', 'find 2', 'find 1.5'] },
+  'boss-flee': { viewport: { width: 1366, height: 768 }, pointer: 'mouse', query: '&szene=h10-22', steps: ['miss', 'miss', 'find 2'] },
+  'boss-wanted': { viewport: { width: 390, height: 844 }, pointer: 'touch', query: '&szene=h15-33', steps: ['miss', 'find 3'] },
   chill: { viewport: { width: 390, height: 844 }, pointer: 'touch', mode: 'chill', steps: ['find 3', 'miss', 'radar', 'find 5', 'find 1', 'find 20', 'quit'] }
 };
 const runs = {};
 for (const [name, run] of Object.entries(RUNS)) {
-  const page = await open(run.viewport, '&clock=manual');
+  const page = await open(run.viewport, '&clock=manual' + (run.query || ''));
   runs[name] = await page.evaluate(({ steps, pointer, mode }) => {
     const K = window.__WDK__, log = [];
     if (mode) K.setMode(mode);

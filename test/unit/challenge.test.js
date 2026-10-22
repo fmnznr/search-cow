@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { withSeed } from '../../src/core/rng.js';
 import { challenge } from '../../src/modes/challenge.js';
 import { classic } from '../../src/modes/classic.js';
 
@@ -42,4 +43,13 @@ test('skill pays more than in classic', () => {
   const ratioClassic = play(classic, strong) / play(classic, sloppy);
   const ratioChallenge = play(challenge, strong) / play(challenge, sloppy);
   assert.ok(ratioChallenge > ratioClassic * 2, `challenge ${ratioChallenge.toFixed(1)} vs classic ${ratioClassic.toFixed(1)}`);
+});
+
+test('every fifth level is a boss, in a fixed order, without modifiers or gold', () => {
+  const plan = lv => withSeed(lv, () => challenge.plan(lv));
+  assert.deepEqual([5, 10, 15, 20, 25].map(lv => plan(lv).boss), ['herd', 'flee', 'wanted', 'herd', 'flee']);
+  for (const lv of [5, 10, 15]) { assert.equal(plan(lv).mods.size, 0); assert.equal(plan(lv).golden, false); }
+  assert.equal(plan(4).boss, undefined);
+  // Same world sequence as classic, so worlds still rotate.
+  assert.equal(plan(5).world, withSeed(5, () => classic.plan(5)).world);
 });

@@ -29,24 +29,29 @@ for (const [w, h] of VIEWPORTS) {
       let prev = null;
       for (let n = 0; n < SEEDS; n++) {
         const sc = K.levelScene(lv, prev, null, mode); prev = sc.world; out.scenes++;
-        const b = K.entBox(sc.cow, 0), ui = K.uiRects(sc), why = [];
+        const ui = K.uiRects(sc), why = [];
         const fail = (kind, msg = kind) => { why.push(msg); out.kinds[kind] = (out.kinds[kind] || 0) + 1; };
-        if (!sc.cowPlaced) fail('kein Platz');
-        if (b[0] < L.edge || b[2] > W - L.edge || b[3] > H - L.edge) fail('Rand');
-        if (b[1] < ui.hudBottom) fail('HUD', `unter dem HUD (${Math.round(ui.hudBottom - b[1])} px)`);
-        if (inter(b, ui.controls)) fail('Radar');
-        // Share of the cow's box covered by figures drawn after it, sampled on a grid.
-        const front = sc.ents.slice(sc.ents.indexOf(sc.cow) + 1).map(e => K.entBox(e, 0)).filter(o => inter(o, b));
-        let hit = 0; const G = 24;
-        for (let i = 0; i < G; i++) for (let j = 0; j < G; j++) {
-          const x = b[0] + (i + .5) / G * (b[2] - b[0]), y = b[1] + (j + .5) / G * (b[3] - b[1]);
-          if (front.some(o => x >= o[0] && x <= o[2] && y >= o[1] && y <= o[3])) hit++;
+        // Boss levels can hide more than one cow; each must be fair on its own.
+        for (const cow of sc.cows) {
+          const b = K.entBox(cow, 0);
+          if (!sc.cowPlaced) fail('kein Platz');
+          if (b[0] < L.edge || b[2] > W - L.edge || b[3] > H - L.edge) fail('Rand');
+          if (b[1] < ui.hudBottom) fail('HUD', `unter dem HUD (${Math.round(ui.hudBottom - b[1])} px)`);
+          if (inter(b, ui.controls)) fail('Radar');
+          // Share of the cow's box covered by figures drawn after it, sampled on a grid.
+          const front = sc.ents.slice(sc.ents.indexOf(cow) + 1).map(e => K.entBox(e, 0)).filter(o => inter(o, b));
+          let hit = 0; const G = 24;
+          for (let i = 0; i < G; i++) for (let j = 0; j < G; j++) {
+            const x = b[0] + (i + .5) / G * (b[2] - b[0]), y = b[1] + (j + .5) / G * (b[3] - b[1]);
+            if (front.some(o => x >= o[0] && x <= o[2] && y >= o[1] && y <= o[3])) hit++;
+          }
+          const covered = hit / (G * G), side = Math.min(b[2] - b[0], b[3] - b[1]);
+          out.maxCovered = Math.max(out.maxCovered, covered); out.minSide = Math.min(out.minSide, side);
+          if (covered > L.covered) fail('verdeckt', `${Math.round(covered * 100)} % verdeckt`);
+          if (side < (sc.mods.has('tiny') ? L.minSideTiny : L.minSide)) fail('zu klein', `nur ${Math.round(side)} px groß`);
+          if (sc.cows.some(o => o !== cow && inter(K.entBox(o, 0), b))) fail('Kühe überlappen');
         }
-        const covered = hit / (G * G), side = Math.min(b[2] - b[0], b[3] - b[1]);
-        out.maxCovered = Math.max(out.maxCovered, covered); out.minSide = Math.min(out.minSide, side);
-        if (covered > L.covered) fail('verdeckt', `${Math.round(covered * 100)} % verdeckt`);
-        if (side < (sc.mods.has('tiny') ? L.minSideTiny : L.minSide)) fail('zu klein', `nur ${Math.round(side)} px groß`);
-        if (why.length) out.fails.push({ scene: (mode.id === 'chill' ? 'c' : '') + `${lv}-${sc.seed}`, world: sc.world, mods: [...sc.mods].join('+') || '-', why: why.join(', ') });
+        if (why.length) out.fails.push({ scene: ({ chill: 'c', challenge: 'h' }[mode.id] || '') + `${lv}-${sc.seed}`, world: sc.world, mods: [...sc.mods].join('+') || '-', why: why.join(', ') });
       }
     }
     return out;

@@ -1,6 +1,7 @@
 // "Challenge": skill pays, guessing costs. Same levels as classic, but misses in a row get dearer,
 // fast clean finds earn medals and multipliers grow higher. No DOM in here.
 import { clamp } from '../core/util.js';
+import { BOSS_ORDER } from '../content/catalog.js';
 import { classic } from './classic.js';
 
 export const MEDALS = { gold: 'Gold', silver: 'Silber', bronze: 'Bronze' };
@@ -12,7 +13,12 @@ export const challenge = {
   penalties: [3, 5, 8],
   radar: { start: 2, bonusEvery: 5 },
   records: 'wdk-record-challenge', leaderboard: false,
-  plan: classic.plan,
+  // Classic levels, but every fifth one is a boss: no modifiers, no golden cow.
+  plan(lv) {
+    const p = classic.plan(lv);
+    if (lv % 5 === 0) Object.assign(p, { boss: BOSS_ORDER[(lv / 5 - 1) % BOSS_ORDER.length], mods: new Set(), golden: false });
+    return p;
+  },
   mult(run) { return 1 + .75 * Math.min(run.streak - 1, 12); },
   // Gold: under 2.5 s, no miss, no radar. Silver: under 5 s with at most one miss. Bronze: found.
   medal({ secs, misses, radar }) {

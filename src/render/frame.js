@@ -8,7 +8,7 @@ import { drawWorld } from './world.js';
 import { bubble, canvasText, drawParticle } from './fx.js';
 import { drawTrans } from './transition.js';
 
-export function cowCenter(t = live.T) { const b = entBox(live.scene.cow, t); return [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2]; }
+export function cowCenter(t = live.T, cow = live.scene.cow) { const b = entBox(cow, t); return [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2]; }
 function lensR() { return clamp(U * 1.7, 62, 100); }
 function nightR() { return clamp(Math.min(W, H) * .16, 85, 150); }
 

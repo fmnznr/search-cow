@@ -1,6 +1,6 @@
 // HUD during play and the level banner.
 import { $, clamp, fmt1, fmtInt } from '../core/util.js';
-import { MODS } from '../content/catalog.js';
+import { BOSSES, MODS, WANTED } from '../content/catalog.js';
 import { G, live } from '../game/state.js';
 import { currentMode } from '../modes/index.js';
 
@@ -25,14 +25,15 @@ export function updateHud() {
   if (G.streak >= 2) { els.combo.hidden = false; setText(els.combo, 'combo', `Serie ×${fmt1(currentMode().mult(G)).replace(',0', '')}`); } else els.combo.hidden = true;
 }
 export function updateLevelPills() {
-  els.lvl.textContent = `Level ${live.scene.lv} · ${live.scene.wd.name}`;
+  els.lvl.textContent = `Level ${live.scene.lv} · ${live.scene.boss ? `Boss: ${BOSSES[live.scene.boss].name}` : live.scene.wd.name}`;
   els.modPills.innerHTML = '';
   for (const m of live.scene.mods) { const s = document.createElement('span'); s.className = 'pill mod'; s.textContent = MODS[m][0]; els.modPills.appendChild(s); }
 }
 export function showBanner() {
-  $('#bnLevel').textContent = `Level ${live.scene.lv}`;
-  $('#bnName').textContent = live.scene.wd.name + (live.scene.mods.has('night') ? ' bei Nacht' : '');
-  $('#bnTag').textContent = live.scene.lv === 1 ? 'Finde die Kuh. Klick drauf. So einfach ist das. Erstmal.' : live.scene.wd.tag;
+  const sc = live.scene, boss = sc.boss && BOSSES[sc.boss];
+  $('#bnLevel').textContent = boss ? `Level ${sc.lv} · Boss · ${sc.wd.name}` : `Level ${sc.lv}`;
+  $('#bnName').textContent = boss ? boss.name : sc.wd.name + (sc.mods.has('night') ? ' bei Nacht' : '');
+  $('#bnTag').textContent = sc.boss === 'wanted' ? `Lauter Doppelgängerinnen. Gesucht ist nur die Kuh ${WANTED[sc.world]}.` : boss ? boss.tag : sc.lv === 1 ? 'Finde die Kuh. Klick drauf. So einfach ist das. Erstmal.' : sc.wd.tag;
   const m = $('#bnMods'); m.innerHTML = '';
   for (const k of live.scene.mods) { const d = document.createElement('div'); d.innerHTML = `<span class="pill mod"></span><span></span>`; d.children[0].textContent = MODS[k][0]; d.children[1].textContent = MODS[k][1]; m.appendChild(d); }
   const bn = $('#banner'); bn.hidden = false; const card = bn.firstElementChild; card.style.animation = 'none'; void card.offsetWidth; card.style.animation = '';
