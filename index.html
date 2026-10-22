@@ -179,6 +179,7 @@ body{
 .btn.alt{background:var(--milk)}
 .btn.small{font-size:1rem;padding:11px 16px}
 .fine{margin:0;font:600 .82rem/1.4 var(--body);opacity:.75}
+.scene-id{opacity:.5;font-variant-numeric:tabular-nums;user-select:all}
 .record{margin:0;font:700 .9rem/1.3 var(--body);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .record b{font:var(--num);font-size:.95rem;background:var(--ink);color:var(--milk);padding:5px 9px;border-radius:999px;font-variant-numeric:tabular-nums}
 :focus-visible{outline:3px solid var(--bell);outline-offset:3px}
@@ -336,6 +337,7 @@ body{
       <button class="btn" id="resumeBtn">Weiter suchen</button>
       <button class="btn alt small" id="quitBtn">Aufgeben</button>
     </div>
+    <p class="fine scene-id" id="pauseScene"></p>
     <div class="toggles">
       <button class="tog" id="pauseSoundBtn" aria-pressed="true">Ton: an</button>
       <button class="tog" id="pauseMusicBtn" aria-pressed="true">Musik: an</button>
@@ -369,6 +371,7 @@ body{
       <button class="btn alt small" id="overBoardBtn">Bestenliste</button>
       <button class="btn alt small" id="menuBtn">Zum Menü</button>
     </div>
+    <p class="fine scene-id" id="overScene"></p>
   </div>
 </section>
 
@@ -395,9 +398,11 @@ body{
    ================================================================ */
 const $ = s => document.querySelector(s);
 const TAU = Math.PI * 2;
-const R = (a, b) => a + Math.random() * (b - a);
-const RI = (a, b) => Math.floor(a + Math.random() * (b - a + 1));
-const pick = a => a[Math.floor(Math.random() * a.length)];
+// Scene generation draws from rnd so a seed reproduces a level; effects and gameplay outside genScene use Math.random.
+let rnd = Math.random;
+const R = (a, b) => a + rnd() * (b - a);
+const RI = (a, b) => Math.floor(a + rnd() * (b - a + 1));
+const pick = a => a[Math.floor(rnd() * a.length)];
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
 const easeOut = x => 1 - Math.pow(1 - x, 3);
 const easeBack = x => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
@@ -405,7 +410,7 @@ const RM = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').m
 const COARSE = window.matchMedia && matchMedia('(pointer: coarse)').matches;
 const fmtInt = n => Math.round(n).toLocaleString('de-DE');
 const fmt1 = n => n.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-function wpick(list) { let s = 0; for (const [, w] of list) s += w; let r = Math.random() * s; for (const [k, w] of list) { r -= w; if (r <= 0) return k; } return list[0][0]; }
+function wpick(list) { let s = 0; for (const [, w] of list) s += w; let r = rnd() * s; for (const [k, w] of list) { r -= w; if (r <= 0) return k; } return list[0][0]; }
 function mulberry(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 
 const INK = '#211b26', MILK = '#fffdf8', PINK = '#ffb0c2', HORN = '#f4e7c8', GOLD = '#ffc21a';
@@ -425,7 +430,7 @@ function RR(c, x, y, w, h, r) {
   c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath();
 }
 function fs(c, fill, lw) { if (fill) { c.fillStyle = fill; c.fill(); } if (lw) { c.lineWidth = lw; c.strokeStyle = INK; c.stroke(); } }
-function mkBlob(n, irr) { const p = []; for (let i = 0; i < n; i++) { const a = (i + R(-.25, .25)) / n * TAU, r = 1 - irr / 2 + Math.random() * irr; p.push([Math.cos(a) * r, Math.sin(a) * r]); } return p; }
+function mkBlob(n, irr) { const p = []; for (let i = 0; i < n; i++) { const a = (i + R(-.25, .25)) / n * TAU, r = 1 - irr / 2 + rnd() * irr; p.push([Math.cos(a) * r, Math.sin(a) * r]); } return p; }
 function blobPath(c, p, x, y, rx, ry) {
   c.beginPath(); const n = p.length;
   for (let i = 0; i <= n; i++) {
@@ -819,8 +824,8 @@ def('cow', {
   k: 1.25, box: [-.6, -.97, .82, .02], walk: true, snd: 'moo', oy: .5, rotR: .3,
   init(e, sc) {
     e.col = MILK; e.spotC = INK; e.spots = mkSpots(RI(3, 5), .14, .24);
-    e.headSpot = Math.random() < .6 ? { p: mkBlob(7, .4), x: R(.2, .7), y: R(.1, .5) } : null;
-    e.graze = !e.float && Math.random() < .35; e.acc = sc.wd.cowAcc;
+    e.headSpot = rnd() < .6 ? { p: mkBlob(7, .4), x: R(.2, .7), y: R(.1, .5) } : null;
+    e.graze = !e.float && rnd() < .35; e.acc = sc.wd.cowAcc;
     if (sc.golden) { e.col = '#ffd34d'; e.spotC = '#c98a0b'; e.gold = true; }
   },
   draw(c, e, t) { quad(c, e, t, COW); }
@@ -885,7 +890,7 @@ const PIG = { bl: .85, bh: .5, lg: .17, lw: .12, hoof: '#c86a82', head: pigHead,
 def('pig', {
   k: .95, box: [-.5, -.84, .68, 0], walk: true, snd: 'oink',
   msg: ['Oink! Ein Schwein.', 'Schwein gehabt? Leider nein.', 'Rosa, rund, keine Kuh.'],
-  init(e) { e.col = pick(['#ffb6c6', '#f8a5b8', '#ffc4cf', '#e9a48f']); e.graze = Math.random() < .3; e.spots = Math.random() < .2 ? mkSpots(3, .1, .16) : null; e.spotC = '#c97a6a'; },
+  init(e) { e.col = pick(['#ffb6c6', '#f8a5b8', '#ffc4cf', '#e9a48f']); e.graze = rnd() < .3; e.spots = rnd() < .2 ? mkSpots(3, .1, .16) : null; e.spotC = '#c97a6a'; },
   draw(c, e, t) { quad(c, e, t, PIG); }
 });
 
@@ -911,8 +916,8 @@ def('sheep', {
   k: 1, box: [-.5, -.84, .62, 0], walk: true, snd: 'baa',
   msg: e => e.black ? 'Das schwarze Schaf der Familie. Keine Kuh.' : pick(['Mäh! Das ist ein Schaf.', 'Ein Schaf. Flauschig, aber falsch.', 'Schaf. Zählt nur beim Einschlafen.']),
   init(e) {
-    const r = Math.random(); e.black = r < .07; e.col = e.black ? '#4a4252' : r < .14 ? '#ddd5c8' : '#fbf8f2';
-    e.face = e.black ? '#211b26' : pick(['#3a3340', '#3a3340', '#f2d9c4']); e.graze = Math.random() < .3;
+    const r = rnd(); e.black = r < .07; e.col = e.black ? '#4a4252' : r < .14 ? '#ddd5c8' : '#fbf8f2';
+    e.face = e.black ? '#211b26' : pick(['#3a3340', '#3a3340', '#f2d9c4']); e.graze = rnd() < .3;
     e.puffs = []; for (let i = 0; i < 11; i++) e.puffs.push({ a: i / 11 * TAU + R(-.15, .15), r: R(.11, .145) });
   },
   draw(c, e, t) { quad(c, e, t, SHEEP); }
@@ -942,7 +947,7 @@ const HORSE = { bl: 1.05, bh: .4, lg: .55, lw: .1, hoof: INK, head: horseHead, t
 def('horse', {
   k: 1.4, box: [-.65, -1.42, .95, 0], walk: true, snd: 'neigh',
   msg: ['Ein Pferd. Wieher!', 'Pferd. Größer, schneller, keine Kuh.', 'Ein Pony. Möchte auch gefunden werden.'],
-  init(e) { e.col = pick(['#a0522d', '#7b4a2e', '#d9b38c', '#4a3b35', '#efe7dc']); e.mane = e.col === '#efe7dc' || e.col === '#d9b38c' ? '#6b4f3a' : '#2b1d14'; e.graze = Math.random() < .25; e.blaze = Math.random() < .5; },
+  init(e) { e.col = pick(['#a0522d', '#7b4a2e', '#d9b38c', '#4a3b35', '#efe7dc']); e.mane = e.col === '#efe7dc' || e.col === '#d9b38c' ? '#6b4f3a' : '#2b1d14'; e.graze = rnd() < .25; e.blaze = rnd() < .5; },
   draw(c, e, t) { quad(c, e, t, HORSE); }
 });
 
@@ -967,7 +972,7 @@ const GOAT = { bl: .72, bh: .36, lg: .33, lw: .075, hoof: INK, head: goatHead, t
 def('goat', {
   k: .95, box: [-.45, -.95, .62, 0], walk: true, snd: 'goat',
   msg: ['Meck! Eine Ziege.', 'Ziege. Auch Hörner, auch Milch, trotzdem falsch.'],
-  init(e) { e.col = pick(['#f4efe6', '#d8b48a', '#8a6b52', '#efe2cf']); e.graze = Math.random() < .3; },
+  init(e) { e.col = pick(['#f4efe6', '#d8b48a', '#8a6b52', '#efe2cf']); e.graze = rnd() < .3; },
   draw(c, e, t) { quad(c, e, t, GOAT); }
 });
 
@@ -1046,12 +1051,12 @@ def('crab', {
 function personInit(e, style) {
   e.style = style; e.skin = pick(SKIN); e.hairC = pick(HAIR); e.hair = pick(['short', 'long', 'bun', 'curly', 'bald', 'short', 'long']);
   e.shirt = pick(SHIRT); e.pants = pick(PANTS); e.shoe = pick(['#211b26', '#ffffff', '#e63946', '#3d5a80']); e.name = pick(NAMES);
-  e.wave = Math.random() < .14; e.flip = 1;
-  e.balloon = (style === 'city' || style === 'farmer' || style === 'swim') && Math.random() < .09 ? pick(BALLOON) : null;
-  e.hat = null; e.shades = false; e.top = Math.random() < .5;
-  if (style === 'farmer') { e.hat = Math.random() < .6 ? 'straw' : null; e.overall = Math.random() < .5; }
-  if (style === 'city') e.hat = Math.random() < .22 ? pick(['cap', 'beanie']) : null;
-  if (style === 'swim') { e.hat = Math.random() < .4 ? 'sun' : null; e.shades = Math.random() < .4; }
+  e.wave = rnd() < .14; e.flip = 1;
+  e.balloon = (style === 'city' || style === 'farmer' || style === 'swim') && rnd() < .09 ? pick(BALLOON) : null;
+  e.hat = null; e.shades = false; e.top = rnd() < .5;
+  if (style === 'farmer') { e.hat = rnd() < .6 ? 'straw' : null; e.overall = rnd() < .5; }
+  if (style === 'city') e.hat = rnd() < .22 ? pick(['cap', 'beanie']) : null;
+  if (style === 'swim') { e.hat = rnd() < .4 ? 'sun' : null; e.shades = rnd() < .4; }
   if (style === 'winter') { e.hat = 'beanie'; e.scarf = pick(['#e63946', '#ffd23f', '#3d6fb5', '#2a9d8f']); e.shirt = pick(['#3d6fb5', '#e63946', '#2a9d8f', '#9b5de5', '#ff9f1c']); }
   e.hatC = pick(['#e63946', '#3d6fb5', '#ffd23f', '#2a9d8f', '#f15bb5']);
 }
@@ -1170,7 +1175,7 @@ def('tree', {
   init(e) {
     e.c1 = pick(['#3fa34d', '#4fb04a', '#2f9447', '#5bbd57']);
     e.cr = [[0, -.78, .22], [-.17, -.66, .17], [.17, -.66, .17], [-.09, -.52, .16], [.1, -.53, .15], [.02, -.64, .2]].map(([x, y, r]) => [x + R(-.02, .02), y + R(-.02, .02), r * R(.9, 1.1)]);
-    e.apples = Math.random() < .35 ? Array.from({ length: 5 }, () => [R(-.22, .22), R(-.82, -.52)]) : null;
+    e.apples = rnd() < .35 ? Array.from({ length: 5 }, () => [R(-.22, .22), R(-.82, -.52)]) : null;
   },
   draw(c, e, t) {
     const s = e.s, lw = e.lw;
@@ -1187,7 +1192,7 @@ def('bush', {
   init(e, sc) {
     e.c1 = pick(['#4caf50', '#3f9e45', '#5cbf5a']);
     e.cr = [[-.25, -.2, .22], [.25, -.2, .22], [0, -.33, .26], [-.1, -.15, .2], [.12, -.14, .2]].map(([x, y, r]) => [x + R(-.03, .03), y, r * R(.9, 1.1)]);
-    e.dots = Math.random() < .6 ? Array.from({ length: 6 }, () => [R(-.35, .35), R(-.5, -.1)]) : null; e.dotC = pick(['#e63946', '#ffffff', '#ff8fab', '#9b5de5']);
+    e.dots = rnd() < .6 ? Array.from({ length: 6 }, () => [R(-.35, .35), R(-.5, -.1)]) : null; e.dotC = pick(['#e63946', '#ffffff', '#ff8fab', '#9b5de5']);
   },
   draw(c, e) {
     const s = e.s, lw = e.lw; circles(c, e.cr, s, e.c1, lw);
@@ -1319,7 +1324,7 @@ def('lamp', {
 def('car', {
   k: 1.8, box: [-.52, -.62, .52, 0], snd: 'horn',
   msg: e => e.taxi ? 'Ein Taxi. Bitte einmal zur Weide!' : pick(['Ein Auto. Parkt im Halteverbot.', 'Ein Auto. Hupt gleich.']),
-  init(e) { e.taxi = Math.random() < .3; e.col = e.taxi ? '#ffd23f' : pick(['#e63946', '#3d6fb5', '#2a9d8f', '#9b5de5', '#f4f1f8', '#ff9f1c']); },
+  init(e) { e.taxi = rnd() < .3; e.col = e.taxi ? '#ffd23f' : pick(['#e63946', '#3d6fb5', '#2a9d8f', '#9b5de5', '#f4f1f8', '#ff9f1c']); },
   draw(c, e) {
     const s = e.s, lw = e.lw;
     c.beginPath(); c.moveTo(-s * .32, -s * .3); c.lineTo(-s * .2, -s * .52); c.lineTo(s * .16, -s * .52); c.lineTo(s * .3, -s * .3); c.closePath(); fs(c, e.col, lw);
@@ -1429,7 +1434,7 @@ def('sled', {
 def('fish', {
   k: .7, box: [-.62, -.42, .45, .3], snd: 'blub', swim: true, rotR: .1,
   msg: ['Blubb. Ein Fisch.', 'Ein Fisch. Kein Rind.', 'Fisch. Schwimmt einfach weiter.'],
-  init(e) { const [a, b] = pick([['#ff8a3d', MILK], ['#4dabf7', '#ffd43b'], ['#f783ac', '#845ef7'], ['#69db7c', '#2b8a3e'], ['#ffd43b', '#4dabf7'], ['#b197fc', '#ffe066']]); e.c1 = a; e.c2 = b; e.stripes = Math.random() < .6; },
+  init(e) { const [a, b] = pick([['#ff8a3d', MILK], ['#4dabf7', '#ffd43b'], ['#f783ac', '#845ef7'], ['#69db7c', '#2b8a3e'], ['#ffd43b', '#4dabf7'], ['#b197fc', '#ffe066']]); e.c1 = a; e.c2 = b; e.stripes = rnd() < .6; },
   draw(c, e, t) {
     const s = e.s, lw = e.lw, wag = Math.sin(t * 6 + e.ph) * .25;
     c.save(); c.translate(-s * .36, 0); c.rotate(wag); c.beginPath(); c.moveTo(s * .04, 0); c.lineTo(-s * .2, -s * .2); c.quadraticCurveTo(-s * .12, 0, -s * .2, s * .2); c.closePath(); fs(c, e.c2, lw); c.restore();
@@ -1545,7 +1550,7 @@ def('chest', {
 def('alien', {
   k: .9, box: [-.36, -.62, .36, .44], snd: 'beep', rotR: .2,
   msg: ['Ein Alien. Sucht auch die Kuh.', 'Außerirdisch, aber keine Kuh.', 'Das Alien sagt: Bliep. Das heißt nein.'],
-  init(e) { e.col = pick(['#7ee081', '#ff8fd0', '#b197fc', '#66e0ff', '#ffd166']); e.three = Math.random() < .25; },
+  init(e) { e.col = pick(['#7ee081', '#ff8fd0', '#b197fc', '#66e0ff', '#ffd166']); e.three = rnd() < .25; },
   draw(c, e, t) {
     const s = e.s, lw = e.lw;
     for (const d of [-1, 1]) { c.beginPath(); c.moveTo(d * s * .08, -s * .3); c.lineTo(d * s * .16, -s * .52); c.lineWidth = Math.max(1, lw); c.strokeStyle = INK; c.stroke(); E(c, d * s * .16, -s * .54, s * .045, s * .045); fs(c, '#ff8fab', lw * .7); }
@@ -1641,7 +1646,7 @@ function groundGrad(c, W, H, hy, a, b) { const g = c.createLinearGradient(0, hy,
 function speckle(c, W, H, y0, r, n, col, size) { c.fillStyle = col; for (let i = 0; i < n; i++) { const y = y0 + r() * (H - y0), x = r() * W, p = .5 + .7 * (y - y0) / (H - y0); E(c, x, y, size * p, size * p * .7); c.fill(); } }
 function drawCloud(c, x, y, s, puffs) { c.beginPath(); for (const [px, py, pr] of puffs) { c.moveTo(x + px * s + pr * s, y + py * s); c.arc(x + px * s, y + py * s, pr * s, 0, TAU); } c.lineWidth = 2; c.strokeStyle = INK; c.stroke(); c.fillStyle = '#ffffff'; c.fill(); }
 const CLOUD = [[0, 0, .32], [-.32, .08, .22], [.32, .08, .24], [.12, -.18, .24], [-.15, -.1, .2]];
-function initClouds(sc, n, yMax) { sc.amb.clouds = Array.from({ length: n }, () => ({ x: Math.random(), y: R(.04, yMax), s: R(.7, 1.2), v: R(.004, .01) })); }
+function initClouds(sc, n, yMax) { sc.amb.clouds = Array.from({ length: n }, () => ({ x: rnd(), y: R(.04, yMax), s: R(.7, 1.2), v: R(.004, .01) })); }
 function drawClouds(c, t, sc) { for (const cl of sc.amb.clouds) { const x = ((cl.x + t * cl.v) % 1.3) * (W + U * 4) - U * 2; drawCloud(c, x, cl.y * H, U * 1.3 * cl.s, CLOUD); } }
 
 const WORLDS = {
@@ -1682,7 +1687,7 @@ const WORLDS = {
     empty: ['Nur Sand.', 'Sand. Überall Sand.', 'Da liegt nur eine Muschel.'],
     pool: [['person', 9], ['umbrella', 3], ['towel', 2], ['castle', 1.4], ['crab', 2], ['ball', 1.2], ['palm', 1], ['dalma', .6], ['costume', .5], ['cowtowel', .5]],
     twins: ['dalma', 'costume', 'cowtowel'],
-    initAmb(sc) { initClouds(sc, 3, .1); sc.amb.gulls = Array.from({ length: 3 }, () => ({ x: Math.random(), y: R(.05, .2), v: R(.02, .04), ph: R(0, 9) })); },
+    initAmb(sc) { initClouds(sc, 3, .1); sc.amb.gulls = Array.from({ length: 3 }, () => ({ x: rnd(), y: R(.05, .2), v: R(.02, .04), ph: R(0, 9) })); },
     bg(c, W, H, r, sc) {
       const hy = sc.hy * H, st = hy - H * .14;
       skyGrad(c, W, 0, st + 2, '#6ccbff', '#e2f7ff');
@@ -1743,7 +1748,7 @@ const WORLDS = {
     empty: ['Nur Schnee.', 'Schnee. Sehr weiß, sehr kalt.', 'Da ist nichts außer Schnee.'],
     pool: [['pine', 4], ['snowman', 2], ['penguin', 3], ['person', 4], ['goat', 1.2], ['sheep', 1.6], ['igloo', .5], ['sled', .8], ['dalma', .8], ['costume', .5]],
     twins: ['dalma', 'costume', 'penguin'],
-    initAmb(sc) { sc.amb.snow = Array.from({ length: 80 }, () => ({ x: Math.random(), y: Math.random(), r: R(1.2, 3.2), v: R(.03, .07), ph: R(0, 9) })); },
+    initAmb(sc) { sc.amb.snow = Array.from({ length: 80 }, () => ({ x: rnd(), y: rnd(), r: R(1.2, 3.2), v: R(.03, .07), ph: R(0, 9) })); },
     bg(c, W, H, r, sc) {
       const hy = sc.hy * H;
       skyGrad(c, W, 0, hy + 2, '#a7d6ff', '#f0faff');
@@ -1773,7 +1778,7 @@ const WORLDS = {
     empty: ['Nur Wasser.', 'Blubb. Nichts da.', 'Da schwimmt nur Plankton.'],
     pool: [['fish', 10], ['jelly', 3], ['coral', 3.5], ['weed', 3], ['octo', 1], ['turtle', 1.2], ['diver', 1.2], ['chest', .4], ['manatee', 1.4], ['cowfish', 1.4]],
     twins: ['manatee', 'cowfish'],
-    initAmb(sc) { sc.amb.bub = Array.from({ length: 40 }, () => ({ x: Math.random(), y: Math.random(), r: R(2, 6), v: R(.03, .08), ph: R(0, 9) })); },
+    initAmb(sc) { sc.amb.bub = Array.from({ length: 40 }, () => ({ x: rnd(), y: rnd(), r: R(2, 6), v: R(.03, .08), ph: R(0, 9) })); },
     bg(c, W, H, r) {
       const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#43c6db'); g.addColorStop(.55, '#1c86c2'); g.addColorStop(1, '#0d4a85'); c.fillStyle = g; c.fillRect(0, 0, W, H);
       c.fillStyle = 'rgba(255,255,255,.07)'; for (let i = 0; i < 6; i++) { const x = r() * W, w = 30 + r() * 80; c.beginPath(); c.moveTo(x, 0); c.lineTo(x + w, 0); c.lineTo(x + w * 2.5 + 80, H); c.lineTo(x + w + 40, H); c.closePath(); c.fill(); }
@@ -1792,7 +1797,7 @@ const WORLDS = {
     empty: ['Nur die Milchstraße.', 'Leeres Weltall.', 'Unendliche Weiten. Keine Kuh.'],
     pool: [['alien', 6], ['ufo', 2], ['asteroid', 4], ['planet', 1.3], ['rocket', 1], ['astro', 2], ['satellite', 1], ['laika', 1], ['spotplanet', .3]],
     twins: ['laika', 'spotplanet'],
-    initAmb(sc) { sc.amb.tw = Array.from({ length: 30 }, () => ({ x: Math.random(), y: Math.random(), ph: R(0, 9), s: R(3, 7) })); sc.amb.shoot = { t: R(2, 6) }; },
+    initAmb(sc) { sc.amb.tw = Array.from({ length: 30 }, () => ({ x: rnd(), y: rnd(), ph: R(0, 9), s: R(3, 7) })); sc.amb.shoot = { t: R(2, 6) }; },
     bg(c, W, H, r) {
       const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#1a1145'); g.addColorStop(.6, '#2a1760'); g.addColorStop(1, '#120c2c'); c.fillStyle = g; c.fillRect(0, 0, W, H);
       for (const [x, y, rr, col] of [[r() * W, r() * H, Math.max(W, H) * .4, 'rgba(255,120,200,.16)'], [r() * W, r() * H, Math.max(W, H) * .35, 'rgba(80,220,255,.12)']]) { const rg = c.createRadialGradient(x, y, 0, x, y, rr); rg.addColorStop(0, col); rg.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = rg; c.fillRect(0, 0, W, H); }
@@ -1822,9 +1827,9 @@ const MODS = {
    Scene generation
    ================================================================ */
 let scene = null;
-function planFor(lv, prevWorld) {
+function planFor(lv) {
   let world = ORDER[(lv - 1) % 6];
-  if (lv > 12) { do world = pick(ORDER); while (world === prevWorld); }
+  if (lv > 12) world = pick(ORDER);
   const mods = new Set();
   if (lv === 4) mods.add('twins');
   if (lv === 7) mods.add('night');
@@ -1832,10 +1837,10 @@ function planFor(lv, prevWorld) {
   if (lv === 9) mods.add('tiny');
   if (lv >= 10) {
     const pool = ['night', 'move', 'twins', 'tiny'];
-    const n = lv < 14 ? 1 : (Math.random() < .5 ? 1 : 2);
+    const n = lv < 14 ? 1 : (rnd() < .5 ? 1 : 2);
     while (mods.size < n) mods.add(pick(pool));
   }
-  return { world, mods, golden: lv >= 3 && Math.random() < .12 };
+  return { world, mods, golden: lv >= 3 && rnd() < .12 };
 }
 function setPos(e, nx, ny, sc) {
   e.nx = nx; e.ny = ny;
@@ -1846,7 +1851,7 @@ function setPos(e, nx, ny, sc) {
 function layoutEnt(e) { e.x = e.nx * W; e.y = e.ny * H; e.s = e.k * U * e.p; e.lw = Math.max(1, .055 * U * e.p); }
 function makeEnt(type, nx, ny, sc) {
   const T = TYPES[type];
-  const e = { type, ph: Math.random() * 100, flip: Math.random() < .5 ? -1 : 1, k: T.k * R(.88, 1.12), wp: Math.random() * TAU, p: 0 };
+  const e = { type, ph: rnd() * 100, flip: rnd() < .5 ? -1 : 1, k: T.k * R(.88, 1.12), wp: rnd() * TAU, p: 0 };
   if (T.float || (sc.wd.float && !T.floor)) { e.float = true; e.oy = T.oy || 0; e.rot = T.rotR ? R(-T.rotR, T.rotR) : 0; }
   if (T.init) T.init(e, sc);
   if (e.p && sc.wd.ground) e.p = 0;
@@ -1873,10 +1878,18 @@ const overlap = (a, b) => a[0] < b[2] && a[2] > b[0] && a[1] < b[3] && a[3] > b[
 const inBox = (b, x, y) => x >= b[0] && x <= b[2] && y >= b[1] && y <= b[3];
 const HUD_TOP = () => 118;
 
+const COW_MIN = 22, COW_MIN_TINY = 16, TOUCH_TARGET = 40;
+const newSeed = () => (Math.random() * 2 ** 31) | 0;
+// Same level, seed and viewport give the same scene. Callers paint the background, so rejected candidates stay cheap.
 function genScene(lv, opts = {}) {
-  const plan = opts.plan || planFor(lv, scene && scene.world);
+  const seed = opts.seed ?? newSeed(), prev = rnd;
+  rnd = mulberry(seed);
+  try { return buildScene(lv, seed, opts); } finally { rnd = prev; }
+}
+function buildScene(lv, seed, opts) {
+  const plan = opts.plan || planFor(lv);
   const wd = WORLDS[plan.world];
-  const sc = { lv, world: plan.world, wd, mods: plan.mods, golden: plan.golden, hy: wd.ground ? wd.horizon : 0, seed: (Math.random() * 1e9) | 0, ents: [], amb: {} };
+  const sc = { lv, world: plan.world, wd, mods: plan.mods, golden: plan.golden, hy: wd.ground ? wd.horizon : 0, seed, ents: [], amb: {} };
   wd.initAmb && wd.initAmb(sc);
   const density = opts.density || Math.min(1.5, .62 + lv * .07);
   const n = Math.round(density * W * H / (U * U * 2.7));
@@ -1887,7 +1900,7 @@ function genScene(lv, opts = {}) {
     let best = null, bestD = -1;
     for (let k = 0; k < 6; k++) {
       let nx = R(-.02, 1.02), ny;
-      if (wd.ground) ny = sc.hy + .025 + Math.pow(Math.random(), .9) * (1.03 - sc.hy - .025);
+      if (wd.ground) ny = sc.hy + .025 + Math.pow(rnd(), .9) * (1.03 - sc.hy - .025);
       else if (T.floor) ny = R(.87, 1.0);
       else ny = R(topN * .6, .92);
       let d = 1e9; const px = nx * W, py = ny * H;
@@ -1901,6 +1914,7 @@ function genScene(lv, opts = {}) {
   if (!plan.mods.has('tiny') && lv > 6) cow.k *= clamp(1 - (lv - 6) * .025, .78, 1);
   const top = opts.title ? 30 : HUD_TOP() + 6;
   const lo = wd.ground ? sc.hy + .08 : (top + 50) / H, hi = wd.ground ? .97 : .84;
+  let placed = false;
   for (let i = 0; i < 400; i++) {
     let nx = R(.05, .95), ny = R(lo, hi);
     if (opts.title) { if (W > 700) nx = R(.62, .92); else ny = R(lo, Math.min(hi, .52)); }
@@ -1908,16 +1922,30 @@ function genScene(lv, opts = {}) {
     const b = entBox(cow, 0);
     if (b[0] < 8 || b[2] > W - 8 || b[1] < top || b[3] > H - 8) continue;
     if (!opts.title && b[2] > W - 220 && b[3] > H - 100) continue;
-    break;
+    // On phones the back rows shrink the cow to a few pixels; keep it where it can still be seen.
+    if (!opts.title && Math.min(b[2] - b[0], b[3] - b[1]) < (plan.mods.has('tiny') ? COW_MIN_TINY : COW_MIN)) continue;
+    placed = true; break;
   }
+  sc.cowPlaced = placed;
   const cb = entBox(cow, 0), cw = cb[2] - cb[0], ch = cb[3] - cb[1];
   const core = [cb[0] + cw * .18, cb[1] + ch * .12, cb[2] - cw * .18, cb[3] - ch * .08];
   sc.ents = sc.ents.filter(e => !(e.y >= cow.y - 2 && overlap(entBox(e, 0), core)) && !(e.float && overlap(entBox(e, 0), core)));
   sc.ents.push(cow); sc.cow = cow;
   sc.ents.sort((a, b) => a.y - b.y);
-  paintBg(sc);
   return sc;
 }
+// Rerolls until the cow has a fair spot and, from level 13 on, the world changes. A given seed is replayed as is.
+function levelScene(lv, prevWorld, seed) {
+  if (seed != null) return genScene(lv, { seed });
+  let sc;
+  for (let i = 0; i < 12; i++) { sc = genScene(lv); if (sc.cowPlaced && !(lv > 12 && sc.world === prevWorld)) break; }
+  return sc;
+}
+const sceneId = sc => `${sc.lv}-${sc.seed}`;
+const REPLAY = (() => {
+  let m = null; try { m = /^(\d{1,3})-(\d{1,10})$/.exec(new URLSearchParams(location.search).get('szene') || ''); } catch (_) {}
+  return m && +m[1] >= 1 ? { lv: +m[1], seed: +m[2] | 0 } : null;
+})();
 function paintBg(sc) {
   bgCv.width = Math.round(W * DPR); bgCv.height = Math.round(H * DPR);
   bgc.setTransform(DPR, 0, 0, DPR, 0, 0); bgc.lineJoin = 'round'; bgc.lineCap = 'round';
@@ -2118,28 +2146,30 @@ function showBanner() {
   for (const k of scene.mods) { const d = document.createElement('div'); d.innerHTML = `<span class="pill mod"></span><span></span>`; d.children[0].textContent = MODS[k][0]; d.children[1].textContent = MODS[k][1]; m.appendChild(d); }
   const bn = $('#banner'); bn.hidden = false; const card = bn.firstElementChild; card.style.animation = 'none'; void card.offsetWidth; card.style.animation = '';
 }
-function loadLevel(lv) {
-  scene = genScene(lv); fx = []; texts = []; marks = []; iris = null; radar = null; nightK = 1;
+function loadLevel(lv, seed) {
+  scene = levelScene(lv, scene && scene.world, seed); paintBg(scene); fx = []; texts = []; marks = []; iris = null; radar = null; nightK = 1;
   light.x = W / 2; light.y = H * .55; G.levelT = 0; G.usedRadar = false;
   updateLevelPills(); showBanner(); MUSIC.setWorld(scene.world);
 }
 function showGameUi(on) { els.hud.hidden = !on; els.controls.hidden = !on; }
 function startGame() {
   SND.unlock(); SND.start();
-  Object.assign(G, { lv: 1, score: 0, cows: 0, time: START_TIME, streak: 0, bestStreak: 0, fastest: null, radar: 3, misses: 0, levelT: 0, usedRadar: false, paused: false, lastTick: 99, nudged: false });
+  const lv0 = REPLAY ? REPLAY.lv : 1;
+  Object.assign(G, { lv: lv0, score: 0, cows: 0, time: START_TIME, streak: 0, bestStreak: 0, fastest: null, radar: 3, misses: 0, levelT: 0, usedRadar: false, paused: false, lastTick: 99, nudged: false });
   $('#title').hidden = true; $('#over').hidden = true; $('#pause').hidden = true; $('#board').hidden = true;
   MUSIC.play();
   G.state = 'trans';
-  runTransition(() => { loadLevel(1); showGameUi(true); updateHud(); }, () => { G.state = 'play'; }, 2.1);
+  runTransition(() => { loadLevel(lv0, REPLAY && REPLAY.seed); showGameUi(true); updateHud(); }, () => { G.state = 'play'; }, 2.1);
 }
 function toTitle() {
   G.state = 'title'; G.paused = false; showGameUi(false);
   $('#over').hidden = true; $('#pause').hidden = true; $('#banner').hidden = true; $('#board').hidden = true; trans = null;
   MUSIC.setWorld('weide'); MUSIC.play();
-  scene = genScene(1, { title: true, density: .75, plan: { world: 'weide', mods: new Set(), golden: false } });
+  scene = genScene(1, { title: true, density: .75, plan: { world: 'weide', mods: new Set(), golden: false } }); paintBg(scene);
   fx = []; texts = []; marks = []; iris = null; radar = null;
   const rec = loadRecord();
-  $('#record').innerHTML = rec.score > 0 ? `Dein Rekord <b>${fmtInt(rec.score)} Punkte</b> <b>${rec.cows} ${rec.cows === 1 ? 'Kuh' : 'Kühe'}</b>` : 'Noch kein Rekord. Zeit, das zu ändern.';
+  if (REPLAY) $('#record').textContent = `Wiederholung von Szene ${REPLAY.lv}-${REPLAY.seed}. Zählt nicht für Rekord und Bestenliste.`;
+  else $('#record').innerHTML = rec.score > 0 ? `Dein Rekord <b>${fmtInt(rec.score)} Punkte</b> <b>${rec.cows} ${rec.cows === 1 ? 'Kuh' : 'Kühe'}</b>` : 'Noch kein Rekord. Zeit, das zu ändern.';
   $('#title').hidden = false;
 }
 function nextLevel() {
@@ -2202,13 +2232,14 @@ function showOver() {
   $('#rankName').textContent = rank[1]; $('#rankText').textContent = rank[2];
   $('#stCows').textContent = G.cows; $('#stScore').textContent = fmtInt(G.score); $('#stStreak').textContent = G.bestStreak;
   $('#stFast').textContent = G.fastest == null ? '–' : `${fmt1(G.fastest)} s`;
-  const rec = loadRecord(), isNew = G.score > rec.score;
+  const rec = loadRecord(), isNew = !REPLAY && G.score > rec.score;
   if (isNew) saveRecord({ score: G.score, cows: G.cows });
   $('#stamp').hidden = !isNew;
   $('#overRecord').innerHTML = isNew ? (rec.score > 0 ? `Alter Rekord <b>${fmtInt(rec.score)} Punkte</b>` : 'Dein erster Rekord. Den holst du dir nochmal.') : `Rekord <b>${fmtInt(rec.score)} Punkte</b> <b>${rec.cows} ${rec.cows === 1 ? 'Kuh' : 'Kühe'}</b>`;
   lastEntry = null; $('#entryMsg').textContent = ''; $('#entryBtn').disabled = false;
-  $('#entryForm').hidden = G.score <= 0;
-  if (G.score > 0) {
+  $('#entryForm').hidden = G.score <= 0 || !!REPLAY;
+  $('#overScene').textContent = `Szene ${sceneId(scene)}`;
+  if (G.score > 0 && !REPLAY) {
     let nick = ''; try { nick = localStorage.getItem('wdk-nick') || ''; } catch (_) {}
     $('#nick').value = nick;
     lastEntry = { nick: nick || 'Du', score: G.score, cows: G.cows, at: Date.now() };
@@ -2282,7 +2313,7 @@ function praise(big, small, gold) {
   const p = $('#praise'); $('#praiseBig').textContent = big; $('#praiseBig').classList.toggle('gold', !!gold); $('#praiseSmall').textContent = small;
   p.classList.remove('show'); void p.offsetWidth; p.classList.add('show');
 }
-function pauseGame() { if (G.state !== 'play' || G.paused) return; G.paused = true; MUSIC.stop(); $('#pause').hidden = false; syncSoundLabels(); setTimeout(() => $('#resumeBtn').focus({ preventScroll: true }), 30); }
+function pauseGame() { if (G.state !== 'play' || G.paused) return; G.paused = true; $('#pauseScene').textContent = `Szene ${sceneId(scene)}`; MUSIC.stop(); $('#pause').hidden = false; syncSoundLabels(); setTimeout(() => $('#resumeBtn').focus({ preventScroll: true }), 30); }
 function resumeGame() { if (!G.paused) return; G.paused = false; $('#pause').hidden = true; last = performance.now(); MUSIC.play(); }
 
 /* ---------- input ---------- */
@@ -2295,7 +2326,9 @@ function guess(x, y) {
   }
   if (G.state !== 'play' || G.paused) return;
   const b = entBox(scene.cow, T), p = scene.cow.s * .1;
-  if (inBox([b[0] - p, b[1] - p, b[2] + p, b[3] + p], x, y)) { onFound(); return; }
+  // Fingers need a bigger target than the cow's box when it is small.
+  const tx = ptr.type === 'mouse' ? p : Math.max(p, (TOUCH_TARGET - (b[2] - b[0])) / 2), ty = ptr.type === 'mouse' ? p : Math.max(p, (TOUCH_TARGET - (b[3] - b[1])) / 2);
+  if (inBox([b[0] - tx, b[1] - ty, b[2] + tx, b[3] + ty], x, y)) { onFound(); return; }
   let hit = null;
   for (let i = scene.ents.length - 1; i >= 0; i--) { const e = scene.ents[i]; if (e !== scene.cow && inBox(entBox(e, T), x, y)) { hit = e; break; } }
   onMiss(x, y, hit);
@@ -2424,6 +2457,15 @@ function frame(now) {
 /* ---------- boot ---------- */
 function start(data) {
   resize(); syncSoundLabels(); setupInstall(); BOARD.init();
+  try { if (new URLSearchParams(location.search).has('test')) window.__WDK__ = {
+    levelScene, entBox, resize, HUD_TOP, get W() { return W; }, get H() { return H; },
+    // Where HUD and radar button really sit for this scene, with the widest pill row the game can show.
+    uiRects(sc) {
+      scene = sc; showGameUi(true); updateLevelPills(); els.combo.hidden = false; els.combo.textContent = 'Serie ×4,5';
+      const hud = Math.max(...[...els.hud.children].map(el => el.getBoundingClientRect().bottom)), r = els.controls.getBoundingClientRect();
+      return { hudBottom: hud, controls: [r.left, r.top, r.right, r.bottom] };
+    }
+  }; } catch (_) {}
   if (data && data.G && ['play', 'found', 'trans'].includes(data.state)) {
     Object.assign(G, data.G, { paused: false, state: 'trans' });
     $('#title').hidden = true;

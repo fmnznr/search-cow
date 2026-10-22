@@ -16,7 +16,9 @@ Zwischen den Phasen steht jeweils eine Go/No-go-Entscheidung (siehe Ende von Pha
 
 Reihenfolge einhalten: 1.1 ist Voraussetzung für 1.2, 1.7 setzt 1.1 bis 1.3 voraus.
 
-### 1.1 Szenen per Seed reproduzierbar machen
+### 1.1 Szenen per Seed reproduzierbar machen ✅
+
+**Umgesetzt:** `rnd` statt `Math.random` in der Szenen-Erzeugung, `genScene(lv, { seed })`, `levelScene` würfelt neu, bis die Kuh einen fairen Platz hat und sich ab Level 13 die Welt ändert. Szenen-Kennung „Szene 14-777“ in Pause- und Endbildschirm; `index.html?szene=14-777` spielt sie nach (zählt nicht für Rekord und Bestenliste).
 
 **Warum:** Fairness-Test (1.2), Fehlerberichte („Szene 48213 ist kaputt“) und Phase 2 brauchen deterministische Szenen.
 
@@ -33,14 +35,16 @@ Reihenfolge einhalten: 1.1 ist Voraussetzung für 1.2, 1.7 setzt 1.1 bis 1.3 vor
 2. Alle `Math.random()` in Szenen-relevantem Code durch `rnd()` ersetzen: `wpick`, `mkBlob`, Typ-`init`s, `personInit`, `initClouds`/`initAmb`, `planFor`, `makeEnt`, `genScene`.
    **Nicht** ersetzen (bleibt `Math.random`, damit Effekte den Seed-Strom nicht verschieben): Rauschen im Audio (Z. 549), Screenshake (Z. 1978), Übergangs-Blobs (Z. 2043), Fehlklick-Texte (Z. 2164), Laufzeit-Verhalten in der Update-Schleife (Z. 2381, 2386).
 3. `genScene(lv, opts)` bekommt `opts.seed`. Ablauf: `const seed = opts.seed ?? (Math.random() * 2 ** 31) | 0; rnd = mulberry(seed); … ; rnd = Math.random;` (in `try/finally`). `sc.seed = seed`, `planFor` läuft innerhalb des geseedeten Blocks.
-4. URL-Parameter für Reproduktion: `?seed=12345&lv=7` startet direkt dieses Level mit diesem Seed (nur Einstiegspunkt, kein UI).
+4. URL-Parameter für Reproduktion: `?szene=7-12345` startet direkt dieses Level mit diesem Seed (nur Einstiegspunkt, kein UI).
 5. Seed sichtbar machen: im Pause-Dialog klein „Szene 7-12345“ (Level-Seed), damit Spieler Fehler melden können.
 
 **Hinweis:** Die Szene hängt weiterhin von der Fenstergröße ab (`W`, `H`, `U` bestimmen Anzahl und Position). Gleicher Seed + gleiche Fenstergröße = gleiche Szene. Das reicht für Phase 1; Phase 2 muss das lösen.
 
 **Fertig, wenn:** Zwei Aufrufe von `genScene(5, { seed: 42 })` bei gleicher Fenstergröße identische `ents` (Typ, Position, Farben) liefern.
 
-### 1.2 Automatischer Fairness-Test
+### 1.2 Automatischer Fairness-Test ✅
+
+**Umgesetzt:** `npm run fairness` (5 Fenstergrößen × 20 Level × 50 Seeds, feste Seed-Folge). Ergebnis des ersten Laufs: Platzierung, HUD, Radar-Knopf und Verdeckung waren schon in Ordnung; einziges Problem waren winzige Kühe auf Handys (bis 11 px). Behoben: Die Kuh steht nur noch dort, wo sie mindestens 22 px groß ist (Mini-Kuh 16 px), und bei Touch ist die Trefferfläche mindestens 40 px.
 
 **Ist-Zustand:** `genScene` schützt die Kuh schon teilweise: Figuren vor der Kuh, die ihren Kern überlappen, werden entfernt; die Kuh meidet HUD und Radar-Knopf. Ungeprüft ist, ob das immer greift. Insbesondere nutzt die Platzierungsschleife (400 Versuche) nach dem letzten Fehlversuch trotzdem die letzte Position.
 

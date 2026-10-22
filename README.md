@@ -12,4 +12,13 @@ Nach jeder Änderung an `src/`:
 node scripts/build.mjs
 ```
 
+Fairness-Test (prüft tausende Szenen, ob die Kuh sichtbar, frei und groß genug ist):
+
+```sh
+npm install
+npm run fairness   # mit vorinstalliertem Chromium: CHROMIUM_PATH=/pfad/zu/chrome npm run fairness
+```
+
+Eine gemeldete Szene nachspielen: `index.html?szene=<Level>-<Seed>` in gleicher Fenstergröße (die Kennung steht im Pause- und im Endbildschirm).
+
 Die Web-App läuft auf jedem statischen Host (z. B. GitHub Pages) direkt aus dem Repo-Stamm.

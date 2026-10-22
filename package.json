@@ -1,0 +1,12 @@
+{
+  "name": "search-cow",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "fairness": "node scripts/fairness.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.64.1"
+  }
+}
