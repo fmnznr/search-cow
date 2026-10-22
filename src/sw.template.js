@@ -20,7 +20,8 @@ self.addEventListener('fetch', e => {
     // Network first for the page itself so updates arrive; cache first for everything else.
     if (req.mode === 'navigate') {
       // Each page under its own URL, so visiting the legal pages never replaces the cached game.
-      e.respondWith(fetch(req).then(res => { if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)); } return res; })
+      // no-cache revalidates with the server; otherwise GitHub Pages' max-age=600 keeps old versions for 10 minutes.
+      e.respondWith(fetch(req, { cache: 'no-cache' }).then(res => { if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)); } return res; })
         .catch(() => caches.match(req, { ignoreSearch: true }).then(hit => hit || caches.match('./index.html'))));
       return;
     }
