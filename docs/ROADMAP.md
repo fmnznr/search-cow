@@ -243,13 +243,17 @@ Ziel: Können lohnt sich spürbar, Raten wird bestraft, gutes Spiel bringt hohe 
 - **Kein Raten:** Fehlklicks werden in Folge teurer (3 s → 5 s → 8 s); erst ein Fund setzt zurück.
 - **Multiplikatoren:** Serie ohne Fehlklick und Tempo multiplizieren sich stärker als heute; eine fehlerfreie, schnelle Serie ist um ein Vielfaches mehr wert als ein langsames Durchkommen.
 - **Medaillen pro Level:** Gold/Silber/Bronze nach Zeit und Fehlklicks, als klares Feedback.
-- **Entscheidungen zwischen Leveln** (`between`): z. B. „Doppelt oder nichts“ (nächstes Level schwerer, Multiplikator ×2), Radar gegen Zeit tauschen, einen Modifikator abwählen gegen weniger Punkte.
+- **Entscheidungen zwischen Leveln** (`between`, nur nach Boss-Leveln, siehe unten): z. B. „Doppelt oder nichts“ (nächstes Level schwerer, Multiplikator ×2), Radar gegen Zeit tauschen, einen Modifikator abwählen gegen weniger Punkte.
 - **Boss-Level alle 5 Level** (vom Notizzettel), z. B.:
   - *Kuhbande:* drei Kühe nacheinander in derselben Szene
   - *Ausreißerin:* die Kuh flieht nach jedem Fehlklick an eine neue Stelle
   - *Steckbrief:* lauter Doppelgänger, nur eine passt zur Beschreibung (Glocke, Fleck, Accessoire)
 - Bestenliste nur für diesen Modus (und Klassisch).
-- **Offene Entscheidung:** Was zuerst – Entscheidungen zwischen Leveln oder mehr Spannung innerhalb eines Levels (Boss-Level, Medaillen)?
+- **Entschieden: beides, verzahnt in einem Rhythmus.** 4 normale Level → Boss-Level → Belohnung. Entscheidungen gibt es nicht nach jedem Level, sondern als Beute nach einem besiegten Boss:
+  1. **Medaillen** zuerst: klares Feedback pro Level, kleinster Schritt, nötig für alles Weitere.
+  2. **Boss-Level** alle 5 Level: Höhepunkt mit eigener Regel.
+  3. **Glocken-Wahl** nach dem Boss: drei Karten, eine davon nehmen (z. B. „Doppelt oder nichts“, „+1 Radar“, „Nacht abwählen“, „Fehlklick-Schutz für ein Level“). Je mehr Gold-Medaillen im Abschnitt, desto bessere Karten.
+  Warum so: Die Spannung im Level bleibt der Kern, die Entscheidungen bleiben selten und bedeutsam, und gutes Spielen wird doppelt belohnt (Punkte und bessere Karten).
 
 ### 2.7 Balancing mit Werkzeug
 
