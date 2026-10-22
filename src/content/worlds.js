@@ -1,11 +1,9 @@
+// Worlds: backgrounds, ambient layers, entity pools and level modifiers.
 import { R, rnd } from '../core/rng.js';
 import { TAU, clamp } from '../core/util.js';
 import { E, INK, MILK, RR, fs, shade } from '../render/draw.js';
 import { H, U, W } from '../core/view.js';
 
-/* ================================================================
-   Worlds: backgrounds, ambient layers, entity pools
-   ================================================================ */
 function skyGrad(c, W, y0, y1, a, b) { const g = c.createLinearGradient(0, y0, 0, y1); g.addColorStop(0, a); g.addColorStop(1, b); c.fillStyle = g; c.fillRect(0, y0, W, y1 - y0); }
 function hills(c, W, base, amp, col, r) {
   c.beginPath(); c.moveTo(-4, base + 60); const f1 = r() * 3 + 1.5, f2 = r() * 5 + 3, p1 = r() * TAU, p2 = r() * TAU;

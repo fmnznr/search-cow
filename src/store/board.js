@@ -1,9 +1,6 @@
+// Leaderboard: shared via the artifact store when available, always mirrored on this device.
 import { clamp } from '../core/util.js';
 
-/* ================================================================
-   Leaderboard: shared via the artifact store when available,
-   always mirrored on this device
-   ================================================================ */
 export const BOARD = (() => {
   let db = null, uid = null, shared = [], mine = null, writable = false, ready = false;
   const subs = [];

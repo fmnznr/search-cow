@@ -184,11 +184,13 @@ Bevor Code verschoben wird, wird das heutige Verhalten eingefroren, sodass jede 
 
 ### 2.2 Umbau in Module (ohne sichtbare Änderung)
 
+**Umgesetzt:** 36 Module statt einer Datei mit 2.400 Zeilen, größte Datei 202 Zeilen (`content/worlds.js`). esbuild bündelt zu `dist/artifact.html` und `index.html`; ESLint fängt fehlende Importe. Laufender Zustand liegt in `live` (`game/state.js`), die Bildgröße in `core/view.js` (`setView`), Seeds über `withSeed` (`core/rng.js`). Alle Schnappschüsse nach jedem Schritt unverändert. Unit-Tests folgen mit dem Regelwerk (2.3), weil Punkteberechnung und Ablauf dort neu geschnitten werden.
+
 - **Build:** esbuild bündelt `src/**/*.js` wieder zu einer einzigen HTML-Datei. Artifact, Web-App und itch-Version bleiben so wie heute.
 - **Aufteilung:**
   ```
   src/
-    core/      rng, Geometrie, Zeit
+    core/      rng, Hilfsfunktionen, Canvas/Bildgröße, Plattform
     content/   entities/* (je Tierart/Figur: Daten + Zeichnen), worlds/*
     scene/     plan, generate – rein, ohne DOM und Canvas
     render/    Hintergrund, Figuren, Effekte, Lupe/Taschenlampe

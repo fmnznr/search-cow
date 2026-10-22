@@ -1,8 +1,8 @@
+// Small creatures.
 import { pick } from '../../core/rng.js';
 import { E, INK, MILK, circles, eye, fs, shade, stroke2 } from '../../render/draw.js';
 import { def } from './rig.js';
 
-/* ---------- small creatures ---------- */
 def('chicken', {
   k: .55, box: [-.42, -.92, .46, 0], walk: true, snd: 'cluck',
   msg: ['Gack! Ein Huhn.', 'Ein Huhn. Legt Eier, keine Milch.'],

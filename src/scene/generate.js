@@ -1,14 +1,10 @@
+// Scene generation: level plan, placement of figures and cow, seeds and replays.
 import { R, mulberry, pick, rnd, withSeed, wpick } from '../core/rng.js';
 import { TAU, clamp } from '../core/util.js';
 import { DPR, H, U, W, bgCv, bgc } from '../core/view.js';
 import { TYPES } from '../content/entities/rig.js';
 import { ORDER, WORLDS } from '../content/worlds.js';
 
-/* ================================================================
-   Scene generation
-   ================================================================ */
-// What changes while the game runs; one object so every module sees and updates the same values.
-export const live = { scene: null, fx: [], texts: [], marks: [], iris: null, radar: null, trans: null, shake: 0, nightK: 1, timers: [], T: 0 };
 function planFor(lv) {
   let world = ORDER[(lv - 1) % 6];
   if (lv > 12) world = pick(ORDER);

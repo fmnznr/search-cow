@@ -1,9 +1,9 @@
+// Underwater creatures and props.
 import { R, RI, pick, rnd } from '../../core/rng.js';
 import { TAU } from '../../core/util.js';
 import { E, GOLD, INK, MILK, RR, eye, fs, stroke2 } from '../../render/draw.js';
 import { def } from './rig.js';
 
-/* ---------- underwater ---------- */
 def('fish', {
   k: .7, box: [-.62, -.42, .45, .3], snd: 'blub', swim: true, rotR: .1,
   msg: ['Blubb. Ein Fisch.', 'Ein Fisch. Kein Rind.', 'Fisch. Schwimmt einfach weiter.'],

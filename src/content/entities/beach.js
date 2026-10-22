@@ -1,9 +1,9 @@
+// Beach figures and props.
 import { R, RI, pick } from '../../core/rng.js';
 import { TAU } from '../../core/util.js';
 import { E, INK, MILK, RR, blobPath, circles, fs, mkSpots, stroke2 } from '../../render/draw.js';
 import { def } from './rig.js';
 
-/* ---------- beach ---------- */
 def('umbrella', {
   k: 1.7, box: [-.55, -1.1, .62, 0], msg: ['Ein Sonnenschirm.', 'Schirm. Darunter ist nur Schatten.'],
   init(e) { e.c1 = pick(['#e63946', '#3d6fb5', '#2a9d8f', '#f15bb5', '#ff9f1c']); e.c2 = MILK; e.tilt = R(-.18, .18); },

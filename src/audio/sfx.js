@@ -1,9 +1,7 @@
+// Sound effects, all synthesized with Web Audio; nothing is loaded.
 import { RI } from '../core/rng.js';
 import { clamp } from '../core/util.js';
 
-/* ================================================================
-   Audio: everything synthesized, nothing loaded
-   ================================================================ */
 export const SND = (() => {
   let ac = null, master = null, on = true;
   try { on = localStorage.getItem('wdk-sound') !== '0'; } catch (_) {}

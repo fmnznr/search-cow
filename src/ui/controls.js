@@ -1,0 +1,37 @@
+// Sound and music toggles and the buttons of all screens.
+import { $, COARSE } from '../core/util.js';
+import { MUSIC } from '../audio/music.js';
+import { SND } from '../audio/sfx.js';
+import { G } from '../game/state.js';
+import { els } from './hud.js';
+import { startGame, timeUp, toTitle } from '../game/flow.js';
+import { openBoard, showBoardTab, submitEntry } from './over.js';
+import { pauseGame, resumeGame, useRadar } from '../game/actions.js';
+
+export const musicMayPlay = () => !G.paused && G.state !== 'reveal';
+function toggleSound() { SND.toggle(); if (SND.on) { SND.bell(1); if (musicMayPlay()) MUSIC.play(); } else MUSIC.stop(); syncSoundLabels(); }
+export function toggleMusic() { MUSIC.arm(); if (MUSIC.toggle()) { if (musicMayPlay()) MUSIC.play(); } else MUSIC.stop(); syncSoundLabels(); }
+const armAudio = () => { SND.unlock(); MUSIC.arm(); if (G.state === 'title' || G.state === 'over') MUSIC.play(); window.removeEventListener('pointerdown', armAudio, true); window.removeEventListener('keydown', armAudio, true); };
+window.addEventListener('pointerdown', armAudio, true); window.addEventListener('keydown', armAudio, true);
+export function syncSoundLabels() {
+  for (const id of ['#soundBtn', '#pauseSoundBtn']) { const b = $(id); b.textContent = `Ton: ${SND.on ? 'an' : 'aus'}`; b.setAttribute('aria-pressed', String(SND.on)); }
+  for (const id of ['#musicBtn', '#pauseMusicBtn']) { const b = $(id); b.textContent = `Musik: ${MUSIC.on ? 'an' : 'aus'}`; b.setAttribute('aria-pressed', String(MUSIC.on)); }
+}
+$('#startBtn').addEventListener('click', startGame);
+$('#againBtn').addEventListener('click', startGame);
+$('#menuBtn').addEventListener('click', toTitle);
+$('#soundBtn').addEventListener('click', toggleSound);
+$('#pauseSoundBtn').addEventListener('click', toggleSound);
+$('#musicBtn').addEventListener('click', toggleMusic);
+$('#pauseMusicBtn').addEventListener('click', toggleMusic);
+$('#boardBtn').addEventListener('click', openBoard);
+$('#overBoardBtn').addEventListener('click', openBoard);
+$('#boardClose').addEventListener('click', () => { $('#board').hidden = true; });
+$('#tabAll').addEventListener('click', () => showBoardTab('all'));
+$('#tabLocal').addEventListener('click', () => showBoardTab('local'));
+$('#entryForm').addEventListener('submit', submitEntry);
+$('#pauseBtn').addEventListener('click', pauseGame);
+$('#resumeBtn').addEventListener('click', resumeGame);
+$('#quitBtn').addEventListener('click', () => { G.paused = false; $('#pause').hidden = true; G.time = 0; timeUp(); });
+els.radarBtn.addEventListener('click', useRadar);
+$('#howto').textContent = COARSE ? 'Tippen = Tipp abgeben · Halten & ziehen = Lupe · Glocke = Muh-Radar' : 'Maus bewegen = Lupe · Klick = Tipp · Leertaste = Muh-Radar · P = Pause · M = Musik';

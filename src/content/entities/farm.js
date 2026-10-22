@@ -1,9 +1,9 @@
+// Plants and props of the farm.
 import { R, pick, rnd } from '../../core/rng.js';
 import { TAU } from '../../core/util.js';
 import { E, GOLD, INK, RR, circles, fs, shade } from '../../render/draw.js';
 import { def } from './rig.js';
 
-/* ---------- plants & props: farm ---------- */
 def('tree', {
   k: 2.1, box: [-.36, -1.02, .36, 0], msg: ['Ein Baum.', 'Baum. Sehr standhaft, sehr keine Kuh.', 'Hinter dem Baum? Nein. Das ist der Baum.'],
   init(e) {

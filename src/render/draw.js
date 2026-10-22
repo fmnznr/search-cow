@@ -1,3 +1,4 @@
+// Palette and canvas drawing primitives shared by all figures.
 import { R, RI, rnd } from '../core/rng.js';
 import { TAU } from '../core/util.js';
 

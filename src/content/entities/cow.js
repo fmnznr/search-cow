@@ -1,9 +1,9 @@
+// The cow and its accessories.
 import { R, RI, rnd } from '../../core/rng.js';
 import { TAU } from '../../core/util.js';
 import { E, GOLD, HORN, INK, MILK, PINK, RR, TUFT, blobPath, eye, fs, mkBlob, mkSpots, stroke2 } from '../../render/draw.js';
 import { def, quad } from './rig.js';
 
-/* ---------- cow ---------- */
 function headAcc(c, e, s, lw, ox = 0, oy = 0) {
   c.save(); c.translate(ox, oy);
   switch (e.acc) {

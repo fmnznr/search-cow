@@ -1,9 +1,9 @@
+// Lookalikes on four legs: dalmatian, pig, sheep, horse, goat.
 import { R, RI, pick, rnd } from '../../core/rng.js';
 import { TAU } from '../../core/util.js';
 import { E, INK, MILK, RR, circles, eye, fs, mkSpots, shade, stroke2 } from '../../render/draw.js';
 import { TYPES, def, quad } from './rig.js';
 
-/* ---------- dalmatian ---------- */
 function dogHead(c, e, t, hx, hy) {
   const s = e.s, lw = e.lw;
   c.save(); c.translate(hx - s * .06, hy + s * .02); c.rotate(-.12 + Math.sin(t * 2 + e.ph) * .06);

@@ -6,11 +6,20 @@ Spielen: https://fmnznr.github.io/search-cow/
 
 ## Aufbau
 
-- `src/game.html` – Quelle des Spiels (so wird es auch als claude.ai-Artifact veröffentlicht)
+- `src/shell.html`, `src/style.css` – Markup und Gestaltung
+- `src/main.js` – Einstieg; importiert alle Module in fester Reihenfolge
+- `src/core/` – Zufall (seedbar), Hilfsfunktionen, Canvas und Bildgröße, Plattform-Erkennung
+- `src/content/` – Figuren (`entities/`, je Gruppe eine Datei) und Welten
+- `src/scene/` – Szenen-Erzeugung (ohne DOM nutzbar)
+- `src/render/` – Zeichnen: Welt, Effekte, Bild pro Frame, Übergang
+- `src/audio/` – Geräusche und Musik, alles synthetisiert
+- `src/game/` – Spielzustand, Ablauf, Aktionen, Eingabe, Schleife, Test-Schnittstelle
+- `src/ui/` – HUD, Endbildschirm, Knöpfe, Installation
+- `src/store/` – Rekord und Bestenliste
 - `src/legal/` – Impressum und Datenschutz
 - `src/sw.template.js` – Vorlage für den Service Worker
 - `fonts/` – selbst ausgelieferte Schriften (`npm run fonts` lädt sie neu)
-- `scripts/build.mjs` – erzeugt `index.html`, `impressum.html`, `datenschutz.html` und `sw.js` für die installierbare Web-App (PWA)
+- `scripts/build.mjs` – bündelt mit esbuild zu `dist/artifact.html` (fürs claude.ai-Artifact) und `index.html`, baut `impressum.html`, `datenschutz.html` und `sw.js` für die installierbare Web-App (PWA)
 
 Die Web-App läuft auf jedem statischen Host (z. B. GitHub Pages) direkt aus dem Repo-Stamm.
 
@@ -19,8 +28,9 @@ Die Web-App läuft auf jedem statischen Host (z. B. GitHub Pages) direkt aus dem
 ```sh
 npm install
 npm run build        # nach jeder Änderung an src/ oder fonts/
+npm run lint         # findet u. a. fehlende Importe
 npm run build:itch   # zusätzlich dist/itch.zip für itch.io
-npm test             # Smoke-, Fairness- und Schnappschuss-Test
+npm test             # Lint, Smoke-, Fairness- und Schnappschuss-Test
 npm run og-image     # Vorschaubild icons/og.png neu rendern
 ```
 

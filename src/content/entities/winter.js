@@ -1,8 +1,8 @@
+// Winter figures and props.
 import { pick } from '../../core/rng.js';
 import { E, INK, MILK, RR, fs, stroke2 } from '../../render/draw.js';
 import { def } from './rig.js';
 
-/* ---------- winter ---------- */
 def('pine', {
   k: 2.0, box: [-.32, -1.02, .32, 0], msg: ['Eine Tanne. Oh Tannenbaum.', 'Tanne. Riecht gut, muht nicht.'],
   init(e, sc) { e.snow = sc.world === 'winter'; e.c1 = pick(['#2f8f5b', '#3aa56a', '#277a4e']); },

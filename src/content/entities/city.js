@@ -1,9 +1,9 @@
+// City figures and props.
 import { pick, rnd } from '../../core/rng.js';
 import { TAU } from '../../core/util.js';
 import { E, INK, MILK, RR, circles, fs } from '../../render/draw.js';
 import { def } from './rig.js';
 
-/* ---------- city ---------- */
 def('lamp', {
   k: 1.9, box: [-.12, -1.02, .12, 0], msg: ['Eine Laterne.', 'Laterne. Leuchtet, muht nicht.'],
   draw(c, e) {

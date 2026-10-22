@@ -1,8 +1,6 @@
+// Music: a small sequenced loop per world, quiet under the effects.
 import { SND } from './sfx.js';
 
-/* ================================================================
-   Music: a small sequenced loop per world, quiet under the effects
-   ================================================================ */
 export const MUSIC = (() => {
   let on = true, armed = false, playing = false, gain = null, filt = null, noise = null, nextT = 0, step = 0, iv = 0, mode = 'weide', fast = false;
   try { on = localStorage.getItem('wdk-music') !== '0'; } catch (_) {}

@@ -1,8 +1,6 @@
+// Entity registry (TYPES, def), people palettes and the shared four-legged rig.
 import { INK, RR, blobPath, fs, shade } from '../../render/draw.js';
 
-/* ================================================================
-   Entity types
-   ================================================================ */
 export const NAMES = ['Jürgen', 'Heike', 'Kevin', 'Uschi', 'Bernd', 'Gisela', 'Tobi', 'Ayşe', 'Lars', 'Mia', 'Detlef', 'Chantal', 'Hans-Peter', 'Svenja', 'Mehmet', 'Greta', 'Olaf', 'Jana', 'Ralf', 'Lina', 'Dieter', 'Yvonne', 'Paul', 'Elif'];
 export const SKIN = ['#f9d3b4', '#e8b48f', '#c68c5d', '#8d5524', '#f1c27d', '#ffdbac', '#a86b45'];
 export const HAIR = ['#2b1d14', '#5a3825', '#d6a25c', '#e6cc8a', '#a33b20', '#1a1a1a', '#c9c9c9', '#7b5cd6', '#e86a92'];

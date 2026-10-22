@@ -1,8 +1,8 @@
+// People, including those in cow costumes, divers and astronauts.
 import { RI, pick, rnd } from '../../core/rng.js';
 import { E, HORN, INK, MILK, PINK, RR, blobPath, circles, fs, mkBlob, mkSpots, stroke2 } from '../../render/draw.js';
 import { BALLOON, HAIR, NAMES, PANTS, SHIRT, SKIN, def } from './rig.js';
 
-/* ---------- people ---------- */
 function personInit(e, style) {
   e.style = style; e.skin = pick(SKIN); e.hairC = pick(HAIR); e.hair = pick(['short', 'long', 'bun', 'curly', 'bald', 'short', 'long']);
   e.shirt = pick(SHIRT); e.pants = pick(PANTS); e.shoe = pick(['#211b26', '#ffffff', '#e63946', '#3d5a80']); e.name = pick(NAMES);

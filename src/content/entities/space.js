@@ -1,9 +1,9 @@
+// Space creatures and props.
 import { R, pick, rnd } from '../../core/rng.js';
 import { TAU } from '../../core/util.js';
 import { E, INK, MILK, RR, blobPath, fs, mkBlob, mkSpots, stroke2 } from '../../render/draw.js';
 import { def } from './rig.js';
 
-/* ---------- space ---------- */
 def('alien', {
   k: .9, box: [-.36, -.62, .36, .44], snd: 'beep', rotR: .2,
   msg: ['Ein Alien. Sucht auch die Kuh.', 'Außerirdisch, aber keine Kuh.', 'Das Alien sagt: Bliep. Das heißt nein.'],

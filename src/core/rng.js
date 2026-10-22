@@ -1,3 +1,4 @@
+// Random numbers for scene generation and helpers to draw from them.
 // Scene generation draws from rnd so a seed reproduces a level; effects and gameplay outside genScene use Math.random.
 export let rnd = Math.random;
 export const R = (a, b) => a + rnd() * (b - a);
