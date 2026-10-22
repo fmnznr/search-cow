@@ -141,7 +141,7 @@ Datei `.github/workflows/ci.yml`, läuft bei Push und Pull Request:
 
 GitHub Pages veröffentlicht weiter direkt aus dem Repo-Stamm von `master`. Sinnvoll: Branch-Schutz auf `master` mit Pflicht-Check `ci`.
 
-### 1.8 Gerätetest und Veröffentlichung
+### 1.8 Gerätetest und Veröffentlichung ✅ (v1.0.0)
 
 **Checkliste (echte Geräte):**
 - [ ] iPhone Safari: Ton nach erstem Tippen, Stummschalter, „Zum Home-Bildschirm“, Safe Area (Notch), Querformat
