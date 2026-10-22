@@ -238,7 +238,7 @@ export default {
 
 ### 2.5 Chill-Modus
 
-**Umgesetzt (Teil 1):** `src/modes/chill.js`: keine Uhr, keine Punkte, Radar unbegrenzt (∞), Fehlklicks ohne Strafe, alle Welten und Modifikatoren (höchstens einer, ab Level 4), Dichte gedeckelt, Goldkuh 20 %. Modus-Wahl „Klassisch / Chill“ auf dem Startbildschirm (gemerkt in `wdk-settings`), eigener Einleitungstext, HUD ohne Punkte und Uhr, „Beenden“ statt „Aufgeben“, Endbildschirm „Feierabend“ ohne Punkte und Rekord, Musik etwas langsamer. Szenen-Kennungen im Chill-Modus mit „c“ davor (`?szene=c5-123`). Fairness-Test prüft beide Modi, neue Spielrunde „chill“ in den Schnappschüssen, 2 Unit-Tests. **Offen (Teil 2):** Kuh-Album.
+**Umgesetzt (Teil 1):** `src/modes/chill.js`: keine Uhr, keine Punkte, Radar unbegrenzt (∞), Fehlklicks ohne Strafe, alle Welten und Modifikatoren (höchstens einer, ab Level 4), Dichte gedeckelt, Goldkuh 20 %. Modus-Wahl „Klassisch / Chill“ auf dem Startbildschirm (gemerkt in `wdk-settings`), eigener Einleitungstext, HUD ohne Punkte und Uhr, „Beenden“ statt „Aufgeben“, Endbildschirm „Feierabend“ ohne Punkte und Rekord, Musik etwas langsamer. Szenen-Kennungen im Chill-Modus mit „c“ davor (`?szene=c5-123`). Fairness-Test prüft beide Modi, neue Spielrunde „chill“ in den Schnappschüssen, 2 Unit-Tests. **Teil 2 umgesetzt:** Kuh-Album mit 36 Stickern (6 Welten × Kuh, Gold, Nacht, Gewusel, Doppel, Mini), gesammelt in beiden Modi, gezeichnet mit der echten Kuh-Figur samt Welt-Accessoire; „Neuer Sticker!“ in der Fund-Meldung; Album über Start- und Endbildschirm. Speicher `wdk-album`, Datenschutzerklärung ergänzt, 3 Unit-Tests, Smoke-Test öffnet das Album.
 
 Erster neuer Nutzer des Regelwerks – bewusst einfach, damit er die Schnittstelle prüft.
 

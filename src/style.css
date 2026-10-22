@@ -201,6 +201,14 @@ body{
 .mode small{font:600 .78rem/1.25 var(--body);opacity:.8}
 .mode[aria-checked="true"]{background:var(--snout)}
 .mode:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.album{display:grid;gap:12px}
+.album-row h3{margin:0 0 6px;font:400 1.05rem/1.1 var(--display)}
+.album-cells{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
+.album-cells figure{margin:0;display:grid;gap:3px;justify-items:center;min-width:0}
+.album-cells canvas{width:100%;aspect-ratio:5/4;display:block}
+.album-cells figcaption{font:700 .62rem/1.1 var(--body);text-align:center;opacity:.55;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.album-cells .got figcaption{opacity:1}
+#album h2{margin:0;font:400 clamp(2.1rem,7vw,3rem)/.95 var(--display);text-wrap:balance}
 .volumes{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
 .volumes label{display:grid;gap:4px;font:700 .82rem/1.2 var(--body)}
 .volumes input{width:100%;margin:0;accent-color:var(--snout-deep)}

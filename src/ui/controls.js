@@ -8,6 +8,7 @@ import { G } from '../game/state.js';
 import { els } from './hud.js';
 import { startGame, timeUp, toTitle } from '../game/flow.js';
 import { openBoard, showBoardTab, submitEntry } from './over.js';
+import { openAlbum } from './album.js';
 import { pauseGame, resumeGame, useRadar } from '../game/actions.js';
 
 export const musicMayPlay = () => !G.paused && G.state !== 'reveal';
@@ -41,6 +42,9 @@ $('#pauseMusicBtn').addEventListener('click', toggleMusic);
 $('#boardBtn').addEventListener('click', openBoard);
 $('#overBoardBtn').addEventListener('click', openBoard);
 $('#boardClose').addEventListener('click', () => { $('#board').hidden = true; });
+$('#albumBtn').addEventListener('click', openAlbum);
+$('#overAlbumBtn').addEventListener('click', openAlbum);
+$('#albumClose').addEventListener('click', () => { $('#album').hidden = true; });
 $('#tabAll').addEventListener('click', () => showBoardTab('all'));
 $('#tabLocal').addEventListener('click', () => showBoardTab('local'));
 $('#entryForm').addEventListener('submit', submitEntry);
