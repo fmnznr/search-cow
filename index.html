@@ -2462,24 +2462,47 @@ function update(dt) {
   cv.style.cursor = G.state === 'play' && ptr.type === 'mouse' ? 'none' : 'default';
 }
 function frame(now) {
+  if (MANUAL_CLOCK) { requestAnimationFrame(frame); return; }
   const dt = Math.min(.05, (now - last) / 1000); last = now;
   if (!G.paused) update(dt);
   render();
   requestAnimationFrame(frame);
 }
 
-/* ---------- boot ---------- */
-function start(data) {
-  resize(); syncSoundLabels(); setupInstall(); BOARD.init();
-  try { if (new URLSearchParams(location.search).has('test')) window.__WDK__ = {
-    levelScene, entBox, resize, HUD_TOP, get W() { return W; }, get H() { return H; },
+/* ---------- test hooks (only with ?test) ---------- */
+// The contract for scripts/fairness.mjs and scripts/snapshots.mjs; keep it stable while refactoring.
+const query = (() => { try { return new URLSearchParams(location.search); } catch (_) { return new URLSearchParams(); } })();
+const TEST = query.has('test');
+// ?clock=manual stops the frame loop; time then only moves through advance(), so runs are reproducible.
+const MANUAL_CLOCK = TEST && query.get('clock') === 'manual';
+function testHooks() {
+  return {
+    levelScene, genScene, entBox, resize, HUD_TOP, get W() { return W; }, get H() { return H; },
     // Where HUD and radar button really sit for this scene, with the widest pill row the game can show.
     uiRects(sc) {
       scene = sc; showGameUi(true); updateLevelPills(); els.combo.hidden = false; els.combo.textContent = 'Serie ×4,5';
       const hud = Math.max(...[...els.hud.children].map(el => el.getBoundingClientRect().bottom)), r = els.controls.getBoundingClientRect();
       return { hudBottom: hud, controls: [r.left, r.top, r.right, r.bottom] };
-    }
-  }; } catch (_) {}
+    },
+    // Background, figures and ambience of a scene at time t, without HUD, lens or effects.
+    renderScene(sc, t) {
+      scene = sc; paintBg(sc);
+      c.setTransform(DPR, 0, 0, DPR, 0, 0); c.lineJoin = 'round'; c.lineCap = 'round';
+      drawWorld(c, t, null);
+      return cv.toDataURL('image/png');
+    },
+    startGame, useRadar,
+    advance(sec, dt = 1 / 60) { for (let i = Math.round(sec / dt); i > 0; i--) if (!G.paused) update(dt); },
+    guess(x, y, type = 'mouse') { ptr.type = type; guess(x, y); },
+    cowCenter: () => cowCenter(),
+    state: () => ({ state: G.state, lv: G.lv, score: G.score, cows: G.cows, time: Math.round(G.time * 1000) / 1000, streak: G.streak, bestStreak: G.bestStreak, radar: G.radar, misses: G.misses, scene: scene && sceneId(scene), world: scene && scene.world })
+  };
+}
+
+/* ---------- boot ---------- */
+function start(data) {
+  resize(); syncSoundLabels(); setupInstall(); BOARD.init();
+  if (TEST) window.__WDK__ = testHooks();
   if (data && data.G && ['play', 'found', 'trans'].includes(data.state)) {
     Object.assign(G, data.G, { paused: false, state: 'trans' });
     $('#title').hidden = true;
