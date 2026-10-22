@@ -1,0 +1,220 @@
+# Roadmap: Wo ist die Kuh?
+
+Drei Phasen, jede für sich veröffentlichbar. Phase 1 ist ausgearbeitet und direkt umsetzbar, Phase 2 und 3 sind Grobpläne mit den Entscheidungen, die vorher fallen müssen.
+
+| Phase | Ziel | Aufwand | Server |
+|---|---|---|---|
+| 1 Soft Launch | Öffentlich, rechtlich sauber, faire Szenen, auf itch.io | 1–2 Tage | nein |
+| 2 Kuh des Tages | Grund zum Wiederkommen und Teilen, Englisch | 1–2 Wochen | nein |
+| 3 Community | Globale Bestenliste, Spieleportale | 2–3 Wochen | ja |
+
+Zwischen den Phasen steht jeweils eine Go/No-go-Entscheidung (siehe Ende von Phase 2).
+
+---
+
+## Phase 1: Soft Launch (detailliert)
+
+Reihenfolge einhalten: 1.1 ist Voraussetzung für 1.2, 1.7 setzt 1.1 bis 1.3 voraus.
+
+### 1.1 Szenen per Seed reproduzierbar machen
+
+**Warum:** Fairness-Test (1.2), Fehlerberichte („Szene 48213 ist kaputt“) und Phase 2 brauchen deterministische Szenen.
+
+**Ist-Zustand:** `R`, `RI`, `pick`, `wpick`, `mkBlob`, `mkSpots`, alle `init()`-Funktionen der Typen und `genScene` nutzen direkt `Math.random`. Nur der Hintergrund ist schon geseedet (`mulberry(sc.seed)` in `paintBg`).
+
+**Umsetzung in `src/game.html`:**
+1. Eine austauschbare Quelle einführen, direkt bei den Helfern (ca. Zeile 382):
+   ```js
+   let rnd = Math.random;
+   const R = (a, b) => a + rnd() * (b - a);
+   const RI = (a, b) => Math.floor(a + rnd() * (b - a + 1));
+   const pick = a => a[Math.floor(rnd() * a.length)];
+   ```
+2. Alle `Math.random()` in Szenen-relevantem Code durch `rnd()` ersetzen: `wpick`, `mkBlob`, Typ-`init`s, `personInit`, `initClouds`/`initAmb`, `planFor`, `makeEnt`, `genScene`.
+   **Nicht** ersetzen (bleibt `Math.random`, damit Effekte den Seed-Strom nicht verschieben): Rauschen im Audio (Z. 549), Screenshake (Z. 1978), Übergangs-Blobs (Z. 2043), Fehlklick-Texte (Z. 2164), Laufzeit-Verhalten in der Update-Schleife (Z. 2381, 2386).
+3. `genScene(lv, opts)` bekommt `opts.seed`. Ablauf: `const seed = opts.seed ?? (Math.random() * 2 ** 31) | 0; rnd = mulberry(seed); … ; rnd = Math.random;` (in `try/finally`). `sc.seed = seed`, `planFor` läuft innerhalb des geseedeten Blocks.
+4. URL-Parameter für Reproduktion: `?seed=12345&lv=7` startet direkt dieses Level mit diesem Seed (nur Einstiegspunkt, kein UI).
+5. Seed sichtbar machen: im Pause-Dialog klein „Szene 7-12345“ (Level-Seed), damit Spieler Fehler melden können.
+
+**Hinweis:** Die Szene hängt weiterhin von der Fenstergröße ab (`W`, `H`, `U` bestimmen Anzahl und Position). Gleicher Seed + gleiche Fenstergröße = gleiche Szene. Das reicht für Phase 1; Phase 2 muss das lösen.
+
+**Fertig, wenn:** Zwei Aufrufe von `genScene(5, { seed: 42 })` bei gleicher Fenstergröße identische `ents` (Typ, Position, Farben) liefern.
+
+### 1.2 Automatischer Fairness-Test
+
+**Ist-Zustand:** `genScene` schützt die Kuh schon teilweise: Figuren vor der Kuh, die ihren Kern überlappen, werden entfernt; die Kuh meidet HUD und Radar-Knopf. Ungeprüft ist, ob das immer greift. Insbesondere nutzt die Platzierungsschleife (400 Versuche) nach dem letzten Fehlversuch trotzdem die letzte Position.
+
+**Umsetzung:**
+1. In `genScene` die Platzierung prüfbar machen: `sc.cowPlaced = true` nur bei `break`. Falls `false`: Szene mit neuem Seed (abgeleitet: `seed + 1`) neu erzeugen, maximal 5-mal.
+2. Test-Hook nur mit `?test`: `window.__WDK__ = { genScene, entBox, resize: … , get W(), get H() }`.
+3. Neues Skript `scripts/fairness.mjs` (Playwright, Chromium unter `/opt/pw-browsers` bzw. Standard):
+   - Viewports: 360×640, 390×844, 768×1024, 1366×768, 1920×1080
+   - Level 1–20 und für jedes Level die Modifikatoren `night`, `move`, `twins`, `tiny` erzwingen (über `opts.plan`)
+   - je Kombination 50 Seeds (lokal; in CI 10)
+   - Prüfungen pro Szene:
+     - **Platziert:** `sc.cowPlaced === true`
+     - **Sichtbar:** Kuh-Box liegt komplett im Fenster, unterhalb der HUD-Höhe, nicht im Radar-Bereich unten rechts
+     - **Nicht verdeckt:** Fläche der Kuh-Box, die von Boxen später gezeichneter Figuren (Index in `ents` nach der Kuh) bedeckt ist, ≤ 35 %
+     - **Treffbar:** kürzere Seite der Kuh-Box ≥ 36 CSS-px (Touch-Ziel; bei `tiny` ≥ 28)
+   - Ausgabe: Tabelle der Verstöße mit `viewport, lv, mods, seed` plus Exit-Code ≠ 0
+4. Gefundene Verstöße beheben (vermutlich Schwellen in `genScene` nachziehen), bis der Test grün ist.
+5. Optional, wenn Box-Heuristik zu grob ist: Pixeltest – Szene einmal mit und einmal ohne Kuh rendern, Anteil geänderter Pixel im Kuh-Bereich messen.
+
+Der `move`-Modus wird nur zum Startzeitpunkt geprüft; dass laufende Figuren die Kuh kurz verdecken, ist gewollt.
+
+**Fertig, wenn:** `node scripts/fairness.mjs` lokal mit 50 Seeds ohne Verstoß durchläuft.
+
+### 1.3 Schriften selbst ausliefern
+
+**Warum:** Google Fonts direkt einzubinden überträgt IP-Adressen an Google; in Deutschland wurde das abgemahnt (LG München I, 20.01.2022). Außerdem funktionieren die Schriften dann sicher offline.
+
+**Rahmen:** Das claude.ai-Artifact darf Stylesheets nur von Google Fonts laden. Deshalb bleibt `src/game.html` unverändert, und nur `build.mjs` tauscht die Einbindung für die Web-App.
+
+**Umsetzung:**
+1. Neues Skript `scripts/fetch-fonts.mjs` (einmalig ausführen, Ergebnis einchecken): lädt die CSS von `fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap` mit Chrome-User-Agent, lädt nur die Subsets `latin` und `latin-ext` als woff2 nach `fonts/`, schreibt `fonts/fonts.css` mit lokalen `url(...)`.
+2. Lizenz: beide Schriften stehen unter SIL OFL 1.1 → `fonts/OFL.txt` beilegen.
+3. `scripts/build.mjs`: die zwei `preconnect`-Zeilen und den Google-Fonts-`<link>` aus dem Body entfernen und `<link rel="stylesheet" href="fonts/fonts.css">` in den Head setzen.
+4. `src/sw.template.js`: `fonts/fonts.css` und alle woff2 in `SHELL`, den `FONT_HOSTS`-Zweig entfernen. Die Font-Dateien auch in den Versions-Hash in `build.mjs` aufnehmen.
+
+**Fertig, wenn:** Beim Laden von `index.html` keine Anfrage an einen fremden Host geht (wird in 1.7 automatisch geprüft) und die Schriften im Flugmodus nach dem ersten Besuch korrekt erscheinen.
+
+### 1.4 Impressum und Datenschutz
+
+*Keine Rechtsberatung; bei Unsicherheit Generator (z. B. e-recht24) oder Anwalt.*
+
+1. `impressum.html` und `datenschutz.html` als schlichte statische Seiten im Repo-Stamm, gleiche Schriften und Farben.
+2. **Impressum** (§ 5 DDG): Name, ladungsfähige Anschrift, E-Mail. Wer die Privatadresse nicht veröffentlichen will: Impressum-Service mit c/o-Adresse.
+3. **Datenschutz**, Inhalte:
+   - Verantwortlicher (wie Impressum)
+   - Hosting bei GitHub Pages: Server-Logs mit IP-Adresse, Übermittlung in die USA (EU-US Data Privacy Framework), Rechtsgrundlage Art. 6 Abs. 1 lit. f DSGVO
+   - Lokaler Speicher auf dem Gerät, ohne Übertragung: `wdk-sound`, `wdk-music`, `wdk-record`, `wdk-board`, `wdk-nick`; nötig für vom Nutzer gewünschte Funktionen (§ 25 Abs. 2 TDDDG)
+   - Service Worker / Offline-Cache
+   - Keine Cookies, kein Tracking, keine Fremdanbieter (gilt erst nach 1.3)
+   - Betroffenenrechte, Beschwerderecht bei der Aufsichtsbehörde
+4. Links „Impressum · Datenschutz“ klein unten auf dem Startbildschirm, nur wenn `STANDALONE_HOST` (im claude.ai-Artifact nicht).
+5. Beide Seiten in die `SHELL` des Service Workers.
+
+**Fertig, wenn:** Beide Seiten erreichbar sind, vom Startbildschirm verlinkt und alle tatsächlich genutzten Speicher-Schlüssel genannt sind.
+
+### 1.5 Vorschau beim Teilen
+
+1. In `build.mjs` (Head) ergänzen: `og:title`, `og:description`, `og:url` (`https://fmnznr.github.io/search-cow/`), `og:image`, `og:locale=de_DE`, `twitter:card=summary_large_image`.
+2. `icons/og.png` (1200×630): per Playwright-Skript `scripts/og-image.mjs` aus dem Startbildschirm in 1200×630 rendern, ggf. von Hand nachbearbeiten.
+
+**Fertig, wenn:** Ein geteilter Link in Messenger oder Social Media Bild, Titel und Beschreibung zeigt.
+
+### 1.6 itch.io-Version
+
+itch.io bettet HTML-Spiele in einen iframe auf einer eigenen Domain ein. Service Worker und App-Installation sind dort sinnlos oder verwirrend.
+
+**Umsetzung:**
+1. `build.mjs --itch` erzeugt `dist/itch/` mit `index.html`, `fonts/`, `icons/` und daraus `dist/itch.zip`. `dist/` in `.gitignore`.
+2. In dieser Variante: keine Service-Worker-Registrierung, keine Manifest-Einbindung, kein Impressum-Link (itch hat eigene Seiten; Impressum gehört dann ins itch-Profil).
+3. Im Spiel: Install-Knopf und iOS-Hinweis ausblenden, wenn `window.top !== window` (gilt für jeden iframe, also auch generisch).
+4. Bei itch.io anlegen:
+   - Kind of project: HTML
+   - Embed: „Embed in page“, Viewport 960×640, Optionen: Mobile friendly, Fullscreen button, Orientation: Default
+   - Klassifikation: Game, Genre Puzzle, Tags u. a. `hidden-object`, `casual`, `cute`, `german`
+   - Screenshots von 3–5 Welten (gleiches Playwright-Skript wie 1.5)
+   - Sichtbarkeit zunächst „Restricted“ zum Testen, dann „Public“
+
+**Fertig, wenn:** Das ZIP auf itch.io im Browser und auf dem Handy läuft, inkl. Ton nach dem ersten Tippen.
+
+### 1.7 CI auf GitHub Actions
+
+Datei `.github/workflows/ci.yml`, läuft bei Push und Pull Request:
+1. `node scripts/build.mjs` und `git diff --exit-code` – stellt sicher, dass `index.html` und `sw.js` zu `src/` passen.
+2. Smoke-Test `scripts/smoke.mjs` (Playwright): Seite laden, Spiel starten, 3 s laufen lassen; prüfen: keine Konsolenfehler, keine Anfragen an fremde Hosts.
+3. `node scripts/fairness.mjs --seeds 10`.
+4. `package.json` mit `playwright` als devDependency und Skripten `build`, `test`, `fairness` anlegen.
+
+GitHub Pages veröffentlicht weiter direkt aus dem Repo-Stamm von `master`. Sinnvoll: Branch-Schutz auf `master` mit Pflicht-Check `ci`.
+
+### 1.8 Gerätetest und Veröffentlichung
+
+**Checkliste (echte Geräte):**
+- [ ] iPhone Safari: Ton nach erstem Tippen, Stummschalter, „Zum Home-Bildschirm“, Safe Area (Notch), Querformat
+- [ ] Android Chrome, möglichst älteres Gerät: flüssig in Level 14+ mit `move`; App installieren
+- [ ] Desktop: Chrome, Firefox, Safari; Tastatur (Leertaste, P, M, Esc)
+- [ ] Update-Pfad: neue Version deployen, installierte App öffnen → spätestens beim zweiten Start neue Version
+- [ ] Offline: Flugmodus, App startet mit Schriften
+- [ ] itch.io-Einbettung auf Handy und Desktop
+
+**Veröffentlichung:**
+1. Tag `v1.0.0`, kurze `CHANGELOG.md`.
+2. README um Live-Link, itch.io-Link und Screenshot ergänzen.
+3. Erste Spieler: Freundeskreis, dann gezielt (z. B. r/WebGames, itch.io-Devlog). Feedback per GitHub-Issues oder E-Mail aus dem Impressum.
+
+### Zu klären vor Phase 1
+- Name und Anschrift fürs Impressum, oder Impressum-Service?
+- itch.io-Account vorhanden?
+- Soll der Seed im Pause-Dialog sichtbar sein oder nur per URL?
+
+---
+
+## Phase 2: Kuh des Tages (Grobplan)
+
+### 2.1 Code aufteilen
+- `src/` in Module: `rng`, `audio`, `music`, `entities/*`, `worlds/*`, `scene`, `render`, `ui`, `board`, `main`.
+- esbuild (oder Vite + Single-File-Plugin) baut daraus wieder **eine** HTML-Datei für Artifact, Web-App und itch.
+- `scene` als reine Funktion ohne DOM und Canvas, damit sie in Tests und später auf dem Server (Phase 3) läuft.
+- Unit-Tests (z. B. `node --test`) für `rng`, `planFor`, `genScene`, Punkteberechnung.
+
+### 2.2 Gleiche Szene auf allen Geräten
+Größtes technisches Thema: Heute hängt die Szene von der Fenstergröße ab.
+- **Empfehlung:** Tagesszene in fester virtueller Fläche erzeugen, je eine für Hoch- und Querformat (z. B. 400×800 und 1280×720), und aufs Fenster skalieren, Ränder mit Hintergrund füllen.
+- Hoch- und Querformat sind dann zwei Layouts derselben Tageskuh; die Bestenliste trennt sie nicht, die Schwierigkeit muss aber vergleichbar sein (Fairness-Test aus 1.2 auf beide anwenden).
+
+### 2.3 Tagesmodus
+- Seed = Hash aus Datum; Tageswechsel um 00:00 Europe/Berlin (oder UTC – entscheiden).
+- Schwierigkeit nach Wochentag (Mo leicht → So schwer).
+- Ein gewerteter Versuch pro Tag, danach Übungsmodus. Ergebnis: Zeit, Fehlklicks, Radar ja/nein.
+- Teilen: `navigator.share`, sonst Zwischenablage. Text z. B. „Wo ist die Kuh? #127 🐄 3,2 s · ❌❌ · wo-ist-die-kuh.de“.
+- Lokale Statistik: Serie, Verteilung der Zeiten, Countdown bis zur nächsten Kuh.
+- Startbildschirm: zwei Einstiege „Kuh des Tages“ und „Endlos“.
+
+### 2.4 Englisch
+- Alle Texte in ein `STR`-Objekt pro Sprache; Sprache aus `navigator.language`, umschaltbar.
+- Witze und Ränge übertragen statt übersetzen (Wortspiele neu schreiben).
+- Titel: „Where's the Cow?“; eigene `og`-Tags pro Sprache.
+
+### 2.5 Eigene Domain (optional)
+- Kurze Domain für den Teilen-Text; GitHub Pages mit Custom Domain und HTTPS.
+- Impressum/Datenschutz anpassen.
+
+### 2.6 Messen (optional)
+- Ohne Messung ist die Go/No-go-Entscheidung für Phase 3 Bauchgefühl. Wenn überhaupt: cookielos und datensparsam (z. B. Plausible oder selbst gehostetes Umami), Datenschutz ergänzen.
+
+### Go/No-go für Phase 3
+Phase 3 nur, wenn nach ca. 4 Wochen Tagesmodus zum Beispiel ≥ 100 tägliche Spieler oder spürbares Teilen ohne eigenes Zutun. Sonst bei Phase 2 bleiben – das Spiel ist dann trotzdem rund.
+
+---
+
+## Phase 3: Community (Grobplan)
+
+### 3.1 Backend
+- Cloudflare Workers + D1 (kostenloser Plan reicht lange). Alternative: Supabase.
+- Endpunkte: `POST /score`, `GET /board/day/:date`, `GET /board/alltime`.
+- Identität: zufällige Geräte-ID im `localStorage` plus Spitzname; kein Login.
+- Rate-Limit pro IP und Geräte-ID.
+- Das claude.ai-Artifact behält seine eigene Bestenliste über `window.claude`; die Web-App nutzt das Backend.
+
+### 3.2 Schummeln eindämmen
+- Der Server kennt den Tages-Seed und kann mit dem `scene`-Modul aus 2.1 die Szene nachrechnen: Lag der gemeldete Klick (Position + Zeitpunkt) in der Kuh-Box?
+- Plausibilität: Mindestzeit, maximale Punkte pro Kuh im Endlosmodus.
+- Restliches Schummeln akzeptieren; Ausreißer manuell löschen können.
+
+### 3.3 Spitznamen
+- Sperrliste (de/en), Länge und Zeichen begrenzen, „Melden“-Knopf, einfache Admin-Ansicht zum Löschen.
+
+### 3.4 Datenschutz
+- Neu: Server verarbeitet IP und Geräte-ID (pseudonym), Speicherdauer festlegen, Cloudflare als Auftragsverarbeiter nennen, Löschmöglichkeit anbieten.
+
+### 3.5 Spieleportale
+- CrazyGames (Einstieg über „Basic Launch“, Ausbau abhängig von Kennzahlen), alternativ GameDistribution; Poki ist sehr selektiv.
+- Voraussetzungen: Englisch, Portal-SDK (Lade-Events, Werbepausen), oft keine externen Links, teils Exklusivität.
+- Eigener Build-Ziel `--portal`; Werbung nur dort, nicht in der eigenen Web-App.
+- Erwartung: Einnahmen eher klein; Hauptnutzen ist Reichweite.
+
+### 3.6 Betrieb
+- Fehler-Logging minimal (Worker-Logs), Backup der D1-Datenbank, Kostenalarm.
