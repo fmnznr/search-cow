@@ -1,9 +1,10 @@
 // Music: a small sequenced loop per world, quiet under the effects.
+import { saveSettings, settings } from '../store/settings.js';
 import { SND } from './sfx.js';
 
 export const MUSIC = (() => {
   let on = true, armed = false, playing = false, gain = null, filt = null, noise = null, nextT = 0, step = 0, iv = 0, mode = 'weide', fast = false;
-  try { on = localStorage.getItem('wdk-music') !== '0'; } catch (_) {}
+  on = settings.music;
   const VOL = .16;
   // 8 bars of 8ths, offsets in semitones above the melody root; null = rest
   const MEL = [7, null, 9, 7, 4, null, 2, 4, 7, null, null, 4, 2, null, 0, 2, 4, null, 7, 9, 12, null, 9, 7, 9, null, 7, 4, 7, null, null, null,
@@ -19,7 +20,7 @@ export const MUSIC = (() => {
     if (!gain) {
       gain = a.createGain(); gain.gain.value = VOL;
       filt = a.createBiquadFilter(); filt.type = 'lowpass'; filt.frequency.value = 14000;
-      gain.connect(filt); filt.connect(SND.master());
+      gain.connect(filt); filt.connect(SND.musicBus());
       const len = Math.floor(a.sampleRate * .1); noise = a.createBuffer(1, len, a.sampleRate);
       const d = noise.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
     }
@@ -45,7 +46,7 @@ export const MUSIC = (() => {
     if (pos % 2 === 1 && !st.space) shaker(a, t, pos === 3 || pos === 7 ? .045 : .022);
     if (s < 64) { const m = MEL[s]; if (m != null) (st.bell ? bellish : marimba)(a, t, mf(72 + k + m), .2); }
     else if (pos === 0 || pos === 3 || pos === 5) marimba(a, t, mf(60 + k + r + [0, third, 7, 12][(s >> 1) % 4]), .08);
-    if (s === 0 || s === 64) SND.bell(1 + k / 24, Math.max(0, t - a.currentTime), .045);
+    if (s === 0 || s === 64) SND.bell(1 + k / 24, Math.max(0, t - a.currentTime), .045, true);
   }
   function tick() {
     const a = ensure(); if (!a || !playing) return;
@@ -55,7 +56,7 @@ export const MUSIC = (() => {
   }
   return {
     get on() { return on; },
-    toggle() { on = !on; try { localStorage.setItem('wdk-music', on ? '1' : '0'); } catch (_) {} return on; },
+    toggle() { on = !on; saveSettings({ music: on }); return on; },
     play() {
       if (!armed || !on || !SND.on || playing || document.hidden) return;
       const a = ensure(); if (!a) return;

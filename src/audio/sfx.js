@@ -1,10 +1,12 @@
 // Sound effects, all synthesized with Web Audio; nothing is loaded.
 import { RI } from '../core/rng.js';
 import { clamp } from '../core/util.js';
+import { saveSettings, settings } from '../store/settings.js';
 
 export const SND = (() => {
-  let ac = null, master = null, on = true;
-  try { on = localStorage.getItem('wdk-sound') !== '0'; } catch (_) {}
+  let ac = null, master = null, sfxBus = null, musicBus = null, on = settings.sound;
+  // Slider position 0..1 to gain; squared so the lower half of the slider is not all loud.
+  const gainOf = v => v * v;
   function ctx() {
     if (!on) return null;
     if (!ac) {
@@ -12,14 +14,17 @@ export const SND = (() => {
       try { ac = new A(); } catch (_) { return null; }
       master = ac.createGain(); master.gain.value = .55;
       const comp = ac.createDynamicsCompressor(); master.connect(comp); comp.connect(ac.destination);
+      // Effects and music get their own bus, so their volumes can be set apart.
+      sfxBus = ac.createGain(); sfxBus.gain.value = gainOf(settings.sfxVolume); sfxBus.connect(master);
+      musicBus = ac.createGain(); musicBus.gain.value = gainOf(settings.musicVolume); musicBus.connect(master);
     }
     if (ac.state === 'suspended') ac.resume().catch(() => {});
     return ac;
   }
-  function dest(pan) {
+  function dest(pan, bus = sfxBus) {
     const g = ac.createGain();
-    if (pan && ac.createStereoPanner) { const p = ac.createStereoPanner(); p.pan.value = clamp(pan, -1, 1); g.connect(p); p.connect(master); }
-    else g.connect(master);
+    if (pan && ac.createStereoPanner) { const p = ac.createStereoPanner(); p.pan.value = clamp(pan, -1, 1); g.connect(p); p.connect(bus); }
+    else g.connect(bus);
     return g;
   }
   function ramp(param, pts, t) { pts.forEach(([dt, v], i) => { if (i === 0) param.setValueAtTime(v, t + dt); else param.exponentialRampToValueAtTime(v, t + dt); }); }
@@ -35,19 +40,25 @@ export const SND = (() => {
     g.gain.setValueAtTime(pk, t + Math.max(at, o.dur - rel)); g.gain.exponentialRampToValueAtTime(.0001, t + o.dur);
     node.connect(g); osc.start(t); osc.stop(t + o.dur + .05);
   }
-  function bell(p = 1, delay = 0, vol = .3) {
+  function bell(p = 1, delay = 0, vol = .3, music = false) {
     const a = ctx(); if (!a) return; const t = a.currentTime + delay + .005;
-    const g = dest(0); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(vol * .25, t + .05); g.gain.exponentialRampToValueAtTime(.0001, t + .55);
+    const g = dest(0, music ? musicBus : sfxBus); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(vol * .25, t + .05); g.gain.exponentialRampToValueAtTime(.0001, t + .55);
     const bp = a.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 950 * p; bp.Q.value = 1.1; bp.connect(g);
     for (const f of [540, 800]) { const o = a.createOscillator(); o.type = 'square'; o.frequency.value = f * p; o.connect(bp); o.start(t); o.stop(t + .6); }
   }
   const pluck = (f, delay = 0, vol = .22, type = 'triangle') => voice({ type, f: [[0, f], [.28, f * .995]], dur: .3, peak: vol, a: .004, rel: .26, delay });
   return {
     get on() { return on; },
-    toggle() { on = !on; try { localStorage.setItem('wdk-sound', on ? '1' : '0'); } catch (_) {} if (on) ctx(); return on; },
+    toggle() { on = !on; saveSettings({ sound: on }); if (on) ctx(); return on; },
     unlock() { ctx(); },
     ctx,
-    master: () => master,
+    musicBus: () => musicBus,
+    // kind: 'sfx' or 'music', v: 0..1
+    setVolume(kind, v) {
+      saveSettings({ [kind === 'music' ? 'musicVolume' : 'sfxVolume']: v });
+      const bus = kind === 'music' ? musicBus : sfxBus;
+      if (bus) bus.gain.setTargetAtTime(gainOf(v), ac.currentTime, .05);
+    },
     moo(pan = 0, p = 1, len = 1) {
       const d = len, f = 118 * p;
       voice({ type: 'sawtooth', f: [[0, f * .82], [.16, f * 1.06], [d * .62, f], [d, f * .72]], dur: d, peak: .5, a: .09, rel: .32, vib: [5.2, f * .03], filt: { type: 'lowpass', Q: 6, f: [[0, 260], [.24, 980], [d * .7, 720], [d, 300]] }, pan });

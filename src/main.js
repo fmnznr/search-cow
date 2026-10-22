@@ -4,6 +4,7 @@ import { $ } from './core/util.js';
 import './render/draw.js';
 import './core/view.js';
 import { TEST } from './core/platform.js';
+import './store/settings.js';
 import { BOARD } from './store/board.js';
 import './audio/music.js';
 import './audio/sfx.js';

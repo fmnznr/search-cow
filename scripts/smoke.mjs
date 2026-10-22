@@ -22,6 +22,10 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 1366, height: 768 
   // Pause only works once the level is playable, after the intro transition.
   for (let i = 0; i < 20 && !(await page.isVisible('#pause')); i++) { await page.waitForTimeout(250); await page.click('#pauseBtn'); }
   check(/^Szene \d+-\d+$/.test(await page.textContent('#pauseScene')), `${tag}: keine Szenen-Kennung in der Pause`);
+  // Volume set in the pause dialog is stored and shows up on the title screen after a reload.
+  await page.locator('#pause input[data-vol="music"]').fill('40');
+  const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('wdk-settings') || '{}'));
+  check(stored.musicVolume === .4, `${tag}: Musik-Lautstärke nicht gespeichert`);
 
   for (const f of ['impressum.html', 'datenschutz.html']) {
     const res = await page.goto(srv.url + f);
@@ -30,6 +34,7 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 1366, height: 768 
 
   // Offline: once the service worker has cached the shell, the game must start without network.
   await page.goto(srv.url);
+  check(await page.inputValue('#title input[data-vol="music"]') === '40', `${tag}: Musik-Lautstärke nach Neuladen falsch`);
   await page.evaluate(() => navigator.serviceWorker.ready);
   await page.waitForTimeout(500);
   await ctx.setOffline(true);

@@ -195,6 +195,11 @@ body{
 .tog[aria-pressed="false"]{background:var(--track)}
 .tog:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
 .tog.app{background:var(--bell)}
+.volumes{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
+.volumes label{display:grid;gap:4px;font:700 .82rem/1.2 var(--body)}
+.volumes input{width:100%;margin:0;accent-color:var(--snout-deep)}
+.vol-more summary{cursor:pointer;width:max-content}
+.vol-more[open] summary{margin-bottom:10px}
 .entry{display:grid;gap:8px;border-top:3px dashed var(--track);padding-top:14px}
 .entry label{font:800 .72rem/1 var(--body);letter-spacing:.14em;text-transform:uppercase;opacity:.7}
 .entry-row{display:flex;gap:10px}
