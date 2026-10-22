@@ -1,9 +1,11 @@
-// Wraps src/game.html (the claude.ai artifact source) into a standalone
-// index.html with PWA head tags, builds the legal pages and stamps the service worker cache version.
+// Bundles src/main.js with esbuild into src/shell.html, giving dist/artifact.html (what gets published
+// as the claude.ai artifact) and the standalone index.html with PWA head tags. Also builds the legal pages
+// and stamps the service worker cache version.
 // node scripts/build.mjs --itch additionally writes dist/itch.zip for itch.io (no PWA, no legal pages).
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, rmSync, cpSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
+import { build } from 'esbuild';
 
 const root = new URL('../', import.meta.url);
 const read = f => readFileSync(new URL(f, root), 'utf8');
@@ -11,8 +13,18 @@ const APP_URL = 'https://fmnznr.github.io/search-cow/';
 const TITLE = 'Wo ist die Kuh?';
 const DESC = 'Wimmelspiel auf Zeit: Finde die eine echte Kuh zwischen Schafen, Dalmatinern und Leuten im Kuhkostüm.';
 
+const { outputFiles: [bundle] } = await build({
+  entryPoints: [new URL('src/main.js', root).pathname], bundle: true, write: false,
+  format: 'iife', target: 'es2020', charset: 'utf8', legalComments: 'none', banner: { js: "'use strict';" }
+});
+if (/<\/script/i.test(bundle.text)) throw new Error('"</script" in the bundle would end the inline script early');
+// Function replacers: the code contains "$" sequences that string replacements would interpret.
+const artifact = read('src/shell.html').replace('/* @style */', () => read('src/style.css').trimEnd()).replace('/* @script */', () => bundle.text.trimEnd());
+mkdirSync(new URL('dist/', root), { recursive: true });
+writeFileSync(new URL('dist/artifact.html', root), artifact);
+
 // The artifact may only load fonts from Google; the web app serves its own copies from fonts/ (scripts/fetch-fonts.mjs).
-const body = read('src/game.html').replace(/<link rel="(preconnect|stylesheet)" href="https:\/\/fonts\.(googleapis|gstatic)\.com[^>]*>\n/g, '').trim();
+const body = artifact.replace(/<link rel="(preconnect|stylesheet)" href="https:\/\/fonts\.(googleapis|gstatic)\.com[^>]*>\n/g, '').trim();
 if (/fonts\.(googleapis|gstatic)\.com/.test(body)) throw new Error('Google Fonts link in src/game.html not recognised');
 const fonts = readdirSync(new URL('fonts/', root)).filter(f => f.endsWith('.woff2')).map(f => `fonts/${f}`);
 const fontHead = `<link rel="stylesheet" href="fonts/fonts.css">
@@ -70,11 +82,11 @@ for (const f of assets) hash.update(readFileSync(new URL(f, root)));
 const version = hash.digest('hex').slice(0, 10);
 const shell = JSON.stringify(['./', './index.html', ...assets.map(f => `./${f}`)]);
 writeFileSync(new URL('sw.js', root), read('src/sw.template.js').replace('__VERSION__', version).replace('__SHELL__', shell));
-console.log(`index.html, ${legal.join(', ')} + sw.js built (cache wdk-${version})`);
+console.log(`dist/artifact.html, index.html, ${legal.join(', ')} + sw.js built (cache wdk-${version})`);
 
 if (process.argv.includes('--itch')) {
-  const dist = new URL('dist/', root), dir = new URL('dist/itch/', root);
-  rmSync(dist, { recursive: true, force: true }); mkdirSync(dir, { recursive: true });
+  const dir = new URL('dist/itch/', root);
+  rmSync(dir, { recursive: true, force: true }); rmSync(new URL('dist/itch.zip', root), { force: true }); mkdirSync(dir, { recursive: true });
   writeFileSync(new URL('index.html', dir), page(`${baseHead}\n${gameStyle}`, body));
   cpSync(new URL('fonts/', root), new URL('fonts/', dir), { recursive: true });
   mkdirSync(new URL('icons/', dir)); cpSync(new URL('icons/icon-192.png', root), new URL('icons/icon-192.png', dir));
