@@ -1433,7 +1433,8 @@ const MODS = {
 /* ================================================================
    Scene generation
    ================================================================ */
-let scene = null;
+// What changes while the game runs; one object so every module sees and updates the same values.
+const live = { scene: null, fx: [], texts: [], marks: [], iris: null, radar: null, trans: null, shake: 0, nightK: 1, timers: [], T: 0 };
 function planFor(lv) {
   let world = ORDER[(lv - 1) % 6];
   if (lv > 12) world = pick(ORDER);
@@ -1564,7 +1565,7 @@ function paintBg(sc) {
    ================================================================ */
 function drawEnt(c, e, t) {
   const T = TYPES[e.type], [x, y] = entPos(e, t);
-  if (scene.wd.ground && !e.float) {
+  if (live.scene.wd.ground && !e.float) {
     const b = T.box, w = (b[2] - b[0]) * e.s * .42;
     c.fillStyle = 'rgba(33,27,38,.14)'; E(c, x + (b[0] + b[2]) / 2 * e.s * e.flip * .3, e.y, w, Math.max(2, e.s * .06)); c.fill();
   }
@@ -1577,17 +1578,16 @@ function drawEnt(c, e, t) {
 }
 function drawWorld(c, t, view) {
   c.drawImage(bgCv, 0, 0, W, H);
-  if (scene.wd.back) scene.wd.back(c, t, scene);
-  for (const e of scene.ents) { if (view && !overlap(entBox(e, t), view)) continue; drawEnt(c, e, t); }
-  if (scene.wd.front) scene.wd.front(c, t, scene);
+  if (live.scene.wd.back) live.scene.wd.back(c, t, live.scene);
+  for (const e of live.scene.ents) { if (view && !overlap(entBox(e, t), view)) continue; drawEnt(c, e, t); }
+  if (live.scene.wd.front) live.scene.wd.front(c, t, live.scene);
 }
 
-let fx = [], texts = [], marks = [], iris = null, radar = null, trans = null, shake = 0, nightK = 1, timers = [], T = 0;
 const ptr = { x: -999, y: -999, inside: false, type: 'mouse', down: null, inspect: false, lp: 0 };
 const light = { x: 0, y: 0 };
 
 function burst(x, y, n, kinds, power = 1) {
-  for (let i = 0; i < n; i++) fx.push({ x, y, vx: R(-1, 1) * R(120, 360) * power, vy: -R(200, 520) * power, g: 900, life: 0, max: R(.9, 1.5), kind: pick(kinds), rot: R(0, TAU), vr: R(-7, 7), size: R(6, 12) * (U / 50), p: mkBlob(6, .4) });
+  for (let i = 0; i < n; i++) live.fx.push({ x, y, vx: R(-1, 1) * R(120, 360) * power, vy: -R(200, 520) * power, g: 900, life: 0, max: R(.9, 1.5), kind: pick(kinds), rot: R(0, TAU), vr: R(-7, 7), size: R(6, 12) * (U / 50), p: mkBlob(6, .4) });
 }
 function drawParticle(c, p) {
   const a = 1 - clamp((p.life - p.max * .7) / (p.max * .3), 0, 1);
@@ -1601,7 +1601,7 @@ function drawParticle(c, p) {
   }
   c.restore();
 }
-function floatText(x, y, text, color, size = 26, dur = 1.1) { texts.push({ x, y, text, color, size, t0: T, dur }); }
+function floatText(x, y, text, color, size = 26, dur = 1.1) { live.texts.push({ x, y, text, color, size, t0: live.T, dur }); }
 function canvasText(c, text, x, y, size, color, align = 'center') {
   c.font = `${size}px "Bagel Fat One", "Arial Rounded MT Bold", system-ui, sans-serif`; c.textAlign = align; c.textBaseline = 'middle';
   c.lineWidth = Math.max(3, size * .16); c.strokeStyle = INK; c.lineJoin = 'round'; c.strokeText(text, x, y); c.fillStyle = color; c.fillText(text, x, y);
@@ -1617,42 +1617,42 @@ function bubble(c, x, y, text, size, k) {
   c.fillStyle = INK; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(text, 0, -h / 2 + size * .05);
   c.restore();
 }
-function cowCenter(t = T) { const b = entBox(scene.cow, t); return [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2]; }
+function cowCenter(t = live.T) { const b = entBox(live.scene.cow, t); return [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2]; }
 function lensR() { return clamp(U * 1.7, 62, 100); }
 function nightR() { return clamp(Math.min(W, H) * .16, 85, 150); }
 
 function render() {
-  const t = T;
+  const t = live.T;
   c.setTransform(DPR, 0, 0, DPR, 0, 0); c.lineJoin = 'round'; c.lineCap = 'round';
-  if (!scene) { c.fillStyle = INK; c.fillRect(0, 0, W, H); return; }
+  if (!live.scene) { c.fillStyle = INK; c.fillRect(0, 0, W, H); return; }
   c.save();
-  if (shake > 0 && !RM) c.translate((Math.random() - .5) * shake * 26, (Math.random() - .5) * shake * 26);
+  if (live.shake > 0 && !RM) c.translate((Math.random() - .5) * live.shake * 26, (Math.random() - .5) * live.shake * 26);
   drawWorld(c, t, null);
-  for (const m of marks) {
+  for (const m of live.marks) {
     const k = (t - m.t0) / .9; if (k > 1) continue; const a = 1 - Math.max(0, (k - .6) / .4), s = 16 * easeBack(Math.min(1, k * 4)) * (U / 50);
     c.save(); c.globalAlpha = a; c.translate(m.x, m.y); c.rotate(-.1);
     c.beginPath(); c.moveTo(-s, -s); c.lineTo(s, s); c.moveTo(s, -s); c.lineTo(-s, s); stroke2(c, 6, '#ff5a4e', 3); c.restore();
   }
   c.restore();
-  const night = scene.mods.has('night');
-  if (night && nightK > .01) {
+  const night = live.scene.mods.has('night');
+  if (night && live.nightK > .01) {
     const lx = light.x, ly = light.y, r = nightR();
     const g = c.createRadialGradient(lx, ly, r * .55, lx, ly, r * 1.05);
-    g.addColorStop(0, 'rgba(8,6,22,0)'); g.addColorStop(1, `rgba(8,6,22,${.93 * nightK})`);
+    g.addColorStop(0, 'rgba(8,6,22,0)'); g.addColorStop(1, `rgba(8,6,22,${.93 * live.nightK})`);
     c.fillStyle = g; c.fillRect(0, 0, W, H);
-    c.beginPath(); c.arc(lx, ly, r * 1.02, 0, TAU); c.lineWidth = 2; c.strokeStyle = `rgba(255,240,180,${.25 * nightK})`; c.stroke();
+    c.beginPath(); c.arc(lx, ly, r * 1.02, 0, TAU); c.lineWidth = 2; c.strokeStyle = `rgba(255,240,180,${.25 * live.nightK})`; c.stroke();
   }
-  if (radar) {
-    const k = t - radar.t0;
-    if (k > 3.8) radar = null;
+  if (live.radar) {
+    const k = t - live.radar.t0;
+    if (k > 3.8) live.radar = null;
     else {
       const a = k < .3 ? k / .3 : k > 3.2 ? (3.8 - k) / .6 : 1;
       c.save(); c.globalAlpha = a;
-      c.beginPath(); c.arc(radar.x, radar.y, radar.r, 0, TAU); c.fillStyle = 'rgba(255,176,194,.16)'; c.fill();
+      c.beginPath(); c.arc(live.radar.x, live.radar.y, live.radar.r, 0, TAU); c.fillStyle = 'rgba(255,176,194,.16)'; c.fill();
       c.setLineDash([12, 9]); c.lineDashOffset = -k * 40; c.lineWidth = 4; c.strokeStyle = INK; c.stroke(); c.setLineDash([]);
-      c.lineWidth = 2; c.strokeStyle = MILK; c.beginPath(); c.arc(radar.x, radar.y, radar.r - 4, 0, TAU); c.stroke();
-      for (let i = 0; i < 3; i++) { const p = (k * .8 + i / 3) % 1; c.beginPath(); c.arc(radar.x, radar.y, radar.r * (1 - p), 0, TAU); c.strokeStyle = `rgba(242,90,130,${(1 - p) * .9})`; c.lineWidth = 3; c.stroke(); }
-      canvasText(c, 'Muh?', radar.x, radar.y - radar.r - 4, 22, GOLD);
+      c.lineWidth = 2; c.strokeStyle = MILK; c.beginPath(); c.arc(live.radar.x, live.radar.y, live.radar.r - 4, 0, TAU); c.stroke();
+      for (let i = 0; i < 3; i++) { const p = (k * .8 + i / 3) % 1; c.beginPath(); c.arc(live.radar.x, live.radar.y, live.radar.r * (1 - p), 0, TAU); c.strokeStyle = `rgba(242,90,130,${(1 - p) * .9})`; c.lineWidth = 3; c.stroke(); }
+      canvasText(c, 'Muh?', live.radar.x, live.radar.y - live.radar.r - 4, 22, GOLD);
       c.restore();
     }
   }
@@ -1672,16 +1672,16 @@ function render() {
   } else if (G.state === 'play' && night && ptr.type === 'mouse' && ptr.inside) {
     c.beginPath(); c.arc(ptr.x, ptr.y, 6, 0, TAU); c.lineWidth = 2; c.strokeStyle = 'rgba(255,240,180,.9)'; c.stroke();
   }
-  if (iris) {
-    const k = easeOut(clamp((t - iris.t0) / .6, 0, 1)), [cx, cy] = cowCenter(t), R0 = Math.hypot(W, H), r = R0 + (iris.r - R0) * k;
+  if (live.iris) {
+    const k = easeOut(clamp((t - live.iris.t0) / .6, 0, 1)), [cx, cy] = cowCenter(t), R0 = Math.hypot(W, H), r = R0 + (live.iris.r - R0) * k;
     c.save(); c.beginPath(); c.rect(0, 0, W, H); c.arc(cx, cy, r, 0, TAU, true); c.fillStyle = `rgba(33,27,38,${.62 * k})`; c.fill('evenodd');
     c.beginPath(); c.arc(cx, cy, r, 0, TAU); c.lineWidth = 4; c.strokeStyle = `rgba(255,253,248,${.9 * k})`; c.stroke(); c.restore();
-    const b = entBox(scene.cow, t), bk = (t - iris.t0 - .15) / .35;
-    if (bk > 0) bubble(c, clamp((b[0] + b[2]) / 2 + scene.cow.s * .2 * scene.cow.flip, 90, W - 90), Math.max(b[1] - 14, 70), iris.lost ? 'Hier war ich!' : (scene.golden ? 'MUUUH!' : 'MUH!'), clamp(U * .55, 22, 34), bk);
+    const b = entBox(live.scene.cow, t), bk = (t - live.iris.t0 - .15) / .35;
+    if (bk > 0) bubble(c, clamp((b[0] + b[2]) / 2 + live.scene.cow.s * .2 * live.scene.cow.flip, 90, W - 90), Math.max(b[1] - 14, 70), live.iris.lost ? 'Hier war ich!' : (live.scene.golden ? 'MUUUH!' : 'MUH!'), clamp(U * .55, 22, 34), bk);
   }
-  for (const p of fx) drawParticle(c, p);
-  for (const tx of texts) { const k = (t - tx.t0) / tx.dur; if (k > 1) continue; c.save(); c.globalAlpha = 1 - Math.max(0, (k - .7) / .3); canvasText(c, tx.text, tx.x, tx.y - k * 46, tx.size * (k < .12 ? easeBack(k / .12) : 1), tx.color); c.restore(); }
-  if (trans) drawTrans(c);
+  for (const p of live.fx) drawParticle(c, p);
+  for (const tx of live.texts) { const k = (t - tx.t0) / tx.dur; if (k > 1) continue; c.save(); c.globalAlpha = 1 - Math.max(0, (k - .7) / .3); canvasText(c, tx.text, tx.x, tx.y - k * 46, tx.size * (k < .12 ? easeBack(k / .12) : 1), tx.color); c.restore(); }
+  if (live.trans) drawTrans(c);
 }
 
 /* ---------- Holstein transition ---------- */
@@ -1694,14 +1694,14 @@ function makeTrans(onCovered, onDone) {
     if (Math.random() < .42) blobs.push({ x: x + R(-.3, .3) * cell, y: y + R(-.3, .3) * cell, r: cell * R(.5, .85), d: (x / W) * .3 + R(.05, .12), col: INK, p: mkBlob(8, .5), z: 1 });
   }
   blobs.sort((a, b) => a.z - b.z);
-  return { blobs, t0: T, stage: 'in', onCovered, onDone };
+  return { blobs, t0: live.T, stage: 'in', onCovered, onDone };
 }
 function drawTrans(c) {
-  const tt = T - trans.t0;
-  for (const b of trans.blobs) {
+  const tt = live.T - live.trans.t0;
+  for (const b of live.trans.blobs) {
     let p;
-    if (trans.stage === 'in') p = easeOut(clamp((tt - b.d * TR_IN / .85) / (TR_IN * .5), 0, 1));
-    else if (trans.stage === 'hold') p = 1;
+    if (live.trans.stage === 'in') p = easeOut(clamp((tt - b.d * TR_IN / .85) / (TR_IN * .5), 0, 1));
+    else if (live.trans.stage === 'hold') p = 1;
     else p = 1 - easeOut(clamp((tt - b.d * TR_OUT / .85) / (TR_OUT * .5), 0, 1));
     if (p <= 0) continue;
     blobPath(c, b.p, b.x, b.y, b.r * p, b.r * p); c.fillStyle = b.col; c.fill();
@@ -1709,20 +1709,20 @@ function drawTrans(c) {
   }
 }
 function updateTrans() {
-  if (!trans) return;
-  const tt = T - trans.t0;
-  if (trans.stage === 'in' && tt >= TR_IN) { trans.stage = 'hold'; trans.t0 = T; trans.onCovered && trans.onCovered(); }
-  else if (trans.stage === 'hold' && tt >= trans.hold) { trans.stage = 'out'; trans.t0 = T; $('#banner').hidden = true; SND.whoosh(false); }
-  else if (trans.stage === 'out' && tt >= TR_OUT) { const d = trans.onDone; trans = null; d && d(); }
+  if (!live.trans) return;
+  const tt = live.T - live.trans.t0;
+  if (live.trans.stage === 'in' && tt >= TR_IN) { live.trans.stage = 'hold'; live.trans.t0 = live.T; live.trans.onCovered && live.trans.onCovered(); }
+  else if (live.trans.stage === 'hold' && tt >= live.trans.hold) { live.trans.stage = 'out'; live.trans.t0 = live.T; $('#banner').hidden = true; SND.whoosh(false); }
+  else if (live.trans.stage === 'out' && tt >= TR_OUT) { const d = live.trans.onDone; live.trans = null; d && d(); }
 }
-function runTransition(onCovered, onDone, hold = TR_HOLD) { trans = makeTrans(onCovered, onDone); trans.hold = hold; SND.whoosh(true); }
+function runTransition(onCovered, onDone, hold = TR_HOLD) { live.trans = makeTrans(onCovered, onDone); live.trans.hold = hold; SND.whoosh(true); }
 
 /* ================================================================
    Game state & flow
    ================================================================ */
 const G = { state: 'boot', lv: 1, score: 0, cows: 0, time: 45, streak: 0, bestStreak: 0, fastest: null, radar: 3, misses: 0, levelT: 0, usedRadar: false, paused: false, lastTick: 99, nudged: false };
 const START_TIME = 45, MAX_TIME = 60;
-function after(sec, fn) { timers.push({ at: T + sec, fn }); }
+function after(sec, fn) { live.timers.push({ at: live.T + sec, fn }); }
 function loadRecord() { try { return JSON.parse(localStorage.getItem('wdk-record') || 'null') || { score: 0, cows: 0 }; } catch (_) { return { score: 0, cows: 0 }; } }
 function saveRecord(r) { try { localStorage.setItem('wdk-record', JSON.stringify(r)); } catch (_) {} }
 
@@ -1741,22 +1741,22 @@ function updateHud() {
   if (G.streak >= 2) { els.combo.hidden = false; setText(els.combo, 'combo', `Serie ×${fmt1(1 + .5 * Math.min(G.streak - 1, 8)).replace(',0', '')}`); } else els.combo.hidden = true;
 }
 function updateLevelPills() {
-  els.lvl.textContent = `Level ${scene.lv} · ${scene.wd.name}`;
+  els.lvl.textContent = `Level ${live.scene.lv} · ${live.scene.wd.name}`;
   els.modPills.innerHTML = '';
-  for (const m of scene.mods) { const s = document.createElement('span'); s.className = 'pill mod'; s.textContent = MODS[m][0]; els.modPills.appendChild(s); }
+  for (const m of live.scene.mods) { const s = document.createElement('span'); s.className = 'pill mod'; s.textContent = MODS[m][0]; els.modPills.appendChild(s); }
 }
 function showBanner() {
-  $('#bnLevel').textContent = `Level ${scene.lv}`;
-  $('#bnName').textContent = scene.wd.name + (scene.mods.has('night') ? ' bei Nacht' : '');
-  $('#bnTag').textContent = scene.lv === 1 ? 'Finde die Kuh. Klick drauf. So einfach ist das. Erstmal.' : scene.wd.tag;
+  $('#bnLevel').textContent = `Level ${live.scene.lv}`;
+  $('#bnName').textContent = live.scene.wd.name + (live.scene.mods.has('night') ? ' bei Nacht' : '');
+  $('#bnTag').textContent = live.scene.lv === 1 ? 'Finde die Kuh. Klick drauf. So einfach ist das. Erstmal.' : live.scene.wd.tag;
   const m = $('#bnMods'); m.innerHTML = '';
-  for (const k of scene.mods) { const d = document.createElement('div'); d.innerHTML = `<span class="pill mod"></span><span></span>`; d.children[0].textContent = MODS[k][0]; d.children[1].textContent = MODS[k][1]; m.appendChild(d); }
+  for (const k of live.scene.mods) { const d = document.createElement('div'); d.innerHTML = `<span class="pill mod"></span><span></span>`; d.children[0].textContent = MODS[k][0]; d.children[1].textContent = MODS[k][1]; m.appendChild(d); }
   const bn = $('#banner'); bn.hidden = false; const card = bn.firstElementChild; card.style.animation = 'none'; void card.offsetWidth; card.style.animation = '';
 }
 function loadLevel(lv, seed) {
-  scene = levelScene(lv, scene && scene.world, seed); paintBg(scene); fx = []; texts = []; marks = []; iris = null; radar = null; nightK = 1;
+  live.scene = levelScene(lv, live.scene && live.scene.world, seed); paintBg(live.scene); live.fx = []; live.texts = []; live.marks = []; live.iris = null; live.radar = null; live.nightK = 1;
   light.x = W / 2; light.y = H * .55; G.levelT = 0; G.usedRadar = false;
-  updateLevelPills(); showBanner(); MUSIC.setWorld(scene.world);
+  updateLevelPills(); showBanner(); MUSIC.setWorld(live.scene.world);
 }
 function showGameUi(on) { els.hud.hidden = !on; els.controls.hidden = !on; }
 function startGame() {
@@ -1770,10 +1770,10 @@ function startGame() {
 }
 function toTitle() {
   G.state = 'title'; G.paused = false; showGameUi(false);
-  $('#over').hidden = true; $('#pause').hidden = true; $('#banner').hidden = true; $('#board').hidden = true; trans = null;
+  $('#over').hidden = true; $('#pause').hidden = true; $('#banner').hidden = true; $('#board').hidden = true; live.trans = null;
   MUSIC.setWorld('weide'); MUSIC.play();
-  scene = genScene(1, { title: true, density: .75, plan: { world: 'weide', mods: new Set(), golden: false } }); paintBg(scene);
-  fx = []; texts = []; marks = []; iris = null; radar = null;
+  live.scene = genScene(1, { title: true, density: .75, plan: { world: 'weide', mods: new Set(), golden: false } }); paintBg(live.scene);
+  live.fx = []; live.texts = []; live.marks = []; live.iris = null; live.radar = null;
   const rec = loadRecord();
   if (REPLAY) $('#record').textContent = `Wiederholung von Szene ${REPLAY.lv}-${REPLAY.seed}. Zählt nicht für Rekord und Bestenliste.`;
   else $('#record').innerHTML = rec.score > 0 ? `Dein Rekord <b>${fmtInt(rec.score)} Punkte</b> <b>${rec.cows} ${rec.cows === 1 ? 'Kuh' : 'Kühe'}</b>` : 'Noch kein Rekord. Zeit, das zu ändern.';
@@ -1786,42 +1786,42 @@ function nextLevel() {
 const RATINGS = [[1.5, 'Adlerauge!'], [3, 'Blitzschnell!'], [6, 'Gefunden!'], [12, 'Da ist sie ja!'], [1e9, 'Endlich!']];
 function onFound() {
   G.state = 'found';
-  const secs = G.levelT, cow = scene.cow;
+  const secs = G.levelT, cow = live.scene.cow;
   G.streak++; G.bestStreak = Math.max(G.bestStreak, G.streak); G.cows++;
   const mult = 1 + .5 * Math.min(G.streak - 1, 8), speed = 1 + clamp((8 - secs) / 8, 0, 1);
-  const pts = Math.round((100 + 20 * G.lv) * speed * mult * (scene.golden ? 3 : 1) * (G.usedRadar ? .5 : 1) / 5) * 5;
-  const bonus = Math.round(Math.max(6, 14 - G.lv * .5) + (scene.golden ? 8 : 0));
+  const pts = Math.round((100 + 20 * G.lv) * speed * mult * (live.scene.golden ? 3 : 1) * (G.usedRadar ? .5 : 1) / 5) * 5;
+  const bonus = Math.round(Math.max(6, 14 - G.lv * .5) + (live.scene.golden ? 8 : 0));
   G.score += pts; G.time = Math.min(G.time + bonus, 99);
   G.fastest = G.fastest == null ? secs : Math.min(G.fastest, secs);
   const extraRadar = G.cows % 5 === 0; if (extraRadar) G.radar++;
   const [cx, cy] = cowCenter();
-  cow.hopT = T; cow.hopN = 3;
-  iris = { t0: T, r: Math.max(cow.s * 1.05, 60) };
-  burst(cx, cy, RM ? 14 : 34, scene.golden ? ['star', 'spark', 'milk', 'heart'] : ['milk', 'spot', 'heart', 'milk']);
-  if (!RM) for (const e of scene.ents) if (e !== cow && TYPES[e.type].walk) { e.hopT = T + Math.hypot(e.x - cx, e.y - cy) / Math.max(W, H) * .7 + .1; e.hopN = 1; }
-  MUSIC.duck(1.6); SND.moo((cx / W) * 2 - 1, scene.golden ? 1.25 : 1); SND.fanfare(G.streak); if (scene.golden) SND.gold();
-  const rating = scene.golden ? 'Goldkuh!' : RATINGS.find(([lim]) => secs < lim)[1];
+  cow.hopT = live.T; cow.hopN = 3;
+  live.iris = { t0: live.T, r: Math.max(cow.s * 1.05, 60) };
+  burst(cx, cy, RM ? 14 : 34, live.scene.golden ? ['star', 'spark', 'milk', 'heart'] : ['milk', 'spot', 'heart', 'milk']);
+  if (!RM) for (const e of live.scene.ents) if (e !== cow && TYPES[e.type].walk) { e.hopT = live.T + Math.hypot(e.x - cx, e.y - cy) / Math.max(W, H) * .7 + .1; e.hopN = 1; }
+  MUSIC.duck(1.6); SND.moo((cx / W) * 2 - 1, live.scene.golden ? 1.25 : 1); SND.fanfare(G.streak); if (live.scene.golden) SND.gold();
+  const rating = live.scene.golden ? 'Goldkuh!' : RATINGS.find(([lim]) => secs < lim)[1];
   const parts = [`+${fmtInt(pts)} Punkte`, `+${bonus} s`, `${fmt1(secs)} s`];
   if (mult > 1) parts.splice(1, 0, `Serie ×${fmt1(mult).replace(',0', '')}`);
   if (extraRadar) parts.push('+1 Radar');
-  praise(rating, parts.join(' · '), scene.golden);
+  praise(rating, parts.join(' · '), live.scene.golden);
   els.timer.classList.add('gain'); setTimeout(() => els.timer.classList.remove('gain'), 500);
   els.radarBtn.classList.remove('nudge');
   after(1.85, nextLevel);
 }
 function onMiss(x, y, ent) {
   G.time = Math.max(0, G.time - 3); G.streak = 0; G.misses++;
-  shake = .3; marks.push({ x, y, t0: T }); floatText(x, y - 24, '−3 s', '#ff5a4e', clamp(U * .48, 18, 28), .9);
+  live.shake = .3; live.marks.push({ x, y, t0: live.T }); floatText(x, y - 24, '−3 s', '#ff5a4e', clamp(U * .48, 18, 28), .9);
   let msg;
-  if (ent) { const m = TYPES[ent.type].msg; msg = typeof m === 'function' ? m(ent) : pick(m); ent.hopT = T; ent.hopN = 1; SND.animal(TYPES[ent.type].snd, (x / W) * 2 - 1); }
-  else { msg = scene.mods.has('night') && Math.random() < .4 ? 'Im Dunkeln getappt.' : pick(scene.wd.empty); SND.bonk(); }
+  if (ent) { const m = TYPES[ent.type].msg; msg = typeof m === 'function' ? m(ent) : pick(m); ent.hopT = live.T; ent.hopN = 1; SND.animal(TYPES[ent.type].snd, (x / W) * 2 - 1); }
+  else { msg = live.scene.mods.has('night') && Math.random() < .4 ? 'Im Dunkeln getappt.' : pick(live.scene.wd.empty); SND.bonk(); }
   say(msg, x, y);
   els.timer.classList.add('flash'); setTimeout(() => els.timer.classList.remove('flash'), 300);
 }
 function timeUp() {
   G.state = 'reveal'; G.time = 0; updateHud(); MUSIC.stop(); SND.womp();
-  const cow = scene.cow; cow.hopT = T + .4; cow.hopN = 2;
-  iris = { t0: T, r: Math.max(cow.s * 1.05, 60), lost: true };
+  const cow = live.scene.cow; cow.hopT = live.T + .4; cow.hopN = 2;
+  live.iris = { t0: live.T, r: Math.max(cow.s * 1.05, 60), lost: true };
   after(2.7, showOver);
 }
 const RANKS = [
@@ -1845,7 +1845,7 @@ function showOver() {
   $('#overRecord').innerHTML = isNew ? (rec.score > 0 ? `Alter Rekord <b>${fmtInt(rec.score)} Punkte</b>` : 'Dein erster Rekord. Den holst du dir nochmal.') : `Rekord <b>${fmtInt(rec.score)} Punkte</b> <b>${rec.cows} ${rec.cows === 1 ? 'Kuh' : 'Kühe'}</b>`;
   lastEntry = null; $('#entryMsg').textContent = ''; $('#entryBtn').disabled = false;
   $('#entryForm').hidden = G.score <= 0 || !!REPLAY;
-  $('#overScene').textContent = `Szene ${sceneId(scene)}`;
+  $('#overScene').textContent = `Szene ${sceneId(live.scene)}`;
   if (G.score > 0 && !REPLAY) {
     let nick = ''; try { nick = localStorage.getItem('wdk-nick') || ''; } catch (_) {}
     $('#nick').value = nick;
@@ -1903,7 +1903,7 @@ function useRadar() {
   if (G.state !== 'play' || G.radar <= 0) return;
   G.radar--; G.usedRadar = true; els.radarBtn.classList.remove('nudge');
   const [cx, cy] = cowCenter(), r = clamp(Math.min(W, H) * .2, 90, 190), a = R(0, TAU), d = R(0, r * .5);
-  radar = { x: cx + Math.cos(a) * d, y: cy + Math.sin(a) * d, r, t0: T };
+  live.radar = { x: cx + Math.cos(a) * d, y: cy + Math.sin(a) * d, r, t0: live.T };
   SND.ping(); setTimeout(() => SND.moo((cx / W) * 2 - 1, 1.08, .85), 250);
   updateHud();
 }
@@ -1920,24 +1920,24 @@ function praise(big, small, gold) {
   const p = $('#praise'); $('#praiseBig').textContent = big; $('#praiseBig').classList.toggle('gold', !!gold); $('#praiseSmall').textContent = small;
   p.classList.remove('show'); void p.offsetWidth; p.classList.add('show');
 }
-function pauseGame() { if (G.state !== 'play' || G.paused) return; G.paused = true; $('#pauseScene').textContent = `Szene ${sceneId(scene)}`; MUSIC.stop(); $('#pause').hidden = false; syncSoundLabels(); setTimeout(() => $('#resumeBtn').focus({ preventScroll: true }), 30); }
+function pauseGame() { if (G.state !== 'play' || G.paused) return; G.paused = true; $('#pauseScene').textContent = `Szene ${sceneId(live.scene)}`; MUSIC.stop(); $('#pause').hidden = false; syncSoundLabels(); setTimeout(() => $('#resumeBtn').focus({ preventScroll: true }), 30); }
 function resumeGame() { if (!G.paused) return; G.paused = false; $('#pause').hidden = true; last = performance.now(); MUSIC.play(); }
 
 /* ---------- input ---------- */
 function guess(x, y) {
-  if (!scene) return;
+  if (!live.scene) return;
   if (G.state === 'title') {
-    const b = entBox(scene.cow, T), p = scene.cow.s * .12;
-    if (inBox([b[0] - p, b[1] - p, b[2] + p, b[3] + p], x, y)) { SND.unlock(); SND.moo((x / W) * 2 - 1); scene.cow.hopT = T; scene.cow.hopN = 2; burst(x, y, 16, ['milk', 'spot', 'heart']); say('Muh! Die war leicht. Jetzt mit Zeitdruck?', x, y); }
+    const b = entBox(live.scene.cow, live.T), p = live.scene.cow.s * .12;
+    if (inBox([b[0] - p, b[1] - p, b[2] + p, b[3] + p], x, y)) { SND.unlock(); SND.moo((x / W) * 2 - 1); live.scene.cow.hopT = live.T; live.scene.cow.hopN = 2; burst(x, y, 16, ['milk', 'spot', 'heart']); say('Muh! Die war leicht. Jetzt mit Zeitdruck?', x, y); }
     return;
   }
   if (G.state !== 'play' || G.paused) return;
-  const b = entBox(scene.cow, T), p = scene.cow.s * .1;
+  const b = entBox(live.scene.cow, live.T), p = live.scene.cow.s * .1;
   // Fingers need a bigger target than the cow's box when it is small.
   const tx = ptr.type === 'mouse' ? p : Math.max(p, (TOUCH_TARGET - (b[2] - b[0])) / 2), ty = ptr.type === 'mouse' ? p : Math.max(p, (TOUCH_TARGET - (b[3] - b[1])) / 2);
   if (inBox([b[0] - tx, b[1] - ty, b[2] + tx, b[3] + ty], x, y)) { onFound(); return; }
   let hit = null;
-  for (let i = scene.ents.length - 1; i >= 0; i--) { const e = scene.ents[i]; if (e !== scene.cow && inBox(entBox(e, T), x, y)) { hit = e; break; } }
+  for (let i = live.scene.ents.length - 1; i >= 0; i--) { const e = live.scene.ents[i]; if (e !== live.scene.cow && inBox(entBox(e, live.T), x, y)) { hit = e; break; } }
   onMiss(x, y, hit);
 }
 cv.addEventListener('pointerdown', ev => {
@@ -2017,34 +2017,34 @@ function resize() {
   W = Math.max(300, window.innerWidth); H = Math.max(300, window.innerHeight);
   cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
   U = clamp(Math.sqrt(W * H) / 17, 30, 64);
-  if (scene) { for (const e of scene.ents) layoutEnt(e); paintBg(scene); }
+  if (live.scene) { for (const e of live.scene.ents) layoutEnt(e); paintBg(live.scene); }
 }
 let rzT = 0; window.addEventListener('resize', () => { clearTimeout(rzT); rzT = setTimeout(resize, 80); });
 
 /* ---------- main loop ---------- */
 let last = performance.now();
 function update(dt) {
-  T += dt;
-  for (let i = timers.length - 1; i >= 0; i--) if (timers[i].at <= T) { const f = timers[i].fn; timers.splice(i, 1); f(); }
+  live.T += dt;
+  for (let i = live.timers.length - 1; i >= 0; i--) if (live.timers[i].at <= live.T) { const f = live.timers[i].fn; live.timers.splice(i, 1); f(); }
   updateTrans();
-  if (shake > 0) shake = Math.max(0, shake - dt * 1.4);
-  if (scene) {
+  if (live.shake > 0) live.shake = Math.max(0, live.shake - dt * 1.4);
+  if (live.scene) {
     let mv = false;
-    for (const e of scene.ents) {
-      if (!e.moving || (e === scene.cow && G.state !== 'play' && G.state !== 'title')) continue;
+    for (const e of live.scene.ents) {
+      if (!e.moving || (e === live.scene.cow && G.state !== 'play' && G.state !== 'title')) continue;
       mv = true; e.wp += dt * 9; e.x += e.flip * e.spd * U * dt;
-      const maxX = e === scene.cow && e.y > H - 110 ? W - 230 : W - U * .7;
+      const maxX = e === live.scene.cow && e.y > H - 110 ? W - 230 : W - U * .7;
       if (e.x < U * .7 && e.flip < 0) e.flip = 1; else if (e.x > maxX && e.flip > 0) e.flip = -1;
       else if (Math.random() < dt * .12) e.flip *= -1;
       if (e.float) { e.y += e.vy * U * dt; const lo = HUD_TOP() + 40, hi = H * .9; if (e.y < lo) e.vy = Math.abs(e.vy); if (e.y > hi) e.vy = -Math.abs(e.vy); e.ny = e.y / H; }
       e.nx = e.x / W;
     }
-    if (mv) scene.ents.sort((a, b) => a.y - b.y);
-    if (scene.golden && G.state === 'play' && Math.random() < dt * 2.5) { const b = entBox(scene.cow, T); fx.push({ x: R(b[0], b[2]), y: R(b[1], b[3]), vx: 0, vy: -20, g: 0, life: 0, max: .7, kind: 'spark', rot: 0, vr: 2, size: R(4, 8) * (U / 50), p: TUFT }); }
+    if (mv) live.scene.ents.sort((a, b) => a.y - b.y);
+    if (live.scene.golden && G.state === 'play' && Math.random() < dt * 2.5) { const b = entBox(live.scene.cow, live.T); live.fx.push({ x: R(b[0], b[2]), y: R(b[1], b[3]), vx: 0, vy: -20, g: 0, life: 0, max: .7, kind: 'spark', rot: 0, vr: 2, size: R(4, 8) * (U / 50), p: TUFT }); }
   }
-  for (let i = fx.length - 1; i >= 0; i--) { const p = fx[i]; p.life += dt; if (p.life > p.max) { fx.splice(i, 1); continue; } p.vy += p.g * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.rot += p.vr * dt; }
-  if (texts.length > 20) texts.splice(0, texts.length - 20);
-  if ((G.state === 'found' || G.state === 'reveal') && nightK > 0) nightK = Math.max(0, nightK - dt * 2.5);
+  for (let i = live.fx.length - 1; i >= 0; i--) { const p = live.fx[i]; p.life += dt; if (p.life > p.max) { live.fx.splice(i, 1); continue; } p.vy += p.g * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.rot += p.vr * dt; }
+  if (live.texts.length > 20) live.texts.splice(0, live.texts.length - 20);
+  if ((G.state === 'found' || G.state === 'reveal') && live.nightK > 0) live.nightK = Math.max(0, live.nightK - dt * 2.5);
   if (G.state === 'play') {
     G.time -= dt; G.levelT += dt;
     if (G.time < 5.5) { const sec = Math.ceil(G.time); if (sec < G.lastTick && sec > 0) { G.lastTick = sec; SND.tick(sec); } } else G.lastTick = 99;
@@ -2074,13 +2074,13 @@ function testHooks() {
     levelScene, genScene, entBox, resize, HUD_TOP, get W() { return W; }, get H() { return H; },
     // Where HUD and radar button really sit for this scene, with the widest pill row the game can show.
     uiRects(sc) {
-      scene = sc; showGameUi(true); updateLevelPills(); els.combo.hidden = false; els.combo.textContent = 'Serie ×4,5';
+      live.scene = sc; showGameUi(true); updateLevelPills(); els.combo.hidden = false; els.combo.textContent = 'Serie ×4,5';
       const hud = Math.max(...[...els.hud.children].map(el => el.getBoundingClientRect().bottom)), r = els.controls.getBoundingClientRect();
       return { hudBottom: hud, controls: [r.left, r.top, r.right, r.bottom] };
     },
     // Background, figures and ambience of a scene at time t, without HUD, lens or effects.
     renderScene(sc, t) {
-      scene = sc; paintBg(sc);
+      live.scene = sc; paintBg(sc);
       c.setTransform(DPR, 0, 0, DPR, 0, 0); c.lineJoin = 'round'; c.lineCap = 'round';
       drawWorld(c, t, null);
       return cv.toDataURL('image/png');
@@ -2089,7 +2089,7 @@ function testHooks() {
     advance(sec, dt = 1 / 60) { for (let i = Math.round(sec / dt); i > 0; i--) if (!G.paused) update(dt); },
     guess(x, y, type = 'mouse') { ptr.type = type; guess(x, y); },
     cowCenter: () => cowCenter(),
-    state: () => ({ state: G.state, lv: G.lv, score: G.score, cows: G.cows, time: Math.round(G.time * 1000) / 1000, streak: G.streak, bestStreak: G.bestStreak, radar: G.radar, misses: G.misses, scene: scene && sceneId(scene), world: scene && scene.world })
+    state: () => ({ state: G.state, lv: G.lv, score: G.score, cows: G.cows, time: Math.round(G.time * 1000) / 1000, streak: G.streak, bestStreak: G.bestStreak, radar: G.radar, misses: G.misses, scene: live.scene && sceneId(live.scene), world: live.scene && live.scene.world })
   };
 }
 

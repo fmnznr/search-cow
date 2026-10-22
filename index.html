@@ -4084,7 +4084,7 @@ body{
     twins: ["Doppelgänger", "Viele Flecken, nur eine echte Kuh."],
     tiny: ["Mini-Kuh", "Die Kuh ist geschrumpft."]
   };
-  var scene = null;
+  var live = { scene: null, fx: [], texts: [], marks: [], iris: null, radar: null, trans: null, shake: 0, nightK: 1, timers: [], T: 0 };
   function planFor(lv) {
     let world = ORDER[(lv - 1) % 6];
     if (lv > 12) world = pick(ORDER);
@@ -4114,16 +4114,16 @@ body{
     e.lw = Math.max(1, 0.055 * U * e.p);
   }
   function makeEnt(type, nx, ny, sc) {
-    const T2 = TYPES[type];
-    const e = { type, ph: rnd() * 100, flip: rnd() < 0.5 ? -1 : 1, k: T2.k * R(0.88, 1.12), wp: rnd() * TAU, p: 0 };
-    if (T2.float || sc.wd.float && !T2.floor) {
+    const T = TYPES[type];
+    const e = { type, ph: rnd() * 100, flip: rnd() < 0.5 ? -1 : 1, k: T.k * R(0.88, 1.12), wp: rnd() * TAU, p: 0 };
+    if (T.float || sc.wd.float && !T.floor) {
       e.float = true;
-      e.oy = T2.oy || 0;
-      e.rot = T2.rotR ? R(-T2.rotR, T2.rotR) : 0;
+      e.oy = T.oy || 0;
+      e.rot = T.rotR ? R(-T.rotR, T.rotR) : 0;
     }
-    if (T2.init) T2.init(e, sc);
+    if (T.init) T.init(e, sc);
     if (e.p && sc.wd.ground) e.p = 0;
-    if (sc.mods.has("move") && (T2.walk || e.float && !T2.floor)) {
+    if (sc.mods.has("move") && (T.walk || e.float && !T.floor)) {
       e.moving = true;
       e.spd = R(0.35, 0.8);
       e.vy = e.float ? R(-0.12, 0.12) : 0;
@@ -4135,10 +4135,10 @@ body{
     return TYPES[e.type].swim && !e.moving ? (Math.cos(t * 0.45 + e.ph) >= 0 ? 1 : -1) * e.flip : e.flip;
   }
   function entPos(e, t) {
-    const T2 = TYPES[e.type];
+    const T = TYPES[e.type];
     let x = e.x, y = e.y;
-    if (T2.swim && !e.moving) x += Math.sin(t * 0.45 + e.ph) * e.s * 0.35 * e.flip;
-    if (T2.side) x += Math.sin(t * 1.4 + e.ph) * e.s * 0.25;
+    if (T.swim && !e.moving) x += Math.sin(t * 0.45 + e.ph) * e.s * 0.35 * e.flip;
+    if (T.side) x += Math.sin(t * 1.4 + e.ph) * e.s * 0.25;
     if (e.float) y += Math.sin(t * 1.1 + e.ph) * e.s * 0.07;
     if (e.hopT != null) {
       const k = (t - e.hopT) / 0.42;
@@ -4148,7 +4148,7 @@ body{
     return [x, y];
   }
   function entBox(e, t) {
-    const T2 = TYPES[e.type], [x, y] = entPos(e, t), s = e.s, b = T2.box, f = curFlip(e, t);
+    const T = TYPES[e.type], [x, y] = entPos(e, t), s = e.s, b = T.box, f = curFlip(e, t);
     let x0 = b[0], x1 = b[2];
     if (f < 0) {
       const a = -x1;
@@ -4184,12 +4184,12 @@ body{
     const pool = wd.pool.map(([k, w]) => [k, w * (plan.mods.has("twins") && wd.twins.includes(k) ? 6 : 1)]);
     const topN = (opts.title ? 20 : HUD_TOP()) / H;
     for (let i = 0; i < n; i++) {
-      const type = wpick(pool), T2 = TYPES[type];
+      const type = wpick(pool), T = TYPES[type];
       let best = null, bestD = -1;
       for (let k = 0; k < 6; k++) {
         let nx = R(-0.02, 1.02), ny;
         if (wd.ground) ny = sc.hy + 0.025 + Math.pow(rnd(), 0.9) * (1.03 - sc.hy - 0.025);
-        else if (T2.floor) ny = R(0.87, 1);
+        else if (T.floor) ny = R(0.87, 1);
         else ny = R(topN * 0.6, 0.92);
         let d = 1e9;
         const px = nx * W, py = ny * H;
@@ -4261,9 +4261,9 @@ body{
     sc.wd.bg(bgc, W, H, mulberry(sc.seed), sc);
   }
   function drawEnt(c2, e, t) {
-    const T2 = TYPES[e.type], [x, y] = entPos(e, t);
-    if (scene.wd.ground && !e.float) {
-      const b = T2.box, w = (b[2] - b[0]) * e.s * 0.42;
+    const T = TYPES[e.type], [x, y] = entPos(e, t);
+    if (live.scene.wd.ground && !e.float) {
+      const b = T.box, w = (b[2] - b[0]) * e.s * 0.42;
       c2.fillStyle = "rgba(33,27,38,.14)";
       E(c2, x + (b[0] + b[2]) / 2 * e.s * e.flip * 0.3, e.y, w, Math.max(2, e.s * 0.06));
       c2.fill();
@@ -4273,32 +4273,22 @@ body{
     if (e.float) c2.rotate((e.rot || 0) + Math.sin(t * 0.7 + e.ph) * 0.1);
     if (e.oy) c2.translate(0, e.oy * e.s);
     c2.scale(curFlip(e, t), 1);
-    T2.draw(c2, e, t);
+    T.draw(c2, e, t);
     c2.restore();
   }
   function drawWorld(c2, t, view) {
     c2.drawImage(bgCv, 0, 0, W, H);
-    if (scene.wd.back) scene.wd.back(c2, t, scene);
-    for (const e of scene.ents) {
+    if (live.scene.wd.back) live.scene.wd.back(c2, t, live.scene);
+    for (const e of live.scene.ents) {
       if (view && !overlap(entBox(e, t), view)) continue;
       drawEnt(c2, e, t);
     }
-    if (scene.wd.front) scene.wd.front(c2, t, scene);
+    if (live.scene.wd.front) live.scene.wd.front(c2, t, live.scene);
   }
-  var fx = [];
-  var texts = [];
-  var marks = [];
-  var iris = null;
-  var radar = null;
-  var trans = null;
-  var shake = 0;
-  var nightK = 1;
-  var timers = [];
-  var T = 0;
   var ptr = { x: -999, y: -999, inside: false, type: "mouse", down: null, inspect: false, lp: 0 };
   var light = { x: 0, y: 0 };
   function burst(x, y, n, kinds, power = 1) {
-    for (let i = 0; i < n; i++) fx.push({ x, y, vx: R(-1, 1) * R(120, 360) * power, vy: -R(200, 520) * power, g: 900, life: 0, max: R(0.9, 1.5), kind: pick(kinds), rot: R(0, TAU), vr: R(-7, 7), size: R(6, 12) * (U / 50), p: mkBlob(6, 0.4) });
+    for (let i = 0; i < n; i++) live.fx.push({ x, y, vx: R(-1, 1) * R(120, 360) * power, vy: -R(200, 520) * power, g: 900, life: 0, max: R(0.9, 1.5), kind: pick(kinds), rot: R(0, TAU), vr: R(-7, 7), size: R(6, 12) * (U / 50), p: mkBlob(6, 0.4) });
   }
   function drawParticle(c2, p) {
     const a = 1 - clamp((p.life - p.max * 0.7) / (p.max * 0.3), 0, 1);
@@ -4348,7 +4338,7 @@ body{
     c2.restore();
   }
   function floatText(x, y, text, color, size = 26, dur = 1.1) {
-    texts.push({ x, y, text, color, size, t0: T, dur });
+    live.texts.push({ x, y, text, color, size, t0: live.T, dur });
   }
   function canvasText(c2, text, x, y, size, color, align = "center") {
     c2.font = `${size}px "Bagel Fat One", "Arial Rounded MT Bold", system-ui, sans-serif`;
@@ -4392,8 +4382,8 @@ body{
     c2.fillText(text, 0, -h / 2 + size * 0.05);
     c2.restore();
   }
-  function cowCenter(t = T) {
-    const b = entBox(scene.cow, t);
+  function cowCenter(t = live.T) {
+    const b = entBox(live.scene.cow, t);
     return [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2];
   }
   function lensR() {
@@ -4403,19 +4393,19 @@ body{
     return clamp(Math.min(W, H) * 0.16, 85, 150);
   }
   function render() {
-    const t = T;
+    const t = live.T;
     c.setTransform(DPR, 0, 0, DPR, 0, 0);
     c.lineJoin = "round";
     c.lineCap = "round";
-    if (!scene) {
+    if (!live.scene) {
       c.fillStyle = INK;
       c.fillRect(0, 0, W, H);
       return;
     }
     c.save();
-    if (shake > 0 && !RM) c.translate((Math.random() - 0.5) * shake * 26, (Math.random() - 0.5) * shake * 26);
+    if (live.shake > 0 && !RM) c.translate((Math.random() - 0.5) * live.shake * 26, (Math.random() - 0.5) * live.shake * 26);
     drawWorld(c, t, null);
-    for (const m of marks) {
+    for (const m of live.marks) {
       const k = (t - m.t0) / 0.9;
       if (k > 1) continue;
       const a = 1 - Math.max(0, (k - 0.6) / 0.4), s = 16 * easeBack(Math.min(1, k * 4)) * (U / 50);
@@ -4432,29 +4422,29 @@ body{
       c.restore();
     }
     c.restore();
-    const night = scene.mods.has("night");
-    if (night && nightK > 0.01) {
+    const night = live.scene.mods.has("night");
+    if (night && live.nightK > 0.01) {
       const lx = light.x, ly = light.y, r = nightR();
       const g = c.createRadialGradient(lx, ly, r * 0.55, lx, ly, r * 1.05);
       g.addColorStop(0, "rgba(8,6,22,0)");
-      g.addColorStop(1, `rgba(8,6,22,${0.93 * nightK})`);
+      g.addColorStop(1, `rgba(8,6,22,${0.93 * live.nightK})`);
       c.fillStyle = g;
       c.fillRect(0, 0, W, H);
       c.beginPath();
       c.arc(lx, ly, r * 1.02, 0, TAU);
       c.lineWidth = 2;
-      c.strokeStyle = `rgba(255,240,180,${0.25 * nightK})`;
+      c.strokeStyle = `rgba(255,240,180,${0.25 * live.nightK})`;
       c.stroke();
     }
-    if (radar) {
-      const k = t - radar.t0;
-      if (k > 3.8) radar = null;
+    if (live.radar) {
+      const k = t - live.radar.t0;
+      if (k > 3.8) live.radar = null;
       else {
         const a = k < 0.3 ? k / 0.3 : k > 3.2 ? (3.8 - k) / 0.6 : 1;
         c.save();
         c.globalAlpha = a;
         c.beginPath();
-        c.arc(radar.x, radar.y, radar.r, 0, TAU);
+        c.arc(live.radar.x, live.radar.y, live.radar.r, 0, TAU);
         c.fillStyle = "rgba(255,176,194,.16)";
         c.fill();
         c.setLineDash([12, 9]);
@@ -4466,17 +4456,17 @@ body{
         c.lineWidth = 2;
         c.strokeStyle = MILK;
         c.beginPath();
-        c.arc(radar.x, radar.y, radar.r - 4, 0, TAU);
+        c.arc(live.radar.x, live.radar.y, live.radar.r - 4, 0, TAU);
         c.stroke();
         for (let i = 0; i < 3; i++) {
           const p = (k * 0.8 + i / 3) % 1;
           c.beginPath();
-          c.arc(radar.x, radar.y, radar.r * (1 - p), 0, TAU);
+          c.arc(live.radar.x, live.radar.y, live.radar.r * (1 - p), 0, TAU);
           c.strokeStyle = `rgba(242,90,130,${(1 - p) * 0.9})`;
           c.lineWidth = 3;
           c.stroke();
         }
-        canvasText(c, "Muh?", radar.x, radar.y - radar.r - 4, 22, GOLD);
+        canvasText(c, "Muh?", live.radar.x, live.radar.y - live.radar.r - 4, 22, GOLD);
         c.restore();
       }
     }
@@ -4532,8 +4522,8 @@ body{
       c.strokeStyle = "rgba(255,240,180,.9)";
       c.stroke();
     }
-    if (iris) {
-      const k = easeOut(clamp((t - iris.t0) / 0.6, 0, 1)), [cx, cy] = cowCenter(t), R0 = Math.hypot(W, H), r = R0 + (iris.r - R0) * k;
+    if (live.iris) {
+      const k = easeOut(clamp((t - live.iris.t0) / 0.6, 0, 1)), [cx, cy] = cowCenter(t), R0 = Math.hypot(W, H), r = R0 + (live.iris.r - R0) * k;
       c.save();
       c.beginPath();
       c.rect(0, 0, W, H);
@@ -4546,11 +4536,11 @@ body{
       c.strokeStyle = `rgba(255,253,248,${0.9 * k})`;
       c.stroke();
       c.restore();
-      const b = entBox(scene.cow, t), bk = (t - iris.t0 - 0.15) / 0.35;
-      if (bk > 0) bubble(c, clamp((b[0] + b[2]) / 2 + scene.cow.s * 0.2 * scene.cow.flip, 90, W - 90), Math.max(b[1] - 14, 70), iris.lost ? "Hier war ich!" : scene.golden ? "MUUUH!" : "MUH!", clamp(U * 0.55, 22, 34), bk);
+      const b = entBox(live.scene.cow, t), bk = (t - live.iris.t0 - 0.15) / 0.35;
+      if (bk > 0) bubble(c, clamp((b[0] + b[2]) / 2 + live.scene.cow.s * 0.2 * live.scene.cow.flip, 90, W - 90), Math.max(b[1] - 14, 70), live.iris.lost ? "Hier war ich!" : live.scene.golden ? "MUUUH!" : "MUH!", clamp(U * 0.55, 22, 34), bk);
     }
-    for (const p of fx) drawParticle(c, p);
-    for (const tx of texts) {
+    for (const p of live.fx) drawParticle(c, p);
+    for (const tx of live.texts) {
       const k = (t - tx.t0) / tx.dur;
       if (k > 1) continue;
       c.save();
@@ -4558,7 +4548,7 @@ body{
       canvasText(c, tx.text, tx.x, tx.y - k * 46, tx.size * (k < 0.12 ? easeBack(k / 0.12) : 1), tx.color);
       c.restore();
     }
-    if (trans) drawTrans(c);
+    if (live.trans) drawTrans(c);
   }
   var TR_IN = RM ? 0.3 : 0.85;
   var TR_HOLD = 1.55;
@@ -4571,14 +4561,14 @@ body{
       if (Math.random() < 0.42) blobs.push({ x: x + R(-0.3, 0.3) * cell, y: y + R(-0.3, 0.3) * cell, r: cell * R(0.5, 0.85), d: x / W * 0.3 + R(0.05, 0.12), col: INK, p: mkBlob(8, 0.5), z: 1 });
     }
     blobs.sort((a, b) => a.z - b.z);
-    return { blobs, t0: T, stage: "in", onCovered, onDone };
+    return { blobs, t0: live.T, stage: "in", onCovered, onDone };
   }
   function drawTrans(c2) {
-    const tt = T - trans.t0;
-    for (const b of trans.blobs) {
+    const tt = live.T - live.trans.t0;
+    for (const b of live.trans.blobs) {
       let p;
-      if (trans.stage === "in") p = easeOut(clamp((tt - b.d * TR_IN / 0.85) / (TR_IN * 0.5), 0, 1));
-      else if (trans.stage === "hold") p = 1;
+      if (live.trans.stage === "in") p = easeOut(clamp((tt - b.d * TR_IN / 0.85) / (TR_IN * 0.5), 0, 1));
+      else if (live.trans.stage === "hold") p = 1;
       else p = 1 - easeOut(clamp((tt - b.d * TR_OUT / 0.85) / (TR_OUT * 0.5), 0, 1));
       if (p <= 0) continue;
       blobPath(c2, b.p, b.x, b.y, b.r * p, b.r * p);
@@ -4592,33 +4582,33 @@ body{
     }
   }
   function updateTrans() {
-    if (!trans) return;
-    const tt = T - trans.t0;
-    if (trans.stage === "in" && tt >= TR_IN) {
-      trans.stage = "hold";
-      trans.t0 = T;
-      trans.onCovered && trans.onCovered();
-    } else if (trans.stage === "hold" && tt >= trans.hold) {
-      trans.stage = "out";
-      trans.t0 = T;
+    if (!live.trans) return;
+    const tt = live.T - live.trans.t0;
+    if (live.trans.stage === "in" && tt >= TR_IN) {
+      live.trans.stage = "hold";
+      live.trans.t0 = live.T;
+      live.trans.onCovered && live.trans.onCovered();
+    } else if (live.trans.stage === "hold" && tt >= live.trans.hold) {
+      live.trans.stage = "out";
+      live.trans.t0 = live.T;
       $("#banner").hidden = true;
       SND.whoosh(false);
-    } else if (trans.stage === "out" && tt >= TR_OUT) {
-      const d = trans.onDone;
-      trans = null;
+    } else if (live.trans.stage === "out" && tt >= TR_OUT) {
+      const d = live.trans.onDone;
+      live.trans = null;
       d && d();
     }
   }
   function runTransition(onCovered, onDone, hold = TR_HOLD) {
-    trans = makeTrans(onCovered, onDone);
-    trans.hold = hold;
+    live.trans = makeTrans(onCovered, onDone);
+    live.trans.hold = hold;
     SND.whoosh(true);
   }
   var G = { state: "boot", lv: 1, score: 0, cows: 0, time: 45, streak: 0, bestStreak: 0, fastest: null, radar: 3, misses: 0, levelT: 0, usedRadar: false, paused: false, lastTick: 99, nudged: false };
   var START_TIME = 45;
   var MAX_TIME = 60;
   function after(sec, fn) {
-    timers.push({ at: T + sec, fn });
+    live.timers.push({ at: live.T + sec, fn });
   }
   function loadRecord() {
     try {
@@ -4659,9 +4649,9 @@ body{
     } else els.combo.hidden = true;
   }
   function updateLevelPills() {
-    els.lvl.textContent = `Level ${scene.lv} · ${scene.wd.name}`;
+    els.lvl.textContent = `Level ${live.scene.lv} · ${live.scene.wd.name}`;
     els.modPills.innerHTML = "";
-    for (const m of scene.mods) {
+    for (const m of live.scene.mods) {
       const s = document.createElement("span");
       s.className = "pill mod";
       s.textContent = MODS[m][0];
@@ -4669,12 +4659,12 @@ body{
     }
   }
   function showBanner() {
-    $("#bnLevel").textContent = `Level ${scene.lv}`;
-    $("#bnName").textContent = scene.wd.name + (scene.mods.has("night") ? " bei Nacht" : "");
-    $("#bnTag").textContent = scene.lv === 1 ? "Finde die Kuh. Klick drauf. So einfach ist das. Erstmal." : scene.wd.tag;
+    $("#bnLevel").textContent = `Level ${live.scene.lv}`;
+    $("#bnName").textContent = live.scene.wd.name + (live.scene.mods.has("night") ? " bei Nacht" : "");
+    $("#bnTag").textContent = live.scene.lv === 1 ? "Finde die Kuh. Klick drauf. So einfach ist das. Erstmal." : live.scene.wd.tag;
     const m = $("#bnMods");
     m.innerHTML = "";
-    for (const k of scene.mods) {
+    for (const k of live.scene.mods) {
       const d = document.createElement("div");
       d.innerHTML = `<span class="pill mod"></span><span></span>`;
       d.children[0].textContent = MODS[k][0];
@@ -4689,21 +4679,21 @@ body{
     card.style.animation = "";
   }
   function loadLevel(lv, seed) {
-    scene = levelScene(lv, scene && scene.world, seed);
-    paintBg(scene);
-    fx = [];
-    texts = [];
-    marks = [];
-    iris = null;
-    radar = null;
-    nightK = 1;
+    live.scene = levelScene(lv, live.scene && live.scene.world, seed);
+    paintBg(live.scene);
+    live.fx = [];
+    live.texts = [];
+    live.marks = [];
+    live.iris = null;
+    live.radar = null;
+    live.nightK = 1;
     light.x = W / 2;
     light.y = H * 0.55;
     G.levelT = 0;
     G.usedRadar = false;
     updateLevelPills();
     showBanner();
-    MUSIC.setWorld(scene.world);
+    MUSIC.setWorld(live.scene.world);
   }
   function showGameUi(on) {
     els.hud.hidden = !on;
@@ -4736,16 +4726,16 @@ body{
     $("#pause").hidden = true;
     $("#banner").hidden = true;
     $("#board").hidden = true;
-    trans = null;
+    live.trans = null;
     MUSIC.setWorld("weide");
     MUSIC.play();
-    scene = genScene(1, { title: true, density: 0.75, plan: { world: "weide", mods: /* @__PURE__ */ new Set(), golden: false } });
-    paintBg(scene);
-    fx = [];
-    texts = [];
-    marks = [];
-    iris = null;
-    radar = null;
+    live.scene = genScene(1, { title: true, density: 0.75, plan: { world: "weide", mods: /* @__PURE__ */ new Set(), golden: false } });
+    paintBg(live.scene);
+    live.fx = [];
+    live.texts = [];
+    live.marks = [];
+    live.iris = null;
+    live.radar = null;
     const rec = loadRecord();
     if (REPLAY) $("#record").textContent = `Wiederholung von Szene ${REPLAY.lv}-${REPLAY.seed}. Zählt nicht für Rekord und Bestenliste.`;
     else $("#record").innerHTML = rec.score > 0 ? `Dein Rekord <b>${fmtInt(rec.score)} Punkte</b> <b>${rec.cows} ${rec.cows === 1 ? "Kuh" : "Kühe"}</b>` : "Noch kein Rekord. Zeit, das zu ändern.";
@@ -4764,38 +4754,38 @@ body{
   var RATINGS = [[1.5, "Adlerauge!"], [3, "Blitzschnell!"], [6, "Gefunden!"], [12, "Da ist sie ja!"], [1e9, "Endlich!"]];
   function onFound() {
     G.state = "found";
-    const secs = G.levelT, cow = scene.cow;
+    const secs = G.levelT, cow = live.scene.cow;
     G.streak++;
     G.bestStreak = Math.max(G.bestStreak, G.streak);
     G.cows++;
     const mult = 1 + 0.5 * Math.min(G.streak - 1, 8), speed = 1 + clamp((8 - secs) / 8, 0, 1);
-    const pts = Math.round((100 + 20 * G.lv) * speed * mult * (scene.golden ? 3 : 1) * (G.usedRadar ? 0.5 : 1) / 5) * 5;
-    const bonus = Math.round(Math.max(6, 14 - G.lv * 0.5) + (scene.golden ? 8 : 0));
+    const pts = Math.round((100 + 20 * G.lv) * speed * mult * (live.scene.golden ? 3 : 1) * (G.usedRadar ? 0.5 : 1) / 5) * 5;
+    const bonus = Math.round(Math.max(6, 14 - G.lv * 0.5) + (live.scene.golden ? 8 : 0));
     G.score += pts;
     G.time = Math.min(G.time + bonus, 99);
     G.fastest = G.fastest == null ? secs : Math.min(G.fastest, secs);
     const extraRadar = G.cows % 5 === 0;
     if (extraRadar) G.radar++;
     const [cx, cy] = cowCenter();
-    cow.hopT = T;
+    cow.hopT = live.T;
     cow.hopN = 3;
-    iris = { t0: T, r: Math.max(cow.s * 1.05, 60) };
-    burst(cx, cy, RM ? 14 : 34, scene.golden ? ["star", "spark", "milk", "heart"] : ["milk", "spot", "heart", "milk"]);
+    live.iris = { t0: live.T, r: Math.max(cow.s * 1.05, 60) };
+    burst(cx, cy, RM ? 14 : 34, live.scene.golden ? ["star", "spark", "milk", "heart"] : ["milk", "spot", "heart", "milk"]);
     if (!RM) {
-      for (const e of scene.ents) if (e !== cow && TYPES[e.type].walk) {
-        e.hopT = T + Math.hypot(e.x - cx, e.y - cy) / Math.max(W, H) * 0.7 + 0.1;
+      for (const e of live.scene.ents) if (e !== cow && TYPES[e.type].walk) {
+        e.hopT = live.T + Math.hypot(e.x - cx, e.y - cy) / Math.max(W, H) * 0.7 + 0.1;
         e.hopN = 1;
       }
     }
     MUSIC.duck(1.6);
-    SND.moo(cx / W * 2 - 1, scene.golden ? 1.25 : 1);
+    SND.moo(cx / W * 2 - 1, live.scene.golden ? 1.25 : 1);
     SND.fanfare(G.streak);
-    if (scene.golden) SND.gold();
-    const rating = scene.golden ? "Goldkuh!" : RATINGS.find(([lim]) => secs < lim)[1];
+    if (live.scene.golden) SND.gold();
+    const rating = live.scene.golden ? "Goldkuh!" : RATINGS.find(([lim]) => secs < lim)[1];
     const parts = [`+${fmtInt(pts)} Punkte`, `+${bonus} s`, `${fmt1(secs)} s`];
     if (mult > 1) parts.splice(1, 0, `Serie ×${fmt1(mult).replace(",0", "")}`);
     if (extraRadar) parts.push("+1 Radar");
-    praise(rating, parts.join(" · "), scene.golden);
+    praise(rating, parts.join(" · "), live.scene.golden);
     els.timer.classList.add("gain");
     setTimeout(() => els.timer.classList.remove("gain"), 500);
     els.radarBtn.classList.remove("nudge");
@@ -4805,18 +4795,18 @@ body{
     G.time = Math.max(0, G.time - 3);
     G.streak = 0;
     G.misses++;
-    shake = 0.3;
-    marks.push({ x, y, t0: T });
+    live.shake = 0.3;
+    live.marks.push({ x, y, t0: live.T });
     floatText(x, y - 24, "−3 s", "#ff5a4e", clamp(U * 0.48, 18, 28), 0.9);
     let msg;
     if (ent) {
       const m = TYPES[ent.type].msg;
       msg = typeof m === "function" ? m(ent) : pick(m);
-      ent.hopT = T;
+      ent.hopT = live.T;
       ent.hopN = 1;
       SND.animal(TYPES[ent.type].snd, x / W * 2 - 1);
     } else {
-      msg = scene.mods.has("night") && Math.random() < 0.4 ? "Im Dunkeln getappt." : pick(scene.wd.empty);
+      msg = live.scene.mods.has("night") && Math.random() < 0.4 ? "Im Dunkeln getappt." : pick(live.scene.wd.empty);
       SND.bonk();
     }
     say(msg, x, y);
@@ -4829,10 +4819,10 @@ body{
     updateHud();
     MUSIC.stop();
     SND.womp();
-    const cow = scene.cow;
-    cow.hopT = T + 0.4;
+    const cow = live.scene.cow;
+    cow.hopT = live.T + 0.4;
     cow.hopN = 2;
-    iris = { t0: T, r: Math.max(cow.s * 1.05, 60), lost: true };
+    live.iris = { t0: live.T, r: Math.max(cow.s * 1.05, 60), lost: true };
     after(2.7, showOver);
   }
   var RANKS = [
@@ -4863,7 +4853,7 @@ body{
     $("#entryMsg").textContent = "";
     $("#entryBtn").disabled = false;
     $("#entryForm").hidden = G.score <= 0 || !!REPLAY;
-    $("#overScene").textContent = `Szene ${sceneId(scene)}`;
+    $("#overScene").textContent = `Szene ${sceneId(live.scene)}`;
     if (G.score > 0 && !REPLAY) {
       let nick = "";
       try {
@@ -4968,7 +4958,7 @@ body{
     G.usedRadar = true;
     els.radarBtn.classList.remove("nudge");
     const [cx, cy] = cowCenter(), r = clamp(Math.min(W, H) * 0.2, 90, 190), a = R(0, TAU), d = R(0, r * 0.5);
-    radar = { x: cx + Math.cos(a) * d, y: cy + Math.sin(a) * d, r, t0: T };
+    live.radar = { x: cx + Math.cos(a) * d, y: cy + Math.sin(a) * d, r, t0: live.T };
     SND.ping();
     setTimeout(() => SND.moo(cx / W * 2 - 1, 1.08, 0.85), 250);
     updateHud();
@@ -5004,7 +4994,7 @@ body{
   function pauseGame() {
     if (G.state !== "play" || G.paused) return;
     G.paused = true;
-    $("#pauseScene").textContent = `Szene ${sceneId(scene)}`;
+    $("#pauseScene").textContent = `Szene ${sceneId(live.scene)}`;
     MUSIC.stop();
     $("#pause").hidden = false;
     syncSoundLabels();
@@ -5018,30 +5008,30 @@ body{
     MUSIC.play();
   }
   function guess(x, y) {
-    if (!scene) return;
+    if (!live.scene) return;
     if (G.state === "title") {
-      const b2 = entBox(scene.cow, T), p2 = scene.cow.s * 0.12;
+      const b2 = entBox(live.scene.cow, live.T), p2 = live.scene.cow.s * 0.12;
       if (inBox([b2[0] - p2, b2[1] - p2, b2[2] + p2, b2[3] + p2], x, y)) {
         SND.unlock();
         SND.moo(x / W * 2 - 1);
-        scene.cow.hopT = T;
-        scene.cow.hopN = 2;
+        live.scene.cow.hopT = live.T;
+        live.scene.cow.hopN = 2;
         burst(x, y, 16, ["milk", "spot", "heart"]);
         say("Muh! Die war leicht. Jetzt mit Zeitdruck?", x, y);
       }
       return;
     }
     if (G.state !== "play" || G.paused) return;
-    const b = entBox(scene.cow, T), p = scene.cow.s * 0.1;
+    const b = entBox(live.scene.cow, live.T), p = live.scene.cow.s * 0.1;
     const tx = ptr.type === "mouse" ? p : Math.max(p, (TOUCH_TARGET - (b[2] - b[0])) / 2), ty = ptr.type === "mouse" ? p : Math.max(p, (TOUCH_TARGET - (b[3] - b[1])) / 2);
     if (inBox([b[0] - tx, b[1] - ty, b[2] + tx, b[3] + ty], x, y)) {
       onFound();
       return;
     }
     let hit = null;
-    for (let i = scene.ents.length - 1; i >= 0; i--) {
-      const e = scene.ents[i];
-      if (e !== scene.cow && inBox(entBox(e, T), x, y)) {
+    for (let i = live.scene.ents.length - 1; i >= 0; i--) {
+      const e = live.scene.ents[i];
+      if (e !== live.scene.cow && inBox(entBox(e, live.T), x, y)) {
         hit = e;
         break;
       }
@@ -5225,9 +5215,9 @@ body{
     cv.width = Math.round(W * DPR);
     cv.height = Math.round(H * DPR);
     U = clamp(Math.sqrt(W * H) / 17, 30, 64);
-    if (scene) {
-      for (const e of scene.ents) layoutEnt(e);
-      paintBg(scene);
+    if (live.scene) {
+      for (const e of live.scene.ents) layoutEnt(e);
+      paintBg(live.scene);
     }
   }
   var rzT = 0;
@@ -5237,22 +5227,22 @@ body{
   });
   var last = performance.now();
   function update(dt) {
-    T += dt;
-    for (let i = timers.length - 1; i >= 0; i--) if (timers[i].at <= T) {
-      const f = timers[i].fn;
-      timers.splice(i, 1);
+    live.T += dt;
+    for (let i = live.timers.length - 1; i >= 0; i--) if (live.timers[i].at <= live.T) {
+      const f = live.timers[i].fn;
+      live.timers.splice(i, 1);
       f();
     }
     updateTrans();
-    if (shake > 0) shake = Math.max(0, shake - dt * 1.4);
-    if (scene) {
+    if (live.shake > 0) live.shake = Math.max(0, live.shake - dt * 1.4);
+    if (live.scene) {
       let mv = false;
-      for (const e of scene.ents) {
-        if (!e.moving || e === scene.cow && G.state !== "play" && G.state !== "title") continue;
+      for (const e of live.scene.ents) {
+        if (!e.moving || e === live.scene.cow && G.state !== "play" && G.state !== "title") continue;
         mv = true;
         e.wp += dt * 9;
         e.x += e.flip * e.spd * U * dt;
-        const maxX = e === scene.cow && e.y > H - 110 ? W - 230 : W - U * 0.7;
+        const maxX = e === live.scene.cow && e.y > H - 110 ? W - 230 : W - U * 0.7;
         if (e.x < U * 0.7 && e.flip < 0) e.flip = 1;
         else if (e.x > maxX && e.flip > 0) e.flip = -1;
         else if (Math.random() < dt * 0.12) e.flip *= -1;
@@ -5265,17 +5255,17 @@ body{
         }
         e.nx = e.x / W;
       }
-      if (mv) scene.ents.sort((a, b) => a.y - b.y);
-      if (scene.golden && G.state === "play" && Math.random() < dt * 2.5) {
-        const b = entBox(scene.cow, T);
-        fx.push({ x: R(b[0], b[2]), y: R(b[1], b[3]), vx: 0, vy: -20, g: 0, life: 0, max: 0.7, kind: "spark", rot: 0, vr: 2, size: R(4, 8) * (U / 50), p: TUFT });
+      if (mv) live.scene.ents.sort((a, b) => a.y - b.y);
+      if (live.scene.golden && G.state === "play" && Math.random() < dt * 2.5) {
+        const b = entBox(live.scene.cow, live.T);
+        live.fx.push({ x: R(b[0], b[2]), y: R(b[1], b[3]), vx: 0, vy: -20, g: 0, life: 0, max: 0.7, kind: "spark", rot: 0, vr: 2, size: R(4, 8) * (U / 50), p: TUFT });
       }
     }
-    for (let i = fx.length - 1; i >= 0; i--) {
-      const p = fx[i];
+    for (let i = live.fx.length - 1; i >= 0; i--) {
+      const p = live.fx[i];
       p.life += dt;
       if (p.life > p.max) {
-        fx.splice(i, 1);
+        live.fx.splice(i, 1);
         continue;
       }
       p.vy += p.g * dt;
@@ -5283,8 +5273,8 @@ body{
       p.y += p.vy * dt;
       p.rot += p.vr * dt;
     }
-    if (texts.length > 20) texts.splice(0, texts.length - 20);
-    if ((G.state === "found" || G.state === "reveal") && nightK > 0) nightK = Math.max(0, nightK - dt * 2.5);
+    if (live.texts.length > 20) live.texts.splice(0, live.texts.length - 20);
+    if ((G.state === "found" || G.state === "reveal") && live.nightK > 0) live.nightK = Math.max(0, live.nightK - dt * 2.5);
     if (G.state === "play") {
       G.time -= dt;
       G.levelT += dt;
@@ -5340,7 +5330,7 @@ body{
       },
       // Where HUD and radar button really sit for this scene, with the widest pill row the game can show.
       uiRects(sc) {
-        scene = sc;
+        live.scene = sc;
         showGameUi(true);
         updateLevelPills();
         els.combo.hidden = false;
@@ -5350,7 +5340,7 @@ body{
       },
       // Background, figures and ambience of a scene at time t, without HUD, lens or effects.
       renderScene(sc, t) {
-        scene = sc;
+        live.scene = sc;
         paintBg(sc);
         c.setTransform(DPR, 0, 0, DPR, 0, 0);
         c.lineJoin = "round";
@@ -5368,7 +5358,7 @@ body{
         guess(x, y);
       },
       cowCenter: () => cowCenter(),
-      state: () => ({ state: G.state, lv: G.lv, score: G.score, cows: G.cows, time: Math.round(G.time * 1e3) / 1e3, streak: G.streak, bestStreak: G.bestStreak, radar: G.radar, misses: G.misses, scene: scene && sceneId(scene), world: scene && scene.world })
+      state: () => ({ state: G.state, lv: G.lv, score: G.score, cows: G.cows, time: Math.round(G.time * 1e3) / 1e3, streak: G.streak, bestStreak: G.bestStreak, radar: G.radar, misses: G.misses, scene: live.scene && sceneId(live.scene), world: live.scene && live.scene.world })
     };
   }
   function start(data) {
