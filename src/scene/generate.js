@@ -54,7 +54,7 @@ function buildScene(lv, seed, opts) {
   const wd = WORLDS[plan.world];
   const sc = { lv, world: plan.world, wd, mods: plan.mods, golden: plan.golden, hy: wd.ground ? wd.horizon : 0, seed, ents: [], amb: {} };
   wd.initAmb && wd.initAmb(sc);
-  const density = opts.density || Math.min(1.5, .62 + lv * .07);
+  const density = opts.density || plan.density || Math.min(1.5, .62 + lv * .07);
   const n = Math.round(density * W * H / (U * U * 2.7));
   const pool = wd.pool.map(([k, w]) => [k, w * (plan.mods.has('twins') && wd.twins.includes(k) ? 6 : 1)]);
   const topN = (opts.title ? 20 : HUD_TOP()) / H;
@@ -98,17 +98,23 @@ function buildScene(lv, seed, opts) {
   return sc;
 }
 // Rerolls until the cow has a fair spot and, from level 13 on, the world changes. A given seed is replayed as is.
-// planner is the mode's plan(lv); it runs on the seeded sequence, so a seed also reproduces the plan.
-export function levelScene(lv, prevWorld, seed, planner = classic.plan) {
-  if (seed != null) return genScene(lv, { seed, planner });
+// The mode's plan(lv) runs on the seeded sequence, so a seed also reproduces the plan.
+export function levelScene(lv, prevWorld, seed, mode = classic) {
+  const sc = seed != null ? genScene(lv, { seed, planner: mode.plan }) : reroll(lv, prevWorld, mode.plan);
+  sc.mode = mode.id;
+  return sc;
+}
+function reroll(lv, prevWorld, planner) {
   let sc;
   for (let i = 0; i < 12; i++) { sc = genScene(lv, { planner }); if (sc.cowPlaced && !(lv > 12 && sc.world === prevWorld)) break; }
   return sc;
 }
-export const sceneId = sc => `${sc.lv}-${sc.seed}`;
+// Classic scenes keep their old ids ("14-777"); other modes get a letter in front ("c14-777" for chill).
+const PREFIX = { chill: 'c' };
+export const sceneId = sc => `${PREFIX[sc.mode] || ''}${sc.lv}-${sc.seed}`;
 export const REPLAY = (() => {
-  let m = null; try { m = /^(\d{1,3})-(\d{1,10})$/.exec(new URLSearchParams(location.search).get('szene') || ''); } catch (_) {}
-  return m && +m[1] >= 1 ? { lv: +m[1], seed: +m[2] | 0 } : null;
+  let m = null; try { m = /^(c?)(\d{1,3})-(\d{1,10})$/.exec(new URLSearchParams(location.search).get('szene') || ''); } catch (_) {}
+  return m && +m[2] >= 1 ? { mode: m[1] === 'c' ? 'chill' : 'classic', lv: +m[2], seed: +m[3] | 0 } : null;
 })();
 export function paintBg(sc) {
   bgCv.width = Math.round(W * DPR); bgCv.height = Math.round(H * DPR);

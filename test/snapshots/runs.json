@@ -388,5 +388,135 @@
     "world": "weide"
    }
   ]
+ ],
+ "chill": [
+  [
+   "start",
+   {
+    "state": "play",
+    "lv": 1,
+    "score": 0,
+    "cows": 0,
+    "time": 0,
+    "streak": 0,
+    "bestStreak": 0,
+    "radar": null,
+    "misses": 0,
+    "scene": "c1-1636338414",
+    "world": "weide"
+   }
+  ],
+  [
+   "find 3",
+   {
+    "state": "found",
+    "lv": 1,
+    "score": 0,
+    "cows": 1,
+    "time": 0,
+    "streak": 1,
+    "bestStreak": 1,
+    "radar": null,
+    "misses": 0,
+    "scene": "c1-1636338414",
+    "world": "weide"
+   }
+  ],
+  [
+   "miss",
+   {
+    "state": "play",
+    "lv": 2,
+    "score": 0,
+    "cows": 1,
+    "time": 0,
+    "streak": 0,
+    "bestStreak": 1,
+    "radar": null,
+    "misses": 1,
+    "scene": "c2-1360483500",
+    "world": "strand"
+   }
+  ],
+  [
+   "radar",
+   {
+    "state": "play",
+    "lv": 2,
+    "score": 0,
+    "cows": 1,
+    "time": 0,
+    "streak": 0,
+    "bestStreak": 1,
+    "radar": null,
+    "misses": 1,
+    "scene": "c2-1360483500",
+    "world": "strand"
+   }
+  ],
+  [
+   "find 5",
+   {
+    "state": "found",
+    "lv": 2,
+    "score": 0,
+    "cows": 2,
+    "time": 0,
+    "streak": 1,
+    "bestStreak": 1,
+    "radar": null,
+    "misses": 1,
+    "scene": "c2-1360483500",
+    "world": "strand"
+   }
+  ],
+  [
+   "find 1",
+   {
+    "state": "found",
+    "lv": 3,
+    "score": 0,
+    "cows": 3,
+    "time": 0,
+    "streak": 2,
+    "bestStreak": 2,
+    "radar": null,
+    "misses": 1,
+    "scene": "c3-167633976",
+    "world": "stadt"
+   }
+  ],
+  [
+   "find 20",
+   {
+    "state": "found",
+    "lv": 4,
+    "score": 0,
+    "cows": 4,
+    "time": 0,
+    "streak": 3,
+    "bestStreak": 3,
+    "radar": null,
+    "misses": 1,
+    "scene": "c4-1933243418",
+    "world": "winter"
+   }
+  ],
+  [
+   "quit",
+   {
+    "state": "over",
+    "lv": 5,
+    "score": 0,
+    "cows": 4,
+    "time": 0,
+    "streak": 3,
+    "bestStreak": 3,
+    "radar": null,
+    "misses": 1,
+    "scene": "c5-1585945575",
+    "world": "meer"
+   }
+  ]
  ]
 }

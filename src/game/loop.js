@@ -48,13 +48,14 @@ export function update(dt) {
   if (live.texts.length > 20) live.texts.splice(0, live.texts.length - 20);
   if ((G.state === 'found' || G.state === 'reveal') && live.nightK > 0) live.nightK = Math.max(0, live.nightK - dt * 2.5);
   if (G.state === 'play') {
-    G.time -= dt; G.levelT += dt;
-    if (G.time < 5.5) { const sec = Math.ceil(G.time); if (sec < G.lastTick && sec > 0) { G.lastTick = sec; SND.tick(sec); } } else G.lastTick = 99;
+    G.levelT += dt;
+    if (currentMode().timer) G.time -= dt;
+    if (currentMode().timer && G.time < 5.5) { const sec = Math.ceil(G.time); if (sec < G.lastTick && sec > 0) { G.lastTick = sec; SND.tick(sec); } } else G.lastTick = 99;
     if (G.lv === 1 && !G.nudged && G.levelT > 9 && G.radar > 0) { G.nudged = true; els.radarBtn.classList.add('nudge'); }
     if (currentMode().isOver(G)) timeUp();
   }
   if (G.state !== 'title' && G.state !== 'boot' && G.state !== 'over') updateHud();
-  MUSIC.setFast(G.state === 'play' && G.time < 10);
+  MUSIC.setFast(G.state === 'play' && !!currentMode().timer && G.time < 10);
   cv.style.cursor = G.state === 'play' && ptr.type === 'mouse' ? 'none' : 'default';
 }
 export function frame(now) {

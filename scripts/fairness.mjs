@@ -25,10 +25,10 @@ for (const [w, h] of VIEWPORTS) {
     const K = window.__WDK__; K.resize();
     const W = K.W, H = K.H, out = { fails: [], kinds: {}, minSide: Infinity, maxCovered: 0, scenes: 0 };
     const inter = (a, b) => a[0] < b[2] && a[2] > b[0] && a[1] < b[3] && a[3] > b[1];
-    for (let lv = 1; lv <= LEVELS; lv++) {
+    for (const mode of Object.values(K.MODES)) for (let lv = 1; lv <= LEVELS; lv++) {
       let prev = null;
       for (let n = 0; n < SEEDS; n++) {
-        const sc = K.levelScene(lv, prev); prev = sc.world; out.scenes++;
+        const sc = K.levelScene(lv, prev, null, mode); prev = sc.world; out.scenes++;
         const b = K.entBox(sc.cow, 0), ui = K.uiRects(sc), why = [];
         const fail = (kind, msg = kind) => { why.push(msg); out.kinds[kind] = (out.kinds[kind] || 0) + 1; };
         if (!sc.cowPlaced) fail('kein Platz');
@@ -46,7 +46,7 @@ for (const [w, h] of VIEWPORTS) {
         out.maxCovered = Math.max(out.maxCovered, covered); out.minSide = Math.min(out.minSide, side);
         if (covered > L.covered) fail('verdeckt', `${Math.round(covered * 100)} % verdeckt`);
         if (side < (sc.mods.has('tiny') ? L.minSideTiny : L.minSide)) fail('zu klein', `nur ${Math.round(side)} px groß`);
-        if (why.length) out.fails.push({ scene: `${lv}-${sc.seed}`, world: sc.world, mods: [...sc.mods].join('+') || '-', why: why.join(', ') });
+        if (why.length) out.fails.push({ scene: (mode.id === 'chill' ? 'c' : '') + `${lv}-${sc.seed}`, world: sc.world, mods: [...sc.mods].join('+') || '-', why: why.join(', ') });
       }
     }
     return out;

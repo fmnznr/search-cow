@@ -1,8 +1,9 @@
 // Sound and music toggles and the buttons of all screens.
 import { $, COARSE } from '../core/util.js';
-import { settings } from '../store/settings.js';
+import { saveSettings, settings } from '../store/settings.js';
 import { MUSIC } from '../audio/music.js';
 import { SND } from '../audio/sfx.js';
+import { REPLAY } from '../scene/generate.js';
 import { G } from '../game/state.js';
 import { els } from './hud.js';
 import { startGame, timeUp, toTitle } from '../game/flow.js';
@@ -45,6 +46,16 @@ $('#tabLocal').addEventListener('click', () => showBoardTab('local'));
 $('#entryForm').addEventListener('submit', submitEntry);
 $('#pauseBtn').addEventListener('click', pauseGame);
 $('#resumeBtn').addEventListener('click', resumeGame);
-$('#quitBtn').addEventListener('click', () => { G.paused = false; $('#pause').hidden = true; G.time = 0; timeUp(); });
+export function quitRun() { G.paused = false; $('#pause').hidden = true; G.time = 0; timeUp(); }
+$('#quitBtn').addEventListener('click', quitRun);
+// Mode choice on the title screen; remembered for the next visit.
+export function showModeChoice() {
+  for (const b of document.querySelectorAll('.mode')) b.setAttribute('aria-checked', String(b.dataset.mode === G.mode));
+  for (const el of document.querySelectorAll('#title [data-for]')) el.hidden = el.dataset.for !== G.mode;
+}
+for (const b of document.querySelectorAll('.mode')) b.addEventListener('click', () => {
+  if (REPLAY || G.state !== 'title') return;
+  G.mode = b.dataset.mode; saveSettings({ mode: G.mode }); showModeChoice(); SND.bell(G.mode === 'chill' ? .8 : 1);
+});
 els.radarBtn.addEventListener('click', useRadar);
 $('#howto').textContent = COARSE ? 'Tippen = Tipp abgeben · Halten & ziehen = Lupe · Glocke = Muh-Radar' : 'Maus bewegen = Lupe · Klick = Tipp · Leertaste = Muh-Radar · P = Pause · M = Musik';

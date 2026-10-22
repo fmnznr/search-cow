@@ -48,8 +48,13 @@
   <div class="card">
     <p class="eyebrow">Ein Wimmelspiel für Adleraugen</p>
     <h1 class="logo"><span class="spot">Wo ist</span><span class="row"><span class="spot">die Kuh</span><span class="q">?</span></span></h1>
-    <p class="lede">Zwischen Schafen, Dalmatinern und Leuten im Kuhkostüm versteckt sich genau eine echte Kuh. Finde sie, bevor die Zeit abläuft.</p>
-    <dl class="rules">
+    <p class="lede" data-for="classic">Zwischen Schafen, Dalmatinern und Leuten im Kuhkostüm versteckt sich genau eine echte Kuh. Finde sie, bevor die Zeit abläuft.</p>
+    <p class="lede" data-for="chill" hidden>Zwischen Schafen, Dalmatinern und Leuten im Kuhkostüm versteckt sich genau eine echte Kuh. Keine Uhr, keine Punkte: Such, so lange du magst.</p>
+    <div class="modes" role="radiogroup" aria-label="Spielmodus">
+      <button class="mode" role="radio" data-mode="classic" aria-checked="true"><b>Klassisch</b><small>Auf Zeit, mit Punkten</small></button>
+      <button class="mode" role="radio" data-mode="chill" aria-checked="false"><b>Chill</b><small>Ohne Uhr, ganz in Ruhe</small></button>
+    </div>
+    <dl class="rules" data-for="classic">
       <div><dt>+ Zeit</dt><dd>für jede gefundene Kuh</dd></div>
       <div><dt>− 3 s</dt><dd>für jeden Fehlklick</dd></div>
       <div><dt>Muh-Radar</dt><dd>verrät, wo es muht</dd></div>
@@ -101,7 +106,7 @@
 <section class="screen" id="over" hidden>
   <div class="card">
     <span class="stamp" id="stamp" hidden>Neuer Rekord!</span>
-    <p class="eyebrow">Zeit um · Dein Titel</p>
+    <p class="eyebrow" id="overEyebrow">Zeit um · Dein Titel</p>
     <h2 id="rankName">Weide-Profi</h2>
     <p class="say-line" id="rankText"></p>
     <div class="stats">

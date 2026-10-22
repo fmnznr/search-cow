@@ -37,7 +37,7 @@ npm run og-image     # Vorschaubild icons/og.png neu rendern
 
 Playwright ist auf 1.56.1 festgelegt, damit lokal und in der CI dieselbe Chromium-Version rendert (wichtig für die Bildvergleiche). Mit anderem Chromium: `CHROMIUM_PATH=/pfad/zu/chrome npm test`.
 
-- **Unit-Tests** (`test/unit/`): Zufall, Regelwerk „Klassisch“ (Levelplan, Punkte, Zeit, Fehlklicks) und Einstellungen (inkl. Übernahme alter Schlüssel) direkt in Node.
+- **Unit-Tests** (`test/unit/`): Zufall, Regelwerke „Klassisch“ und „Chill“ (Levelplan, Punkte, Zeit, Fehlklicks) und Einstellungen (inkl. Übernahme alter Schlüssel) direkt in Node.
 - **Smoke-Test:** keine Fehler, keine Anfragen an fremde Server, Schriften geladen, Lautstärke wird gespeichert, Rechtsseiten erreichbar, startet offline.
 - **Fairness-Test:** prüft tausende Szenen, ob die Kuh sichtbar, frei und groß genug ist.
 - **Schnappschuss-Test:** friert das Verhalten ein – 120 erzeugte Szenen, 8 gerenderte Bilder und 3 durchgespielte Runden auf manueller Uhr (`test/snapshots/`). Jede Abweichung schlägt an; Bild-Abweichungen landen in `test/snapshots/out/`.
