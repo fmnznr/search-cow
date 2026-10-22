@@ -20,10 +20,10 @@ jobs:
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ steps.pw.outputs.version }}
+      # The runner image already has Chrome's system libraries; only a fresh browser download also installs them.
+      # (install-deps on every run took up to 11 minutes when the apt mirrors were slow.)
       - if: steps.pw-cache.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps chromium
-      - if: steps.pw-cache.outputs.cache-hit == 'true'
-        run: npx playwright install-deps chromium
       - run: npm run lint
       - run: npm run unit
       - name: index.html und sw.js passen zu src/
