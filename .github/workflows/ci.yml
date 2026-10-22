@@ -1,8 +1,7 @@
 name: ci
+# Every branch push; pull requests from this repo get the result through their head commit.
 on:
   push:
-    branches: [master]
-  pull_request:
 
 jobs:
   ci:
@@ -19,3 +18,10 @@ jobs:
         run: npm run build && git diff --exit-code
       - run: npm run smoke
       - run: npm run fairness -- --seeds 10
+      - run: npm run snapshots
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: snapshot-diffs
+          path: test/snapshots/out/
+          if-no-files-found: ignore

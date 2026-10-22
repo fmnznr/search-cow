@@ -171,6 +171,8 @@ GitHub Pages veröffentlicht weiter direkt aus dem Repo-Stamm von `master`. Sinn
 
 ### 2.1 Sicherheitsnetz vor dem ersten Umbau-Schritt
 
+**Umgesetzt (Stand v1.0.0):** `npm run snapshots` mit 120 Szenen (Hash + Zusammenfassung), 8 Bildern (Pixelvergleich, Toleranz 8/255, max. 0,2 % abweichende Pixel) und 3 Spielrunden (Desktop/Maus, Handy/Touch, Zeitablauf) auf manueller Uhr (`?test&clock=manual`). Gegenprobe: andere Schafsfarbe → 38 Szenen und 3 Bilder rot; Serien-Multiplikator 0,5 → 0,6 → 2 Spielrunden rot. Playwright auf 1.56.1 festgelegt, damit lokal und CI gleich rendern. Test-Schnittstelle `testHooks()` in `src/game.html` bleibt während des Umbaus stabil. **Offen:** Branch-Schutz auf `master` (GitHub → Settings → Branches, Pflicht-Check `ci`) – nur durch den Repo-Besitzer einstellbar.
+
 Bevor Code verschoben wird, wird das heutige Verhalten eingefroren, sodass jede Abweichung automatisch auffällt.
 
 - **Szenen-Schnappschüsse:** Für feste Seeds × Level × Fenstergrößen die erzeugte Szene (Typ, Position gerundet, Farben, Modifikatoren) als JSON einchecken. Nach dem Umbau müssen sie identisch sein.

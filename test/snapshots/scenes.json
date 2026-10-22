@@ -1,0 +1,1322 @@
+{
+ "390x844 1-1": {
+  "hash": "a0c44c6d41277feb",
+  "world": "weide",
+  "mods": "",
+  "golden": false,
+  "figures": 73,
+  "cow": [
+   0.3503,
+   0.8028
+  ]
+ },
+ "390x844 1-2": {
+  "hash": "31db947845c1d855",
+  "world": "weide",
+  "mods": "",
+  "golden": false,
+  "figures": 74,
+  "cow": [
+   0.5666,
+   0.4125
+  ]
+ },
+ "390x844 1-3": {
+  "hash": "61c8709d2ca61edf",
+  "world": "weide",
+  "mods": "",
+  "golden": false,
+  "figures": 75,
+  "cow": [
+   0.4558,
+   0.68
+  ]
+ },
+ "390x844 2-1": {
+  "hash": "a43da3ab6e410b15",
+  "world": "strand",
+  "mods": "",
+  "golden": false,
+  "figures": 82,
+  "cow": [
+   0.6802,
+   0.5142
+  ]
+ },
+ "390x844 2-2": {
+  "hash": "b59121674dd9bdb5",
+  "world": "strand",
+  "mods": "",
+  "golden": false,
+  "figures": 81,
+  "cow": [
+   0.7033,
+   0.8295
+  ]
+ },
+ "390x844 2-3": {
+  "hash": "2fca91e233fae431",
+  "world": "strand",
+  "mods": "",
+  "golden": false,
+  "figures": 80,
+  "cow": [
+   0.7021,
+   0.8129
+  ]
+ },
+ "390x844 3-1": {
+  "hash": "56dddd63d1553839",
+  "world": "stadt",
+  "mods": "",
+  "golden": false,
+  "figures": 90,
+  "cow": [
+   0.8486,
+   0.4438
+  ]
+ },
+ "390x844 3-2": {
+  "hash": "499f348c7a2e8fc1",
+  "world": "stadt",
+  "mods": "",
+  "golden": false,
+  "figures": 89,
+  "cow": [
+   0.6513,
+   0.859
+  ]
+ },
+ "390x844 3-3": {
+  "hash": "843dd3d14656cd3b",
+  "world": "stadt",
+  "mods": "",
+  "golden": false,
+  "figures": 90,
+  "cow": [
+   0.4789,
+   0.6029
+  ]
+ },
+ "390x844 4-1": {
+  "hash": "058fe2ebd619df1a",
+  "world": "winter",
+  "mods": "twins",
+  "golden": false,
+  "figures": 96,
+  "cow": [
+   0.6716,
+   0.7696
+  ]
+ },
+ "390x844 4-2": {
+  "hash": "6f827b10798bb534",
+  "world": "winter",
+  "mods": "twins",
+  "golden": false,
+  "figures": 97,
+  "cow": [
+   0.5605,
+   0.5087
+  ]
+ },
+ "390x844 4-3": {
+  "hash": "a7f4290d070f6c1f",
+  "world": "winter",
+  "mods": "twins",
+  "golden": false,
+  "figures": 96,
+  "cow": [
+   0.4789,
+   0.8211
+  ]
+ },
+ "390x844 5-1": {
+  "hash": "006d68b150c6b993",
+  "world": "meer",
+  "mods": "",
+  "golden": false,
+  "figures": 104,
+  "cow": [
+   0.2587,
+   0.5439
+  ]
+ },
+ "390x844 5-2": {
+  "hash": "ed3f7830a42ffc62",
+  "world": "meer",
+  "mods": "",
+  "golden": false,
+  "figures": 105,
+  "cow": [
+   0.4956,
+   0.5051
+  ]
+ },
+ "390x844 5-3": {
+  "hash": "756d463ab8bdbd62",
+  "world": "meer",
+  "mods": "",
+  "golden": false,
+  "figures": 103,
+  "cow": [
+   0.2847,
+   0.8077
+  ]
+ },
+ "390x844 6-1": {
+  "hash": "09d639c8dc211c7e",
+  "world": "all",
+  "mods": "",
+  "golden": false,
+  "figures": 110,
+  "cow": [
+   0.1201,
+   0.5127
+  ]
+ },
+ "390x844 6-2": {
+  "hash": "9e46a77314387f2c",
+  "world": "all",
+  "mods": "",
+  "golden": false,
+  "figures": 111,
+  "cow": [
+   0.7877,
+   0.4434
+  ]
+ },
+ "390x844 6-3": {
+  "hash": "115d292f93598578",
+  "world": "all",
+  "mods": "",
+  "golden": false,
+  "figures": 111,
+  "cow": [
+   0.4052,
+   0.4594
+  ]
+ },
+ "390x844 7-1": {
+  "hash": "643f996b637cefac",
+  "world": "weide",
+  "mods": "night",
+  "golden": false,
+  "figures": 119,
+  "cow": [
+   0.4634,
+   0.7699
+  ]
+ },
+ "390x844 7-2": {
+  "hash": "715e02229ee32ca2",
+  "world": "weide",
+  "mods": "night",
+  "golden": false,
+  "figures": 119,
+  "cow": [
+   0.4665,
+   0.3964
+  ]
+ },
+ "390x844 7-3": {
+  "hash": "77d2f930ef50673b",
+  "world": "weide",
+  "mods": "night",
+  "golden": false,
+  "figures": 119,
+  "cow": [
+   0.9087,
+   0.3947
+  ]
+ },
+ "390x844 8-1": {
+  "hash": "b237c0d9b6e1ca93",
+  "world": "strand",
+  "mods": "move",
+  "golden": false,
+  "figures": 127,
+  "cow": [
+   0.229,
+   0.8367
+  ]
+ },
+ "390x844 8-2": {
+  "hash": "e6119abd40dd8ace",
+  "world": "strand",
+  "mods": "move",
+  "golden": false,
+  "figures": 125,
+  "cow": [
+   0.6501,
+   0.5036
+  ]
+ },
+ "390x844 8-3": {
+  "hash": "17e40ce668bad0e4",
+  "world": "strand",
+  "mods": "move",
+  "golden": false,
+  "figures": 127,
+  "cow": [
+   0.8371,
+   0.5067
+  ]
+ },
+ "390x844 9-1": {
+  "hash": "b76a988f2310c1ea",
+  "world": "stadt",
+  "mods": "tiny",
+  "golden": false,
+  "figures": 134,
+  "cow": [
+   0.5539,
+   0.6928
+  ]
+ },
+ "390x844 9-2": {
+  "hash": "363ed6ffd42eb82b",
+  "world": "stadt",
+  "mods": "tiny",
+  "golden": false,
+  "figures": 135,
+  "cow": [
+   0.4174,
+   0.6813
+  ]
+ },
+ "390x844 9-3": {
+  "hash": "5675b09d7829ab10",
+  "world": "stadt",
+  "mods": "tiny",
+  "golden": false,
+  "figures": 134,
+  "cow": [
+   0.8638,
+   0.5642
+  ]
+ },
+ "390x844 10-1": {
+  "hash": "1cab575a2e673128",
+  "world": "winter",
+  "mods": "twins",
+  "golden": true,
+  "figures": 140,
+  "cow": [
+   0.7943,
+   0.8802
+  ]
+ },
+ "390x844 10-2": {
+  "hash": "7beec212f63580f2",
+  "world": "winter",
+  "mods": "twins",
+  "golden": false,
+  "figures": 141,
+  "cow": [
+   0.5945,
+   0.7229
+  ]
+ },
+ "390x844 10-3": {
+  "hash": "5c7143f36cb81fae",
+  "world": "winter",
+  "mods": "twins",
+  "golden": true,
+  "figures": 141,
+  "cow": [
+   0.2696,
+   0.6463
+  ]
+ },
+ "390x844 11-1": {
+  "hash": "a6f13d5ce05ca4c5",
+  "world": "meer",
+  "mods": "twins",
+  "golden": true,
+  "figures": 148,
+  "cow": [
+   0.4641,
+   0.71
+  ]
+ },
+ "390x844 11-2": {
+  "hash": "524839d1aae0aa9c",
+  "world": "meer",
+  "mods": "twins",
+  "golden": false,
+  "figures": 148,
+  "cow": [
+   0.6856,
+   0.2337
+  ]
+ },
+ "390x844 11-3": {
+  "hash": "b3f7d1ad3acf4957",
+  "world": "meer",
+  "mods": "twins",
+  "golden": true,
+  "figures": 149,
+  "cow": [
+   0.8126,
+   0.4201
+  ]
+ },
+ "390x844 12-1": {
+  "hash": "0ce46b337911cc12",
+  "world": "all",
+  "mods": "twins",
+  "golden": true,
+  "figures": 155,
+  "cow": [
+   0.1262,
+   0.3534
+  ]
+ },
+ "390x844 12-2": {
+  "hash": "be7a55ada235b072",
+  "world": "all",
+  "mods": "twins",
+  "golden": false,
+  "figures": 156,
+  "cow": [
+   0.4769,
+   0.4222
+  ]
+ },
+ "390x844 12-3": {
+  "hash": "a7c9cd061ea43a5c",
+  "world": "all",
+  "mods": "twins",
+  "golden": true,
+  "figures": 156,
+  "cow": [
+   0.1014,
+   0.3012
+  ]
+ },
+ "390x844 13-1": {
+  "hash": "9474c28e6874509e",
+  "world": "winter",
+  "mods": "night",
+  "golden": false,
+  "figures": 160,
+  "cow": [
+   0.9272,
+   0.671
+  ]
+ },
+ "390x844 13-2": {
+  "hash": "547c353431f21be7",
+  "world": "meer",
+  "mods": "move",
+  "golden": false,
+  "figures": 161,
+  "cow": [
+   0.8643,
+   0.6649
+  ]
+ },
+ "390x844 13-3": {
+  "hash": "29a105a46054a383",
+  "world": "meer",
+  "mods": "night",
+  "golden": false,
+  "figures": 160,
+  "cow": [
+   0.7451,
+   0.4622
+  ]
+ },
+ "390x844 14-1": {
+  "hash": "8db472d4b1a33f7b",
+  "world": "winter",
+  "mods": "twins",
+  "golden": false,
+  "figures": 162,
+  "cow": [
+   0.2171,
+   0.5101
+  ]
+ },
+ "390x844 14-2": {
+  "hash": "e6f550ed1cae87bd",
+  "world": "meer",
+  "mods": "move",
+  "golden": false,
+  "figures": 159,
+  "cow": [
+   0.5976,
+   0.6853
+  ]
+ },
+ "390x844 14-3": {
+  "hash": "09a213b35094515b",
+  "world": "meer",
+  "mods": "move",
+  "golden": true,
+  "figures": 160,
+  "cow": [
+   0.1528,
+   0.7233
+  ]
+ },
+ "390x844 15-1": {
+  "hash": "8f25148d5b6953ec",
+  "world": "winter",
+  "mods": "twins",
+  "golden": false,
+  "figures": 162,
+  "cow": [
+   0.2171,
+   0.5101
+  ]
+ },
+ "390x844 15-2": {
+  "hash": "775754a67fd207ee",
+  "world": "meer",
+  "mods": "move",
+  "golden": false,
+  "figures": 159,
+  "cow": [
+   0.5976,
+   0.6853
+  ]
+ },
+ "390x844 15-3": {
+  "hash": "82c15d524c06f84a",
+  "world": "meer",
+  "mods": "move",
+  "golden": true,
+  "figures": 160,
+  "cow": [
+   0.1528,
+   0.7233
+  ]
+ },
+ "390x844 16-1": {
+  "hash": "8f25148d5b6953ec",
+  "world": "winter",
+  "mods": "twins",
+  "golden": false,
+  "figures": 162,
+  "cow": [
+   0.2171,
+   0.5101
+  ]
+ },
+ "390x844 16-2": {
+  "hash": "775754a67fd207ee",
+  "world": "meer",
+  "mods": "move",
+  "golden": false,
+  "figures": 159,
+  "cow": [
+   0.5976,
+   0.6853
+  ]
+ },
+ "390x844 16-3": {
+  "hash": "82c15d524c06f84a",
+  "world": "meer",
+  "mods": "move",
+  "golden": true,
+  "figures": 160,
+  "cow": [
+   0.1528,
+   0.7233
+  ]
+ },
+ "390x844 17-1": {
+  "hash": "8f25148d5b6953ec",
+  "world": "winter",
+  "mods": "twins",
+  "golden": false,
+  "figures": 162,
+  "cow": [
+   0.2171,
+   0.5101
+  ]
+ },
+ "390x844 17-2": {
+  "hash": "775754a67fd207ee",
+  "world": "meer",
+  "mods": "move",
+  "golden": false,
+  "figures": 159,
+  "cow": [
+   0.5976,
+   0.6853
+  ]
+ },
+ "390x844 17-3": {
+  "hash": "82c15d524c06f84a",
+  "world": "meer",
+  "mods": "move",
+  "golden": true,
+  "figures": 160,
+  "cow": [
+   0.1528,
+   0.7233
+  ]
+ },
+ "390x844 18-1": {
+  "hash": "8f25148d5b6953ec",
+  "world": "winter",
+  "mods": "twins",
+  "golden": false,
+  "figures": 162,
+  "cow": [
+   0.2171,
+   0.5101
+  ]
+ },
+ "390x844 18-2": {
+  "hash": "775754a67fd207ee",
+  "world": "meer",
+  "mods": "move",
+  "golden": false,
+  "figures": 159,
+  "cow": [
+   0.5976,
+   0.6853
+  ]
+ },
+ "390x844 18-3": {
+  "hash": "82c15d524c06f84a",
+  "world": "meer",
+  "mods": "move",
+  "golden": true,
+  "figures": 160,
+  "cow": [
+   0.1528,
+   0.7233
+  ]
+ },
+ "390x844 19-1": {
+  "hash": "8f25148d5b6953ec",
+  "world": "winter",
+  "mods": "twins",
+  "golden": false,
+  "figures": 162,
+  "cow": [
+   0.2171,
+   0.5101
+  ]
+ },
+ "390x844 19-2": {
+  "hash": "775754a67fd207ee",
+  "world": "meer",
+  "mods": "move",
+  "golden": false,
+  "figures": 159,
+  "cow": [
+   0.5976,
+   0.6853
+  ]
+ },
+ "390x844 19-3": {
+  "hash": "82c15d524c06f84a",
+  "world": "meer",
+  "mods": "move",
+  "golden": true,
+  "figures": 160,
+  "cow": [
+   0.1528,
+   0.7233
+  ]
+ },
+ "390x844 20-1": {
+  "hash": "8f25148d5b6953ec",
+  "world": "winter",
+  "mods": "twins",
+  "golden": false,
+  "figures": 162,
+  "cow": [
+   0.2171,
+   0.5101
+  ]
+ },
+ "390x844 20-2": {
+  "hash": "775754a67fd207ee",
+  "world": "meer",
+  "mods": "move",
+  "golden": false,
+  "figures": 159,
+  "cow": [
+   0.5976,
+   0.6853
+  ]
+ },
+ "390x844 20-3": {
+  "hash": "82c15d524c06f84a",
+  "world": "meer",
+  "mods": "move",
+  "golden": true,
+  "figures": 160,
+  "cow": [
+   0.1528,
+   0.7233
+  ]
+ },
+ "1366x768 1-1": {
+  "hash": "600cf70d5ec292ad",
+  "world": "weide",
+  "mods": "",
+  "golden": false,
+  "figures": 74,
+  "cow": [
+   0.467,
+   0.9698
+  ]
+ },
+ "1366x768 1-2": {
+  "hash": "677f9d9e2face7ee",
+  "world": "weide",
+  "mods": "",
+  "golden": false,
+  "figures": 75,
+  "cow": [
+   0.5666,
+   0.4125
+  ]
+ },
+ "1366x768 1-3": {
+  "hash": "428bace5fc83000c",
+  "world": "weide",
+  "mods": "",
+  "golden": false,
+  "figures": 75,
+  "cow": [
+   0.4558,
+   0.68
+  ]
+ },
+ "1366x768 2-1": {
+  "hash": "cdf4018325373c56",
+  "world": "strand",
+  "mods": "",
+  "golden": false,
+  "figures": 81,
+  "cow": [
+   0.6802,
+   0.5142
+  ]
+ },
+ "1366x768 2-2": {
+  "hash": "29e3bd1f088c1a2f",
+  "world": "strand",
+  "mods": "",
+  "golden": false,
+  "figures": 81,
+  "cow": [
+   0.7033,
+   0.8295
+  ]
+ },
+ "1366x768 2-3": {
+  "hash": "44016138f0627f64",
+  "world": "strand",
+  "mods": "",
+  "golden": false,
+  "figures": 81,
+  "cow": [
+   0.7021,
+   0.8129
+  ]
+ },
+ "1366x768 3-1": {
+  "hash": "e481fb1febc31162",
+  "world": "stadt",
+  "mods": "",
+  "golden": false,
+  "figures": 90,
+  "cow": [
+   0.8486,
+   0.4438
+  ]
+ },
+ "1366x768 3-2": {
+  "hash": "fe4634e8d6e64244",
+  "world": "stadt",
+  "mods": "",
+  "golden": false,
+  "figures": 89,
+  "cow": [
+   0.6513,
+   0.859
+  ]
+ },
+ "1366x768 3-3": {
+  "hash": "5f228ef530539484",
+  "world": "stadt",
+  "mods": "",
+  "golden": false,
+  "figures": 89,
+  "cow": [
+   0.4789,
+   0.6029
+  ]
+ },
+ "1366x768 4-1": {
+  "hash": "65109be7fb26188a",
+  "world": "winter",
+  "mods": "twins",
+  "golden": false,
+  "figures": 95,
+  "cow": [
+   0.6716,
+   0.7696
+  ]
+ },
+ "1366x768 4-2": {
+  "hash": "30b9111502b50230",
+  "world": "winter",
+  "mods": "twins",
+  "golden": false,
+  "figures": 96,
+  "cow": [
+   0.5605,
+   0.5087
+  ]
+ },
+ "1366x768 4-3": {
+  "hash": "b9566b40178116c8",
+  "world": "winter",
+  "mods": "twins",
+  "golden": false,
+  "figures": 95,
+  "cow": [
+   0.4789,
+   0.8211
+  ]
+ },
+ "1366x768 5-1": {
+  "hash": "d1417fab79ec260e",
+  "world": "meer",
+  "mods": "",
+  "golden": false,
+  "figures": 104,
+  "cow": [
+   0.2587,
+   0.5534
+  ]
+ },
+ "1366x768 5-2": {
+  "hash": "6247b87fdc090101",
+  "world": "meer",
+  "mods": "",
+  "golden": false,
+  "figures": 104,
+  "cow": [
+   0.4956,
+   0.5159
+  ]
+ },
+ "1366x768 5-3": {
+  "hash": "d9f97a980e7119de",
+  "world": "meer",
+  "mods": "",
+  "golden": false,
+  "figures": 103,
+  "cow": [
+   0.2847,
+   0.8087
+  ]
+ },
+ "1366x768 6-1": {
+  "hash": "5c146745d4cc6690",
+  "world": "all",
+  "mods": "",
+  "golden": false,
+  "figures": 109,
+  "cow": [
+   0.9243,
+   0.8106
+  ]
+ },
+ "1366x768 6-2": {
+  "hash": "2e8cbba0f3623e95",
+  "world": "all",
+  "mods": "",
+  "golden": false,
+  "figures": 110,
+  "cow": [
+   0.7877,
+   0.4562
+  ]
+ },
+ "1366x768 6-3": {
+  "hash": "6a7df7c1a8b01afe",
+  "world": "all",
+  "mods": "",
+  "golden": false,
+  "figures": 110,
+  "cow": [
+   0.0702,
+   0.294
+  ]
+ },
+ "1366x768 7-1": {
+  "hash": "9928505e9c562010",
+  "world": "weide",
+  "mods": "night",
+  "golden": false,
+  "figures": 120,
+  "cow": [
+   0.4634,
+   0.7699
+  ]
+ },
+ "1366x768 7-2": {
+  "hash": "31b6e70516326c3d",
+  "world": "weide",
+  "mods": "night",
+  "golden": false,
+  "figures": 120,
+  "cow": [
+   0.4665,
+   0.3964
+  ]
+ },
+ "1366x768 7-3": {
+  "hash": "2d14041d5bf01108",
+  "world": "weide",
+  "mods": "night",
+  "golden": false,
+  "figures": 119,
+  "cow": [
+   0.9087,
+   0.3947
+  ]
+ },
+ "1366x768 8-1": {
+  "hash": "9455cb70dc1bd137",
+  "world": "strand",
+  "mods": "move",
+  "golden": false,
+  "figures": 123,
+  "cow": [
+   0.229,
+   0.8367
+  ]
+ },
+ "1366x768 8-2": {
+  "hash": "b9d817a81b820928",
+  "world": "strand",
+  "mods": "move",
+  "golden": false,
+  "figures": 126,
+  "cow": [
+   0.6501,
+   0.5036
+  ]
+ },
+ "1366x768 8-3": {
+  "hash": "e92d1d20e80b9cd0",
+  "world": "strand",
+  "mods": "move",
+  "golden": false,
+  "figures": 126,
+  "cow": [
+   0.8371,
+   0.5067
+  ]
+ },
+ "1366x768 9-1": {
+  "hash": "2938955de31b1c49",
+  "world": "stadt",
+  "mods": "tiny",
+  "golden": false,
+  "figures": 135,
+  "cow": [
+   0.5539,
+   0.6928
+  ]
+ },
+ "1366x768 9-2": {
+  "hash": "6c7773dbc074e74c",
+  "world": "stadt",
+  "mods": "tiny",
+  "golden": false,
+  "figures": 133,
+  "cow": [
+   0.6116,
+   0.953
+  ]
+ },
+ "1366x768 9-3": {
+  "hash": "836b225495ae1563",
+  "world": "stadt",
+  "mods": "tiny",
+  "golden": false,
+  "figures": 134,
+  "cow": [
+   0.8638,
+   0.5642
+  ]
+ },
+ "1366x768 10-1": {
+  "hash": "efd207ec595b5d91",
+  "world": "winter",
+  "mods": "twins",
+  "golden": true,
+  "figures": 141,
+  "cow": [
+   0.7943,
+   0.8802
+  ]
+ },
+ "1366x768 10-2": {
+  "hash": "9035125b82c82a82",
+  "world": "winter",
+  "mods": "twins",
+  "golden": false,
+  "figures": 141,
+  "cow": [
+   0.5945,
+   0.7229
+  ]
+ },
+ "1366x768 10-3": {
+  "hash": "c843015de2f9e64f",
+  "world": "winter",
+  "mods": "twins",
+  "golden": true,
+  "figures": 142,
+  "cow": [
+   0.2696,
+   0.6463
+  ]
+ },
+ "1366x768 11-1": {
+  "hash": "3b4f8dba0302a370",
+  "world": "meer",
+  "mods": "twins",
+  "golden": true,
+  "figures": 149,
+  "cow": [
+   0.4641,
+   0.7142
+  ]
+ },
+ "1366x768 11-2": {
+  "hash": "1c211a3cbcd31dcc",
+  "world": "meer",
+  "mods": "twins",
+  "golden": false,
+  "figures": 150,
+  "cow": [
+   0.6856,
+   0.2532
+  ]
+ },
+ "1366x768 11-3": {
+  "hash": "87572c08256f5a83",
+  "world": "meer",
+  "mods": "twins",
+  "golden": true,
+  "figures": 148,
+  "cow": [
+   0.0569,
+   0.2506
+  ]
+ },
+ "1366x768 12-1": {
+  "hash": "14d0e590fd46d258",
+  "world": "all",
+  "mods": "twins",
+  "golden": true,
+  "figures": 155,
+  "cow": [
+   0.1262,
+   0.3691
+  ]
+ },
+ "1366x768 12-2": {
+  "hash": "246635c96a81ff0f",
+  "world": "all",
+  "mods": "twins",
+  "golden": false,
+  "figures": 155,
+  "cow": [
+   0.4769,
+   0.4357
+  ]
+ },
+ "1366x768 12-3": {
+  "hash": "59a71b7fe783a04a",
+  "world": "all",
+  "mods": "twins",
+  "golden": true,
+  "figures": 155,
+  "cow": [
+   0.9388,
+   0.7493
+  ]
+ },
+ "1366x768 13-1": {
+  "hash": "e111b86320cee85c",
+  "world": "winter",
+  "mods": "night",
+  "golden": false,
+  "figures": 160,
+  "cow": [
+   0.9272,
+   0.671
+  ]
+ },
+ "1366x768 13-2": {
+  "hash": "0273b28a909fc565",
+  "world": "meer",
+  "mods": "move",
+  "golden": false,
+  "figures": 160,
+  "cow": [
+   0.8643,
+   0.6705
+  ]
+ },
+ "1366x768 13-3": {
+  "hash": "34e1685179881a9d",
+  "world": "meer",
+  "mods": "night",
+  "golden": false,
+  "figures": 161,
+  "cow": [
+   0.7451,
+   0.4744
+  ]
+ },
+ "1366x768 14-1": {
+  "hash": "fe327cd1619115c6",
+  "world": "winter",
+  "mods": "twins",
+  "golden": false,
+  "figures": 161,
+  "cow": [
+   0.2171,
+   0.5101
+  ]
+ },
+ "1366x768 14-2": {
+  "hash": "83313817ac3a4fbd",
+  "world": "meer",
+  "mods": "move",
+  "golden": false,
+  "figures": 162,
+  "cow": [
+   0.5976,
+   0.6902
+  ]
+ },
+ "1366x768 14-3": {
+  "hash": "40afa495cf1b7d52",
+  "world": "meer",
+  "mods": "move",
+  "golden": true,
+  "figures": 161,
+  "cow": [
+   0.1528,
+   0.7271
+  ]
+ },
+ "1366x768 15-1": {
+  "hash": "a38147fce998382e",
+  "world": "winter",
+  "mods": "twins",
+  "golden": false,
+  "figures": 161,
+  "cow": [
+   0.2171,
+   0.5101
+  ]
+ },
+ "1366x768 15-2": {
+  "hash": "543201a87f9b5142",
+  "world": "meer",
+  "mods": "move",
+  "golden": false,
+  "figures": 162,
+  "cow": [
+   0.5976,
+   0.6902
+  ]
+ },
+ "1366x768 15-3": {
+  "hash": "3f3f16262b559dd3",
+  "world": "meer",
+  "mods": "move",
+  "golden": true,
+  "figures": 161,
+  "cow": [
+   0.1528,
+   0.7271
+  ]
+ },
+ "1366x768 16-1": {
+  "hash": "a38147fce998382e",
+  "world": "winter",
+  "mods": "twins",
+  "golden": false,
+  "figures": 161,
+  "cow": [
+   0.2171,
+   0.5101
+  ]
+ },
+ "1366x768 16-2": {
+  "hash": "543201a87f9b5142",
+  "world": "meer",
+  "mods": "move",
+  "golden": false,
+  "figures": 162,
+  "cow": [
+   0.5976,
+   0.6902
+  ]
+ },
+ "1366x768 16-3": {
+  "hash": "3f3f16262b559dd3",
+  "world": "meer",
+  "mods": "move",
+  "golden": true,
+  "figures": 161,
+  "cow": [
+   0.1528,
+   0.7271
+  ]
+ },
+ "1366x768 17-1": {
+  "hash": "a38147fce998382e",
+  "world": "winter",
+  "mods": "twins",
+  "golden": false,
+  "figures": 161,
+  "cow": [
+   0.2171,
+   0.5101
+  ]
+ },
+ "1366x768 17-2": {
+  "hash": "543201a87f9b5142",
+  "world": "meer",
+  "mods": "move",
+  "golden": false,
+  "figures": 162,
+  "cow": [
+   0.5976,
+   0.6902
+  ]
+ },
+ "1366x768 17-3": {
+  "hash": "3f3f16262b559dd3",
+  "world": "meer",
+  "mods": "move",
+  "golden": true,
+  "figures": 161,
+  "cow": [
+   0.1528,
+   0.7271
+  ]
+ },
+ "1366x768 18-1": {
+  "hash": "a38147fce998382e",
+  "world": "winter",
+  "mods": "twins",
+  "golden": false,
+  "figures": 161,
+  "cow": [
+   0.2171,
+   0.5101
+  ]
+ },
+ "1366x768 18-2": {
+  "hash": "543201a87f9b5142",
+  "world": "meer",
+  "mods": "move",
+  "golden": false,
+  "figures": 162,
+  "cow": [
+   0.5976,
+   0.6902
+  ]
+ },
+ "1366x768 18-3": {
+  "hash": "3f3f16262b559dd3",
+  "world": "meer",
+  "mods": "move",
+  "golden": true,
+  "figures": 161,
+  "cow": [
+   0.1528,
+   0.7271
+  ]
+ },
+ "1366x768 19-1": {
+  "hash": "a38147fce998382e",
+  "world": "winter",
+  "mods": "twins",
+  "golden": false,
+  "figures": 161,
+  "cow": [
+   0.2171,
+   0.5101
+  ]
+ },
+ "1366x768 19-2": {
+  "hash": "543201a87f9b5142",
+  "world": "meer",
+  "mods": "move",
+  "golden": false,
+  "figures": 162,
+  "cow": [
+   0.5976,
+   0.6902
+  ]
+ },
+ "1366x768 19-3": {
+  "hash": "3f3f16262b559dd3",
+  "world": "meer",
+  "mods": "move",
+  "golden": true,
+  "figures": 161,
+  "cow": [
+   0.1528,
+   0.7271
+  ]
+ },
+ "1366x768 20-1": {
+  "hash": "a38147fce998382e",
+  "world": "winter",
+  "mods": "twins",
+  "golden": false,
+  "figures": 161,
+  "cow": [
+   0.2171,
+   0.5101
+  ]
+ },
+ "1366x768 20-2": {
+  "hash": "543201a87f9b5142",
+  "world": "meer",
+  "mods": "move",
+  "golden": false,
+  "figures": 162,
+  "cow": [
+   0.5976,
+   0.6902
+  ]
+ },
+ "1366x768 20-3": {
+  "hash": "3f3f16262b559dd3",
+  "world": "meer",
+  "mods": "move",
+  "golden": true,
+  "figures": 161,
+  "cow": [
+   0.1528,
+   0.7271
+  ]
+ }
+}
