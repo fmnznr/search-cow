@@ -18,6 +18,9 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 1366, height: 768 
   await page.evaluate(() => document.fonts.ready);
   check(await page.evaluate(() => document.fonts.check('16px "Bagel Fat One"') && document.fonts.check('800 16px "Bricolage Grotesque"')), `${tag}: Schriften nicht geladen`);
   check(await page.isVisible('#legal'), `${tag}: Impressum-Links fehlen`);
+  await page.click('#albumBtn');
+  check(await page.locator('#albumGrid canvas').count() === 36, `${tag}: Album zeigt nicht 36 Sticker`);
+  await page.click('#albumClose');
   await page.click('#startBtn');
   // Pause only works once the level is playable, after the intro transition.
   for (let i = 0; i < 20 && !(await page.isVisible('#pause')); i++) { await page.waitForTimeout(250); await page.click('#pauseBtn'); }

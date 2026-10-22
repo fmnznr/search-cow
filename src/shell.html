@@ -62,6 +62,7 @@
     <div class="actions">
       <button class="btn" id="startBtn">Los, suchen!</button>
       <button class="btn alt small" id="boardBtn">Bestenliste</button>
+      <button class="btn alt small" id="albumBtn">Album</button>
     </div>
     <div class="toggles">
       <button class="tog" id="soundBtn" aria-pressed="true">Ton: an</button>
@@ -127,6 +128,7 @@
     <div class="actions">
       <button class="btn" id="againBtn">Nochmal!</button>
       <button class="btn alt small" id="overBoardBtn">Bestenliste</button>
+      <button class="btn alt small" id="overAlbumBtn">Album</button>
       <button class="btn alt small" id="menuBtn">Zum Menü</button>
     </div>
     <p class="fine scene-id" id="overScene"></p>
@@ -144,6 +146,17 @@
     <ol class="ranks" id="rankList"></ol>
     <p class="fine" id="boardNote"></p>
     <div class="actions"><button class="btn alt small" id="boardClose">Zurück</button></div>
+  </div>
+</section>
+
+<section class="screen" id="album" hidden>
+  <div class="card">
+    <p class="eyebrow">Kuh-Album</p>
+    <h2>Alle Kühe der Welt</h2>
+    <p class="fine" id="albumCount"></p>
+    <div class="album" id="albumGrid"></div>
+    <p class="fine">Jede gefundene Kuh bringt den Sticker ihrer Welt. Goldkühe, Nacht, Gewusel, Doppelgänger und Mini-Kühe bringen eigene.</p>
+    <div class="actions"><button class="btn alt small" id="albumClose">Zurück</button></div>
   </div>
 </section>
 

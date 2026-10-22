@@ -3,9 +3,11 @@ import { pick } from '../core/rng.js';
 import { $, RM, clamp, fmt1, fmtInt } from '../core/util.js';
 import { H, U, W } from '../core/view.js';
 import { settings } from '../store/settings.js';
+import { collectStickers } from '../store/album.js';
 import { MUSIC } from '../audio/music.js';
 import { SND } from '../audio/sfx.js';
 import { TYPES } from '../content/entities/rig.js';
+import { stickersFor } from '../content/album.js';
 import { REPLAY, genScene, levelScene, paintBg, sceneId } from '../scene/generate.js';
 import { G, after, light, live } from './state.js';
 import { classic } from '../modes/classic.js';
@@ -24,7 +26,7 @@ export function startGame() {
   G.mode = REPLAY ? REPLAY.mode : settings.mode;
   const lv0 = REPLAY ? REPLAY.lv : 1, mode = currentMode();
   Object.assign(G, { lv: lv0, score: 0, cows: 0, time: mode.timer ? mode.timer.start : 0, streak: 0, bestStreak: 0, fastest: null, radar: mode.radar.start, misses: 0, levelT: 0, usedRadar: false, paused: false, lastTick: 99, nudged: false });
-  $('#title').hidden = true; $('#over').hidden = true; $('#pause').hidden = true; $('#board').hidden = true;
+  $('#title').hidden = true; $('#over').hidden = true; $('#pause').hidden = true; $('#board').hidden = true; $('#album').hidden = true;
   $('#quitBtn').textContent = mode.timer ? 'Aufgeben' : 'Beenden';
   MUSIC.setCalm(!mode.timer); MUSIC.play();
   G.state = 'trans';
@@ -32,7 +34,7 @@ export function startGame() {
 }
 export function toTitle() {
   G.state = 'title'; G.paused = false; showGameUi(false);
-  $('#over').hidden = true; $('#pause').hidden = true; $('#banner').hidden = true; $('#board').hidden = true; live.trans = null;
+  $('#over').hidden = true; $('#pause').hidden = true; $('#banner').hidden = true; $('#board').hidden = true; $('#album').hidden = true; live.trans = null;
   MUSIC.setWorld('weide'); MUSIC.play();
   live.scene = genScene(1, { title: true, density: .75, plan: { world: 'weide', mods: new Set(), golden: false } }); paintBg(live.scene);
   live.fx = []; live.texts = []; live.marks = []; live.iris = null; live.radar = null;
@@ -61,6 +63,8 @@ export function onFound() {
   const rating = live.scene.golden ? 'Goldkuh!' : RATINGS.find(([lim]) => secs < lim)[1];
   const parts = [pts != null && `+${fmtInt(pts)} Punkte`, mult > 1 && `Serie ×${fmt1(mult).replace(',0', '')}`, bonus != null && `+${bonus} s`, `${fmt1(secs)} s`].filter(Boolean);
   if (extraRadar) parts.push('+1 Radar');
+  const fresh = REPLAY ? [] : collectStickers(stickersFor(live.scene));
+  if (fresh.length) parts.push(fresh.length === 1 ? 'Neuer Sticker!' : `${fresh.length} neue Sticker!`);
   praise(rating, parts.join(' · '), live.scene.golden);
   els.timer.classList.add('gain'); setTimeout(() => els.timer.classList.remove('gain'), 500);
   els.radarBtn.classList.remove('nudge');
