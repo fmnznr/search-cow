@@ -4,7 +4,12 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/build.mjs",
-    "fairness": "node scripts/fairness.mjs"
+    "build:itch": "node scripts/build.mjs --itch",
+    "fonts": "node scripts/fetch-fonts.mjs",
+    "og-image": "node scripts/og-image.mjs",
+    "smoke": "node scripts/smoke.mjs",
+    "fairness": "node scripts/fairness.mjs",
+    "test": "npm run smoke && npm run fairness"
   },
   "devDependencies": {
     "playwright": "1.64.1"

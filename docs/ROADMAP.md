@@ -68,7 +68,9 @@ Der `move`-Modus wird nur zum Startzeitpunkt geprüft; dass laufende Figuren die
 
 **Fertig, wenn:** `node scripts/fairness.mjs` lokal mit 50 Seeds ohne Verstoß durchläuft.
 
-### 1.3 Schriften selbst ausliefern
+### 1.3 Schriften selbst ausliefern ✅
+
+**Umgesetzt:** `npm run fonts` lädt die Schriften nach `fonts/`; `build.mjs` ersetzt die Google-Einbindung, der Service Worker cached sie. Der Smoke-Test prüft, dass keine fremden Hosts angefragt werden.
 
 **Warum:** Google Fonts direkt einzubinden überträgt IP-Adressen an Google; in Deutschland wurde das abgemahnt (LG München I, 20.01.2022). Außerdem funktionieren die Schriften dann sicher offline.
 
@@ -82,7 +84,9 @@ Der `move`-Modus wird nur zum Startzeitpunkt geprüft; dass laufende Figuren die
 
 **Fertig, wenn:** Beim Laden von `index.html` keine Anfrage an einen fremden Host geht (wird in 1.7 automatisch geprüft) und die Schriften im Flugmodus nach dem ersten Besuch korrekt erscheinen.
 
-### 1.4 Impressum und Datenschutz
+### 1.4 Impressum und Datenschutz ✅ (Adresse fehlt noch)
+
+**Umgesetzt:** Quellen in `src/legal/`, gebaut nach `impressum.html` und `datenschutz.html`. **Offen:** Platzhalter `[Vorname Nachname]`, `[Straße Hausnummer]`, `[PLZ Ort]`, `[E-Mail]` in beiden Dateien ersetzen, dann `npm run build`. Der Build warnt, solange Platzhalter drin sind.
 
 *Keine Rechtsberatung; bei Unsicherheit Generator (z. B. e-recht24) oder Anwalt.*
 
@@ -100,14 +104,16 @@ Der `move`-Modus wird nur zum Startzeitpunkt geprüft; dass laufende Figuren die
 
 **Fertig, wenn:** Beide Seiten erreichbar sind, vom Startbildschirm verlinkt und alle tatsächlich genutzten Speicher-Schlüssel genannt sind.
 
-### 1.5 Vorschau beim Teilen
+### 1.5 Vorschau beim Teilen ✅
 
 1. In `build.mjs` (Head) ergänzen: `og:title`, `og:description`, `og:url` (`https://fmnznr.github.io/search-cow/`), `og:image`, `og:locale=de_DE`, `twitter:card=summary_large_image`.
 2. `icons/og.png` (1200×630): per Playwright-Skript `scripts/og-image.mjs` aus dem Startbildschirm in 1200×630 rendern, ggf. von Hand nachbearbeiten.
 
 **Fertig, wenn:** Ein geteilter Link in Messenger oder Social Media Bild, Titel und Beschreibung zeigt.
 
-### 1.6 itch.io-Version
+### 1.6 itch.io-Version ✅ (Upload offen)
+
+**Umgesetzt:** `npm run build:itch` → `dist/itch.zip`. Im fremden iframe (`EMBEDDED`) gibt es keinen Service Worker, keine Installation und keine Rechtslinks. **Offen:** Seite auf itch.io anlegen und hochladen.
 
 itch.io bettet HTML-Spiele in einen iframe auf einer eigenen Domain ein. Service Worker und App-Installation sind dort sinnlos oder verwirrend.
 
@@ -124,7 +130,7 @@ itch.io bettet HTML-Spiele in einen iframe auf einer eigenen Domain ein. Service
 
 **Fertig, wenn:** Das ZIP auf itch.io im Browser und auf dem Handy läuft, inkl. Ton nach dem ersten Tippen.
 
-### 1.7 CI auf GitHub Actions
+### 1.7 CI auf GitHub Actions ✅
 
 Datei `.github/workflows/ci.yml`, läuft bei Push und Pull Request:
 1. `node scripts/build.mjs` und `git diff --exit-code` – stellt sicher, dass `index.html` und `sw.js` zu `src/` passen.
@@ -150,9 +156,9 @@ GitHub Pages veröffentlicht weiter direkt aus dem Repo-Stamm von `master`. Sinn
 3. Erste Spieler: Freundeskreis, dann gezielt (z. B. r/WebGames, itch.io-Devlog). Feedback per GitHub-Issues oder E-Mail aus dem Impressum.
 
 ### Zu klären vor Phase 1
-- Name und Anschrift fürs Impressum, oder Impressum-Service?
+- ~~Name und Anschrift fürs Impressum~~ → eigene Adresse, trägt der Betreiber selbst ein
 - itch.io-Account vorhanden?
-- Soll der Seed im Pause-Dialog sichtbar sein oder nur per URL?
+- ~~Seed sichtbar?~~ → klein in Pause- und Endbildschirm
 
 ---
 
@@ -222,3 +228,10 @@ Phase 3 nur, wenn nach ca. 4 Wochen Tagesmodus zum Beispiel ≥ 100 tägliche Sp
 
 ### 3.6 Betrieb
 - Fehler-Logging minimal (Worker-Logs), Backup der D1-Datenbank, Kostenalarm.
+
+---
+
+## Notizzettel: Ideen für später
+
+- **Lautstärke getrennt einstellen:** Musik relativ zu den Tier- und Kuhgeräuschen regeln (Schieberegler in den Einstellungen statt nur an/aus).
+- **Boss-Level:** in festen Abständen (z. B. jedes 5. Level) ein besonderes Level, etwa mehrere Kühe in Folge, eine Kuh, die sich versteckt oder flieht, oder eine Welt mit eigener Regel.

@@ -163,6 +163,7 @@ body{
 .btn.alt{background:var(--milk)}
 .btn.small{font-size:1rem;padding:11px 16px}
 .fine{margin:0;font:600 .82rem/1.4 var(--body);opacity:.75}
+.legal a{color:inherit}
 .scene-id{opacity:.5;font-variant-numeric:tabular-nums;user-select:all}
 .record{margin:0;font:700 .9rem/1.3 var(--body);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .record b{font:var(--num);font-size:.95rem;background:var(--ink);color:var(--milk);padding:5px 9px;border-radius:999px;font-variant-numeric:tabular-nums}
@@ -309,6 +310,7 @@ body{
     <p class="fine" id="installHint" hidden></p>
     <p class="fine" id="howto">Maus bewegen = Lupe · Klick = Tipp · Leertaste = Muh-Radar · P = Pause</p>
     <p class="record" id="record"></p>
+    <p class="fine legal" id="legal" hidden><a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a></p>
   </div>
 </section>
 
@@ -672,6 +674,8 @@ const BOARD = (() => {
    ================================================================ */
 const APP_URL = 'https://fmnznr.github.io/search-cow/';
 const STANDALONE_HOST = !window.claude;
+// Inside someone else's frame (itch.io and the like): no service worker, install prompt or legal pages of our own.
+const EMBEDDED = window.top !== window;
 const IS_IOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 const IS_INSTALLED = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
 let installEvt = null;
@@ -2377,8 +2381,9 @@ els.radarBtn.addEventListener('click', useRadar);
 $('#howto').textContent = COARSE ? 'Tippen = Tipp abgeben · Halten & ziehen = Lupe · Glocke = Muh-Radar' : 'Maus bewegen = Lupe · Klick = Tipp · Leertaste = Muh-Radar · P = Pause · M = Musik';
 function setupInstall() {
   const btn = $('#installBtn'), link = $('#appLink'), hint = $('#installHint');
+  $('#legal').hidden = !STANDALONE_HOST || EMBEDDED;
   if (IS_INSTALLED) return;
-  if (STANDALONE_HOST) {
+  if (STANDALONE_HOST && !EMBEDDED) {
     if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
     window.addEventListener('beforeinstallprompt', ev => { ev.preventDefault(); installEvt = ev; btn.hidden = false; });
     window.addEventListener('appinstalled', () => { installEvt = null; btn.hidden = true; });

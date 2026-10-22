@@ -4,22 +4,31 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#211b26">
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="preload" href="fonts/bagel-fat-one-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/bricolage-grotesque-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="icon" href="icons/icon-192.png" type="image/png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Kuh suchen">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Wo ist die Kuh?">
+<meta property="og:description" content="Wimmelspiel auf Zeit: Finde die eine echte Kuh zwischen Schafen, Dalmatinern und Leuten im Kuhkostüm.">
+<meta property="og:url" content="https://fmnznr.github.io/search-cow/">
+<meta property="og:image" content="https://fmnznr.github.io/search-cow/icons/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="de_DE">
+<meta name="twitter:card" content="summary_large_image">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
 </head>
 <body>
 <title>Wo ist die Kuh?</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="description" content="Ein Wimmelspiel: Finde die eine echte Kuh zwischen Schafen, Dalmatinern und Leuten im Kuhkostüm.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap">
 <style>
 /* Layout: full-bleed canvas Wimmelbild; sticker-cut HUD (ink outline + hard offset shadow) floats on top; Holstein spots are the brand pattern. Single deliberate look in both host themes. */
 :root{
@@ -179,6 +188,7 @@ body{
 .btn.alt{background:var(--milk)}
 .btn.small{font-size:1rem;padding:11px 16px}
 .fine{margin:0;font:600 .82rem/1.4 var(--body);opacity:.75}
+.legal a{color:inherit}
 .scene-id{opacity:.5;font-variant-numeric:tabular-nums;user-select:all}
 .record{margin:0;font:700 .9rem/1.3 var(--body);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .record b{font:var(--num);font-size:.95rem;background:var(--ink);color:var(--milk);padding:5px 9px;border-radius:999px;font-variant-numeric:tabular-nums}
@@ -325,6 +335,7 @@ body{
     <p class="fine" id="installHint" hidden></p>
     <p class="fine" id="howto">Maus bewegen = Lupe · Klick = Tipp · Leertaste = Muh-Radar · P = Pause</p>
     <p class="record" id="record"></p>
+    <p class="fine legal" id="legal" hidden><a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a></p>
   </div>
 </section>
 
@@ -688,6 +699,8 @@ const BOARD = (() => {
    ================================================================ */
 const APP_URL = 'https://fmnznr.github.io/search-cow/';
 const STANDALONE_HOST = !window.claude;
+// Inside someone else's frame (itch.io and the like): no service worker, install prompt or legal pages of our own.
+const EMBEDDED = window.top !== window;
 const IS_IOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 const IS_INSTALLED = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
 let installEvt = null;
@@ -2393,8 +2406,9 @@ els.radarBtn.addEventListener('click', useRadar);
 $('#howto').textContent = COARSE ? 'Tippen = Tipp abgeben · Halten & ziehen = Lupe · Glocke = Muh-Radar' : 'Maus bewegen = Lupe · Klick = Tipp · Leertaste = Muh-Radar · P = Pause · M = Musik';
 function setupInstall() {
   const btn = $('#installBtn'), link = $('#appLink'), hint = $('#installHint');
+  $('#legal').hidden = !STANDALONE_HOST || EMBEDDED;
   if (IS_INSTALLED) return;
-  if (STANDALONE_HOST) {
+  if (STANDALONE_HOST && !EMBEDDED) {
     if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
     window.addEventListener('beforeinstallprompt', ev => { ev.preventDefault(); installEvt = ev; btn.hidden = false; });
     window.addEventListener('appinstalled', () => { installEvt = null; btn.hidden = true; });

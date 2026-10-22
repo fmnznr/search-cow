@@ -1,7 +1,6 @@
 // Generated from src/sw.template.js by scripts/build.mjs. Do not edit sw.js by hand.
-const CACHE = 'wdk-32c89ce20d';
-const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
-const FONT_HOSTS = ['fonts.googleapis.com', 'fonts.gstatic.com'];
+const CACHE = 'wdk-a73b5a5726';
+const SHELL = ["./","./index.html","./manifest.webmanifest","./icons/icon-192.png","./icons/icon-512.png","./icons/icon-maskable-512.png","./icons/apple-touch-icon.png","./fonts/fonts.css","./fonts/bagel-fat-one-latin-ext.woff2","./fonts/bagel-fat-one-latin.woff2","./fonts/bricolage-grotesque-latin-ext.woff2","./fonts/bricolage-grotesque-latin.woff2","./datenschutz.html","./impressum.html"];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
@@ -20,20 +19,14 @@ self.addEventListener('fetch', e => {
   if (url.origin === location.origin) {
     // Network first for the page itself so updates arrive; cache first for everything else.
     if (req.mode === 'navigate') {
-      e.respondWith(fetch(req).then(res => { const copy = res.clone(); caches.open(CACHE).then(c => c.put('./index.html', copy)); return res; })
-        .catch(() => caches.match('./index.html')));
+      // Each page under its own URL, so visiting the legal pages never replaces the cached game.
+      e.respondWith(fetch(req).then(res => { if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)); } return res; })
+        .catch(() => caches.match(req, { ignoreSearch: true }).then(hit => hit || caches.match('./index.html'))));
       return;
     }
     e.respondWith(caches.match(req).then(hit => hit || fetch(req).then(res => {
       if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)); }
       return res;
-    })));
-    return;
-  }
-  if (FONT_HOSTS.includes(url.hostname)) {
-    e.respondWith(caches.open(CACHE).then(c => c.match(req).then(hit => {
-      const net = fetch(req).then(res => { if (res.ok || res.type === 'opaque') c.put(req, res.clone()); return res; }).catch(() => hit);
-      return hit || net;
     })));
   }
 });
