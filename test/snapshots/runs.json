@@ -389,6 +389,168 @@
    }
   ]
  ],
+ "challenge": [
+  [
+   "start",
+   {
+    "state": "play",
+    "lv": 1,
+    "score": 0,
+    "cows": 0,
+    "time": 39.967,
+    "streak": 0,
+    "bestStreak": 0,
+    "radar": 2,
+    "misses": 0,
+    "scene": "h1-34173934",
+    "world": "weide"
+   }
+  ],
+  [
+   "find 1.5",
+   {
+    "state": "found",
+    "lv": 1,
+    "score": 465,
+    "cows": 1,
+    "time": 50.467,
+    "streak": 1,
+    "bestStreak": 1,
+    "radar": 2,
+    "misses": 0,
+    "scene": "h1-34173934",
+    "world": "weide"
+   }
+  ],
+  [
+   "find 4",
+   {
+    "state": "found",
+    "lv": 2,
+    "score": 985,
+    "cows": 2,
+    "time": 57.433,
+    "streak": 2,
+    "bestStreak": 2,
+    "radar": 2,
+    "misses": 0,
+    "scene": "h2-966215619",
+    "world": "strand"
+   }
+  ],
+  [
+   "miss",
+   {
+    "state": "play",
+    "lv": 3,
+    "score": 985,
+    "cows": 2,
+    "time": 54.417,
+    "streak": 0,
+    "bestStreak": 2,
+    "radar": 2,
+    "misses": 1,
+    "scene": "h3-77965615",
+    "world": "stadt"
+   }
+  ],
+  [
+   "miss",
+   {
+    "state": "play",
+    "lv": 3,
+    "score": 985,
+    "cows": 2,
+    "time": 49.417,
+    "streak": 0,
+    "bestStreak": 2,
+    "radar": 2,
+    "misses": 2,
+    "scene": "h3-77965615",
+    "world": "stadt"
+   }
+  ],
+  [
+   "miss",
+   {
+    "state": "play",
+    "lv": 3,
+    "score": 985,
+    "cows": 2,
+    "time": 41.417,
+    "streak": 0,
+    "bestStreak": 2,
+    "radar": 2,
+    "misses": 3,
+    "scene": "h3-77965615",
+    "world": "stadt"
+   }
+  ],
+  [
+   "find 1",
+   {
+    "state": "found",
+    "lv": 3,
+    "score": 1450,
+    "cows": 3,
+    "time": 51.417,
+    "streak": 1,
+    "bestStreak": 2,
+    "radar": 2,
+    "misses": 3,
+    "scene": "h3-77965615",
+    "world": "stadt"
+   }
+  ],
+  [
+   "radar",
+   {
+    "state": "play",
+    "lv": 4,
+    "score": 1450,
+    "cows": 3,
+    "time": 51.367,
+    "streak": 1,
+    "bestStreak": 2,
+    "radar": 1,
+    "misses": 3,
+    "scene": "h4-24360022",
+    "world": "winter"
+   }
+  ],
+  [
+   "find 2",
+   {
+    "state": "found",
+    "lv": 4,
+    "score": 1935,
+    "cows": 4,
+    "time": 59.367,
+    "streak": 2,
+    "bestStreak": 2,
+    "radar": 1,
+    "misses": 3,
+    "scene": "h4-24360022",
+    "world": "winter"
+   }
+  ],
+  [
+   "out",
+   {
+    "state": "over",
+    "lv": 5,
+    "score": 1935,
+    "cows": 4,
+    "time": 0,
+    "streak": 2,
+    "bestStreak": 2,
+    "radar": 1,
+    "misses": 3,
+    "scene": "h5-262379509",
+    "world": "meer"
+   }
+  ]
+ ],
  "chill": [
   [
    "start",

@@ -31,7 +31,7 @@ export function showOver() {
   if (isNew) saveRecord(mode.records, { score: G.score, cows: G.cows });
   $('#stamp').hidden = !isNew;
   if (!rec) $('#overRecord').textContent = G.cows ? `${G.cows} ${G.cows === 1 ? 'Kuh' : 'Kühe'} in aller Ruhe gefunden.` : 'Manchmal ist Suchen schon genug.';
-  else $('#overRecord').innerHTML = isNew ? (rec.score > 0 ? `Alter Rekord <b>${fmtInt(rec.score)} Punkte</b>` : 'Dein erster Rekord. Den holst du dir nochmal.') : `Rekord <b>${fmtInt(rec.score)} Punkte</b> <b>${rec.cows} ${rec.cows === 1 ? 'Kuh' : 'Kühe'}</b>`;
+  else $('#overRecord').innerHTML = (mode.medal ? `<span class="row">Medaillen <b>${G.medals.gold}× Gold</b> <b>${G.medals.silver}× Silber</b> <b>${G.medals.bronze}× Bronze</b></span>` : '') + (isNew ? (rec.score > 0 ? `Alter Rekord <b>${fmtInt(rec.score)} Punkte</b>` : 'Dein erster Rekord. Den holst du dir nochmal.') : `Rekord <b>${fmtInt(rec.score)} Punkte</b> <b>${rec.cows} ${rec.cows === 1 ? 'Kuh' : 'Kühe'}</b>`);
   lastEntry = null; $('#entryMsg').textContent = ''; $('#entryBtn').disabled = false;
   $('#entryForm').hidden = G.score <= 0 || !!REPLAY || !mode.leaderboard;
   $('#overScene').textContent = `Szene ${sceneId(live.scene)}`;

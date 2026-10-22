@@ -11,6 +11,7 @@ import { stickersFor } from '../content/album.js';
 import { REPLAY, genScene, levelScene, paintBg, sceneId } from '../scene/generate.js';
 import { G, after, light, live } from './state.js';
 import { classic } from '../modes/classic.js';
+import { MEDALS } from '../modes/challenge.js';
 import { currentMode } from '../modes/index.js';
 import { burst, floatText } from '../render/fx.js';
 import { cowCenter } from '../render/frame.js';
@@ -25,7 +26,7 @@ export function startGame() {
   SND.unlock(); SND.start();
   G.mode = REPLAY ? REPLAY.mode : settings.mode;
   const lv0 = REPLAY ? REPLAY.lv : 1, mode = currentMode();
-  Object.assign(G, { lv: lv0, score: 0, cows: 0, time: mode.timer ? mode.timer.start : 0, streak: 0, bestStreak: 0, fastest: null, radar: mode.radar.start, misses: 0, levelT: 0, usedRadar: false, paused: false, lastTick: 99, nudged: false });
+  Object.assign(G, { levelMisses: 0, missRow: 0, medals: { gold: 0, silver: 0, bronze: 0 }, lv: lv0, score: 0, cows: 0, time: mode.timer ? mode.timer.start : 0, streak: 0, bestStreak: 0, fastest: null, radar: mode.radar.start, misses: 0, levelT: 0, usedRadar: false, paused: false, lastTick: 99, nudged: false });
   $('#title').hidden = true; $('#over').hidden = true; $('#pause').hidden = true; $('#board').hidden = true; $('#album').hidden = true;
   $('#quitBtn').textContent = mode.timer ? 'Aufgeben' : 'Beenden';
   MUSIC.setCalm(!mode.timer); MUSIC.play();
@@ -53,19 +54,19 @@ const RATINGS = [[1.5, 'Adlerauge!'], [3, 'Blitzschnell!'], [6, 'Gefunden!'], [1
 export function onFound() {
   G.state = 'found';
   const secs = G.levelT, cow = live.scene.cow;
-  const { points: pts, bonus, mult, extraRadar } = currentMode().found(G, { secs, golden: live.scene.golden });
+  const { points: pts, bonus, mult, extraRadar, medal } = currentMode().found(G, { secs, golden: live.scene.golden });
   const [cx, cy] = cowCenter();
   cow.hopT = live.T; cow.hopN = 3;
   live.iris = { t0: live.T, r: Math.max(cow.s * 1.05, 60) };
   burst(cx, cy, RM ? 14 : 34, live.scene.golden ? ['star', 'spark', 'milk', 'heart'] : ['milk', 'spot', 'heart', 'milk']);
   if (!RM) for (const e of live.scene.ents) if (e !== cow && TYPES[e.type].walk) { e.hopT = live.T + Math.hypot(e.x - cx, e.y - cy) / Math.max(W, H) * .7 + .1; e.hopN = 1; }
-  MUSIC.duck(1.6); SND.moo((cx / W) * 2 - 1, live.scene.golden ? 1.25 : 1); SND.fanfare(G.streak); if (live.scene.golden) SND.gold();
-  const rating = live.scene.golden ? 'Goldkuh!' : RATINGS.find(([lim]) => secs < lim)[1];
-  const parts = [pts != null && `+${fmtInt(pts)} Punkte`, mult > 1 && `Serie ×${fmt1(mult).replace(',0', '')}`, bonus != null && `+${bonus} s`, `${fmt1(secs)} s`].filter(Boolean);
+  MUSIC.duck(1.6); SND.moo((cx / W) * 2 - 1, live.scene.golden ? 1.25 : 1); SND.fanfare(G.streak); if (live.scene.golden || medal === 'gold') SND.gold();
+  const rating = medal ? `${MEDALS[medal]}!` : live.scene.golden ? 'Goldkuh!' : RATINGS.find(([lim]) => secs < lim)[1];
+  const parts = [medal && live.scene.golden && 'Goldkuh', pts != null && `+${fmtInt(pts)} Punkte`, mult > 1 && `Serie ×${fmt1(mult).replace(',0', '')}`, bonus != null && `+${bonus} s`, `${fmt1(secs)} s`].filter(Boolean);
   if (extraRadar) parts.push('+1 Radar');
   const fresh = REPLAY ? [] : collectStickers(stickersFor(live.scene));
   if (fresh.length) parts.push(fresh.length === 1 ? 'Neuer Sticker!' : `${fresh.length} neue Sticker!`);
-  praise(rating, parts.join(' · '), live.scene.golden);
+  praise(rating, parts.join(' · '), live.scene.golden || medal === 'gold');
   els.timer.classList.add('gain'); setTimeout(() => els.timer.classList.remove('gain'), 500);
   els.radarBtn.classList.remove('nudge');
   after(1.85, nextLevel);
@@ -90,6 +91,6 @@ export function timeUp() {
 
 export function loadLevel(lv, seed) {
   live.scene = levelScene(lv, live.scene && live.scene.world, seed, currentMode()); paintBg(live.scene); live.fx = []; live.texts = []; live.marks = []; live.iris = null; live.radar = null; live.nightK = 1;
-  light.x = W / 2; light.y = H * .55; G.levelT = 0; G.usedRadar = false;
+  light.x = W / 2; light.y = H * .55; G.levelT = 0; G.usedRadar = false; G.levelMisses = 0;
   updateLevelPills(); showBanner(); MUSIC.setWorld(live.scene.world);
 }

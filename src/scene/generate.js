@@ -109,12 +109,12 @@ function reroll(lv, prevWorld, planner) {
   for (let i = 0; i < 12; i++) { sc = genScene(lv, { planner }); if (sc.cowPlaced && !(lv > 12 && sc.world === prevWorld)) break; }
   return sc;
 }
-// Classic scenes keep their old ids ("14-777"); other modes get a letter in front ("c14-777" for chill).
-const PREFIX = { chill: 'c' };
+// Classic scenes keep their old ids ("14-777"); other modes get a letter in front ("c14-777" chill, "h14-777" challenge).
+const PREFIX = { chill: 'c', challenge: 'h' };
 export const sceneId = sc => `${PREFIX[sc.mode] || ''}${sc.lv}-${sc.seed}`;
 export const REPLAY = (() => {
-  let m = null; try { m = /^(c?)(\d{1,3})-(\d{1,10})$/.exec(new URLSearchParams(location.search).get('szene') || ''); } catch (_) {}
-  return m && +m[2] >= 1 ? { mode: m[1] === 'c' ? 'chill' : 'classic', lv: +m[2], seed: +m[3] | 0 } : null;
+  let m = null; try { m = /^([ch]?)(\d{1,3})-(\d{1,10})$/.exec(new URLSearchParams(location.search).get('szene') || ''); } catch (_) {}
+  return m && +m[2] >= 1 ? { mode: { c: 'chill', h: 'challenge' }[m[1]] || 'classic', lv: +m[2], seed: +m[3] | 0 } : null;
 })();
 export function paintBg(sc) {
   bgCv.width = Math.round(W * DPR); bgCv.height = Math.round(H * DPR);

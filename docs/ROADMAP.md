@@ -248,6 +248,8 @@ Erster neuer Nutzer des Regelwerks – bewusst einfach, damit er die Schnittstel
 
 ### 2.6 Challenge-Modus
 
+**Umgesetzt (Teil 1: Modus und Medaillen):** `src/modes/challenge.js` als dritter Modus („Klassisch / Challenge / Chill“): Fehlklicks in Folge kosten 3 → 5 → 8 s (ein Fund setzt zurück), Serien-Multiplikator bis ×10, Tempo-Faktor bis ×3, Medaille pro Level (Gold: unter 2,5 s ohne Fehlklick und ohne Radar; Silber: unter 5 s mit höchstens einem Fehlklick; sonst Bronze) mit Punkte-Aufschlag (×1,5/×1,2), Startzeit 40 s, Obergrenze 60 s, 2 Radar. Medaillen im Endbildschirm, eigener Rekord (`wdk-record-challenge`), Szenen-Kennung mit „h“. Bestenliste bleibt vorerst dem Klassisch-Modus vorbehalten (eine gemeinsame Liste würde Modi mischen; getrennte Listen kommen mit Phase 4). Rechnerischer Abstand in 15 Leveln: sauber und schnell gegen langsam mit Fehlklick ≈ 19:1 (Klassisch ≈ 5:1). 4 Unit-Tests, Spielrunde „challenge“ in den Schnappschüsse. **Offen:** Boss-Level (Teil 2), Glocken-Wahl (Teil 3).
+
 Ziel: Können lohnt sich spürbar, Raten wird bestraft, gutes Spiel bringt hohe Multiplikatoren.
 
 - **Kein Raten:** Fehlklicks werden in Folge teurer (3 s → 5 s → 8 s); erst ein Fund setzt zurück.

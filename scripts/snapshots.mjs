@@ -95,6 +95,7 @@ const RUNS = {
   desktop: { viewport: { width: 1366, height: 768 }, pointer: 'mouse', steps: ['find 2', 'find 0.5', 'miss', 'find 1', 'radar', 'find 4', 'miss', 'miss', 'miss', 'find 1', 'find 7', 'find 0.3', 'out'] },
   phone: { viewport: { width: 390, height: 844 }, pointer: 'touch', steps: ['find 1.5', 'miss', 'find 3', 'radar', 'find 2', 'find 9', 'out'] },
   idle: { viewport: { width: 800, height: 600 }, pointer: 'mouse', steps: ['out'] },
+  challenge: { viewport: { width: 1366, height: 768 }, pointer: 'mouse', mode: 'challenge', steps: ['find 1.5', 'find 4', 'miss', 'miss', 'miss', 'find 1', 'radar', 'find 2', 'out'] },
   chill: { viewport: { width: 390, height: 844 }, pointer: 'touch', mode: 'chill', steps: ['find 3', 'miss', 'radar', 'find 5', 'find 1', 'find 20', 'quit'] }
 };
 const runs = {};

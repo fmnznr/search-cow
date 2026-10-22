@@ -49,15 +49,22 @@
     <p class="eyebrow">Ein Wimmelspiel für Adleraugen</p>
     <h1 class="logo"><span class="spot">Wo ist</span><span class="row"><span class="spot">die Kuh</span><span class="q">?</span></span></h1>
     <p class="lede" data-for="classic">Zwischen Schafen, Dalmatinern und Leuten im Kuhkostüm versteckt sich genau eine echte Kuh. Finde sie, bevor die Zeit abläuft.</p>
+    <p class="lede" data-for="challenge" hidden>Zwischen Schafen, Dalmatinern und Leuten im Kuhkostüm versteckt sich genau eine echte Kuh. Raten wird teuer, schnelle fehlerfreie Funde bringen Medaillen und hohe Multiplikatoren.</p>
     <p class="lede" data-for="chill" hidden>Zwischen Schafen, Dalmatinern und Leuten im Kuhkostüm versteckt sich genau eine echte Kuh. Keine Uhr, keine Punkte: Such, so lange du magst.</p>
     <div class="modes" role="radiogroup" aria-label="Spielmodus">
-      <button class="mode" role="radio" data-mode="classic" aria-checked="true"><b>Klassisch</b><small>Auf Zeit, mit Punkten</small></button>
-      <button class="mode" role="radio" data-mode="chill" aria-checked="false"><b>Chill</b><small>Ohne Uhr, ganz in Ruhe</small></button>
+      <button class="mode" role="radio" data-mode="classic" aria-checked="true"><b>Klassisch</b><small>Auf Zeit</small></button>
+      <button class="mode" role="radio" data-mode="challenge" aria-checked="false"><b>Challenge</b><small>Mit Medaillen</small></button>
+      <button class="mode" role="radio" data-mode="chill" aria-checked="false"><b>Chill</b><small>Ohne Uhr</small></button>
     </div>
     <dl class="rules" data-for="classic">
       <div><dt>+ Zeit</dt><dd>für jede gefundene Kuh</dd></div>
       <div><dt>− 3 s</dt><dd>für jeden Fehlklick</dd></div>
       <div><dt>Muh-Radar</dt><dd>verrät, wo es muht</dd></div>
+    </dl>
+    <dl class="rules" data-for="challenge" hidden>
+      <div><dt>Medaillen</dt><dd>Gold: unter 2,5 s ohne Fehler</dd></div>
+      <div><dt>−3/5/8 s</dt><dd>Fehlklicks in Folge</dd></div>
+      <div><dt>Serie ×10</dt><dd>fehlerfrei bleiben</dd></div>
     </dl>
     <div class="actions">
       <button class="btn" id="startBtn">Los, suchen!</button>
