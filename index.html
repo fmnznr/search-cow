@@ -192,6 +192,7 @@ body{
 .legal a{color:inherit}
 .scene-id{opacity:.5;font-variant-numeric:tabular-nums;user-select:all}
 .record{margin:0;font:700 .9rem/1.3 var(--body);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.record .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;flex-basis:100%}
 .record b{font:var(--num);font-size:.95rem;background:var(--ink);color:var(--milk);padding:5px 9px;border-radius:999px;font-variant-numeric:tabular-nums}
 :focus-visible{outline:3px solid var(--bell);outline-offset:3px}
 
@@ -228,7 +229,7 @@ body{
 .tog[aria-pressed="false"]{background:var(--track)}
 .tog:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
 .tog.app{background:var(--bell)}
-.modes{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.modes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .mode{display:grid;gap:2px;text-align:left;padding:9px 12px;border:3px solid var(--ink);border-radius:16px;background:var(--milk);color:var(--ink);cursor:pointer;font:400 1.05rem/1.1 var(--display);box-shadow:3px 3px 0 var(--ink)}
 .mode small{font:600 .78rem/1.25 var(--body);opacity:.8}
 .mode[aria-checked="true"]{background:var(--snout)}
@@ -339,15 +340,22 @@ body{
     <p class="eyebrow">Ein Wimmelspiel für Adleraugen</p>
     <h1 class="logo"><span class="spot">Wo ist</span><span class="row"><span class="spot">die Kuh</span><span class="q">?</span></span></h1>
     <p class="lede" data-for="classic">Zwischen Schafen, Dalmatinern und Leuten im Kuhkostüm versteckt sich genau eine echte Kuh. Finde sie, bevor die Zeit abläuft.</p>
+    <p class="lede" data-for="challenge" hidden>Zwischen Schafen, Dalmatinern und Leuten im Kuhkostüm versteckt sich genau eine echte Kuh. Raten wird teuer, schnelle fehlerfreie Funde bringen Medaillen und hohe Multiplikatoren.</p>
     <p class="lede" data-for="chill" hidden>Zwischen Schafen, Dalmatinern und Leuten im Kuhkostüm versteckt sich genau eine echte Kuh. Keine Uhr, keine Punkte: Such, so lange du magst.</p>
     <div class="modes" role="radiogroup" aria-label="Spielmodus">
-      <button class="mode" role="radio" data-mode="classic" aria-checked="true"><b>Klassisch</b><small>Auf Zeit, mit Punkten</small></button>
-      <button class="mode" role="radio" data-mode="chill" aria-checked="false"><b>Chill</b><small>Ohne Uhr, ganz in Ruhe</small></button>
+      <button class="mode" role="radio" data-mode="classic" aria-checked="true"><b>Klassisch</b><small>Auf Zeit</small></button>
+      <button class="mode" role="radio" data-mode="challenge" aria-checked="false"><b>Challenge</b><small>Mit Medaillen</small></button>
+      <button class="mode" role="radio" data-mode="chill" aria-checked="false"><b>Chill</b><small>Ohne Uhr</small></button>
     </div>
     <dl class="rules" data-for="classic">
       <div><dt>+ Zeit</dt><dd>für jede gefundene Kuh</dd></div>
       <div><dt>− 3 s</dt><dd>für jeden Fehlklick</dd></div>
       <div><dt>Muh-Radar</dt><dd>verrät, wo es muht</dd></div>
+    </dl>
+    <dl class="rules" data-for="challenge" hidden>
+      <div><dt>Medaillen</dt><dd>Gold: unter 2,5 s ohne Fehler</dd></div>
+      <div><dt>−3/5/8 s</dt><dd>Fehlklicks in Folge</dd></div>
+      <div><dt>Serie ×10</dt><dd>fehlerfrei bleiben</dd></div>
     </dl>
     <div class="actions">
       <button class="btn" id="startBtn">Los, suchen!</button>
@@ -3613,6 +3621,13 @@ body{
     twins: ["Doppelgänger", "Viele Flecken, nur eine echte Kuh."],
     tiny: ["Mini-Kuh", "Die Kuh ist geschrumpft."]
   };
+  var BOSSES = {
+    herd: { name: "Die Kuhbande", tag: "Drei Kühe haben sich versteckt. Finde alle drei." },
+    flee: { name: "Die Ausreißerin", tag: "Jeder Fehlklick verscheucht sie an eine andere Stelle." },
+    wanted: { name: "Steckbrief", tag: "Lauter Doppelgängerinnen. Gesucht ist nur eine." }
+  };
+  var BOSS_ORDER = ["herd", "flee", "wanted"];
+  var WANTED = { weide: "mit Blume", strand: "mit Sonnenbrille", stadt: "mit Schiebermütze", winter: "mit Mütze", meer: "mit Taucherhelm", all: "mit Raumhelm" };
 
   // src/content/album.js
   var KINDS = [["normal", "Kuh"], ["gold", "Gold"], ["night", "Nacht"], ["move", "Gewusel"], ["twins", "Doppel"], ["tiny", "Mini"]];
@@ -4427,26 +4442,46 @@ body{
     if (!plan.mods.has("tiny") && lv > 6) cow.k *= clamp(1 - (lv - 6) * 0.025, 0.78, 1);
     const top = opts.title ? 30 : HUD_TOP() + 6;
     const lo = wd.ground ? sc.hy + 0.08 : (top + 50) / H, hi = wd.ground ? 0.97 : 0.84;
-    let placed = false;
-    for (let i = 0; i < 400; i++) {
-      let nx = R(0.05, 0.95), ny = R(lo, hi);
-      if (opts.title) {
-        if (W > 700) nx = R(0.62, 0.92);
-        else ny = R(lo, Math.min(hi, 0.52));
+    const place = (c2, avoid = []) => {
+      for (let i = 0; i < 400; i++) {
+        let nx = R(0.05, 0.95), ny = R(lo, hi);
+        if (opts.title) {
+          if (W > 700) nx = R(0.62, 0.92);
+          else ny = R(lo, Math.min(hi, 0.52));
+        }
+        setPos(c2, nx, ny, sc);
+        const b = entBox(c2, 0);
+        if (b[0] < 8 || b[2] > W - 8 || b[1] < top || b[3] > H - 8) continue;
+        if (!opts.title && b[2] > W - 220 && b[3] > H - 100) continue;
+        if (!opts.title && Math.min(b[2] - b[0], b[3] - b[1]) < (plan.mods.has("tiny") ? COW_MIN_TINY : COW_MIN)) continue;
+        if (avoid.some((o) => overlap(entBox(o, 0), b))) continue;
+        return true;
       }
-      setPos(cow, nx, ny, sc);
-      const b = entBox(cow, 0);
-      if (b[0] < 8 || b[2] > W - 8 || b[1] < top || b[3] > H - 8) continue;
-      if (!opts.title && b[2] > W - 220 && b[3] > H - 100) continue;
-      if (!opts.title && Math.min(b[2] - b[0], b[3] - b[1]) < (plan.mods.has("tiny") ? COW_MIN_TINY : COW_MIN)) continue;
-      placed = true;
-      break;
+      return false;
+    };
+    sc.cowPlaced = place(cow);
+    sc.cows = [cow];
+    sc.boss = plan.boss || null;
+    const extra = [];
+    if (sc.boss === "herd") for (let i = 0; i < 2; i++) {
+      const c2 = makeEnt("cow", 0.5, 0.6, sc);
+      sc.cowPlaced = place(c2, [cow, ...extra]) && sc.cowPlaced;
+      extra.push(c2);
+      sc.cows.push(c2);
     }
-    sc.cowPlaced = placed;
-    const cb = entBox(cow, 0), cw = cb[2] - cb[0], ch = cb[3] - cb[1];
-    const core = [cb[0] + cw * 0.18, cb[1] + ch * 0.12, cb[2] - cw * 0.18, cb[3] - ch * 0.08];
-    sc.ents = sc.ents.filter((e) => !(e.y >= cow.y - 2 && overlap(entBox(e, 0), core)) && !(e.float && overlap(entBox(e, 0), core)));
-    sc.ents.push(cow);
+    if (sc.boss === "wanted") for (let i = 0; i < 5; i++) {
+      const c2 = makeEnt("cow", 0.5, 0.6, sc);
+      c2.acc = null;
+      c2.decoy = true;
+      place(c2, [cow]);
+      extra.push(c2);
+    }
+    for (const c2 of sc.cows) {
+      const cb = entBox(c2, 0), cw = cb[2] - cb[0], ch = cb[3] - cb[1];
+      const core = [cb[0] + cw * 0.18, cb[1] + ch * 0.12, cb[2] - cw * 0.18, cb[3] - ch * 0.08];
+      sc.ents = sc.ents.filter((e) => !(e.y >= c2.y - 2 && overlap(entBox(e, 0), core)) && !(e.float && overlap(entBox(e, 0), core)));
+    }
+    sc.ents.push(cow, ...extra);
     sc.cow = cow;
     sc.ents.sort((a, b) => a.y - b.y);
     return sc;
@@ -4464,15 +4499,15 @@ body{
     }
     return sc;
   }
-  var PREFIX = { chill: "c" };
+  var PREFIX = { chill: "c", challenge: "h" };
   var sceneId = (sc) => `${PREFIX[sc.mode] || ""}${sc.lv}-${sc.seed}`;
   var REPLAY = (() => {
     let m = null;
     try {
-      m = /^(c?)(\d{1,3})-(\d{1,10})$/.exec(new URLSearchParams(location.search).get("szene") || "");
+      m = /^([ch]?)(\d{1,3})-(\d{1,10})$/.exec(new URLSearchParams(location.search).get("szene") || "");
     } catch (_) {
     }
-    return m && +m[2] >= 1 ? { mode: m[1] === "c" ? "chill" : "classic", lv: +m[2], seed: +m[3] | 0 } : null;
+    return m && +m[2] >= 1 ? { mode: { c: "chill", h: "challenge" }[m[1]] || "classic", lv: +m[2], seed: +m[3] | 0 } : null;
   })();
   function paintBg(sc) {
     bgCv.width = Math.round(W * DPR);
@@ -4485,12 +4520,69 @@ body{
 
   // src/game/state.js
   var live = { scene: null, fx: [], texts: [], marks: [], iris: null, radar: null, trans: null, shake: 0, nightK: 1, timers: [], T: 0 };
-  var G = { state: "boot", mode: "classic", lv: 1, score: 0, cows: 0, time: 45, streak: 0, bestStreak: 0, fastest: null, radar: 3, misses: 0, levelT: 0, usedRadar: false, paused: false, lastTick: 99, nudged: false };
+  var G = { state: "boot", mode: "classic", levelMisses: 0, missRow: 0, medals: { gold: 0, silver: 0, bronze: 0 }, lv: 1, score: 0, cows: 0, time: 45, streak: 0, bestStreak: 0, fastest: null, radar: 3, misses: 0, levelT: 0, usedRadar: false, paused: false, lastTick: 99, nudged: false };
   function after(sec, fn) {
     live.timers.push({ at: live.T + sec, fn });
   }
   var ptr = { x: -999, y: -999, inside: false, type: "mouse", down: null, inspect: false, lp: 0 };
   var light = { x: 0, y: 0 };
+
+  // src/modes/challenge.js
+  var MEDALS = { gold: "Gold", silver: "Silber", bronze: "Bronze" };
+  var challenge = {
+    id: "challenge",
+    name: "Challenge",
+    timer: { start: 40, full: 60, max: 60, penalty: 3 },
+    // Time lost for the first, second and every further miss in a row; a find resets the row.
+    penalties: [3, 5, 8],
+    radar: { start: 2, bonusEvery: 5 },
+    records: "wdk-record-challenge",
+    leaderboard: false,
+    // Classic levels, but every fifth one is a boss: no modifiers, no golden cow.
+    plan(lv) {
+      const p = classic.plan(lv);
+      if (lv % 5 === 0) Object.assign(p, { boss: BOSS_ORDER[(lv / 5 - 1) % BOSS_ORDER.length], mods: /* @__PURE__ */ new Set(), golden: false });
+      return p;
+    },
+    mult(run) {
+      return 1 + 0.75 * Math.min(run.streak - 1, 12);
+    },
+    // Gold: under 2.5 s, no miss, no radar. Silver: under 5 s with at most one miss. Bronze: found.
+    medal({ secs, misses, radar }) {
+      if (secs < 2.5 && misses === 0 && !radar) return "gold";
+      if (secs < 5 && misses <= 1) return "silver";
+      return "bronze";
+    },
+    found(run, { secs, golden }) {
+      const medal = this.medal({ secs, misses: run.levelMisses, radar: run.usedRadar });
+      run.streak++;
+      run.bestStreak = Math.max(run.bestStreak, run.streak);
+      run.cows++;
+      run.missRow = 0;
+      run.medals[medal]++;
+      const mult = this.mult(run), speed = 1 + 2 * clamp((6 - secs) / 6, 0, 1), shine = { gold: 1.5, silver: 1.2, bronze: 1 }[medal];
+      const points = Math.round((100 + 25 * run.lv) * speed * mult * shine * (golden ? 3 : 1) * (run.usedRadar ? 0.5 : 1) / 5) * 5;
+      const bonus = Math.round(Math.max(5, 12 - run.lv * 0.5) + (golden ? 6 : 0));
+      run.score += points;
+      run.time = Math.min(run.time + bonus, this.timer.max);
+      run.fastest = run.fastest == null ? secs : Math.min(run.fastest, secs);
+      const extraRadar = run.cows % this.radar.bonusEvery === 0;
+      if (extraRadar) run.radar++;
+      return { points, bonus, mult, extraRadar, medal };
+    },
+    miss(run) {
+      const penalty = this.penalties[Math.min(run.missRow, this.penalties.length - 1)];
+      run.missRow++;
+      run.levelMisses++;
+      run.time = Math.max(0, run.time - penalty);
+      run.streak = 0;
+      run.misses++;
+      return { penalty };
+    },
+    isOver(run) {
+      return run.time <= 0;
+    }
+  };
 
   // src/modes/chill.js
   var chill = {
@@ -4530,7 +4622,7 @@ body{
   };
 
   // src/modes/index.js
-  var MODES = { classic, chill };
+  var MODES = { classic, challenge, chill };
   var currentMode = () => MODES[G.mode] || classic;
 
   // src/render/world.js
@@ -4714,8 +4806,8 @@ body{
   }
 
   // src/render/frame.js
-  function cowCenter(t = live.T) {
-    const b = entBox(live.scene.cow, t);
+  function cowCenter(t = live.T, cow = live.scene.cow) {
+    const b = entBox(cow, t);
     return [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2];
   }
   function lensR() {
@@ -5007,7 +5099,7 @@ body{
     } else els.combo.hidden = true;
   }
   function updateLevelPills() {
-    els.lvl.textContent = `Level ${live.scene.lv} · ${live.scene.wd.name}`;
+    els.lvl.textContent = `Level ${live.scene.lv} · ${live.scene.boss ? `Boss: ${BOSSES[live.scene.boss].name}` : live.scene.wd.name}`;
     els.modPills.innerHTML = "";
     for (const m of live.scene.mods) {
       const s = document.createElement("span");
@@ -5017,9 +5109,10 @@ body{
     }
   }
   function showBanner() {
-    $("#bnLevel").textContent = `Level ${live.scene.lv}`;
-    $("#bnName").textContent = live.scene.wd.name + (live.scene.mods.has("night") ? " bei Nacht" : "");
-    $("#bnTag").textContent = live.scene.lv === 1 ? "Finde die Kuh. Klick drauf. So einfach ist das. Erstmal." : live.scene.wd.tag;
+    const sc = live.scene, boss = sc.boss && BOSSES[sc.boss];
+    $("#bnLevel").textContent = boss ? `Level ${sc.lv} · Boss · ${sc.wd.name}` : `Level ${sc.lv}`;
+    $("#bnName").textContent = boss ? boss.name : sc.wd.name + (sc.mods.has("night") ? " bei Nacht" : "");
+    $("#bnTag").textContent = sc.boss === "wanted" ? `Lauter Doppelgängerinnen. Gesucht ist nur die Kuh ${WANTED[sc.world]}.` : boss ? boss.tag : sc.lv === 1 ? "Finde die Kuh. Klick drauf. So einfach ist das. Erstmal." : sc.wd.tag;
     const m = $("#bnMods");
     m.innerHTML = "";
     for (const k of live.scene.mods) {
@@ -5065,7 +5158,7 @@ body{
     if (isNew) saveRecord(mode.records, { score: G.score, cows: G.cows });
     $("#stamp").hidden = !isNew;
     if (!rec) $("#overRecord").textContent = G.cows ? `${G.cows} ${G.cows === 1 ? "Kuh" : "Kühe"} in aller Ruhe gefunden.` : "Manchmal ist Suchen schon genug.";
-    else $("#overRecord").innerHTML = isNew ? rec.score > 0 ? `Alter Rekord <b>${fmtInt(rec.score)} Punkte</b>` : "Dein erster Rekord. Den holst du dir nochmal." : `Rekord <b>${fmtInt(rec.score)} Punkte</b> <b>${rec.cows} ${rec.cows === 1 ? "Kuh" : "Kühe"}</b>`;
+    else $("#overRecord").innerHTML = (mode.medal ? `<span class="row">Medaillen <b>${G.medals.gold}× Gold</b> <b>${G.medals.silver}× Silber</b> <b>${G.medals.bronze}× Bronze</b></span>` : "") + (isNew ? rec.score > 0 ? `Alter Rekord <b>${fmtInt(rec.score)} Punkte</b>` : "Dein erster Rekord. Den holst du dir nochmal." : `Rekord <b>${fmtInt(rec.score)} Punkte</b> <b>${rec.cows} ${rec.cows === 1 ? "Kuh" : "Kühe"}</b>`);
     lastEntry = null;
     $("#entryMsg").textContent = "";
     $("#entryBtn").disabled = false;
@@ -5464,7 +5557,7 @@ body{
     SND.start();
     G.mode = REPLAY ? REPLAY.mode : settings.mode;
     const lv0 = REPLAY ? REPLAY.lv : 1, mode = currentMode();
-    Object.assign(G, { lv: lv0, score: 0, cows: 0, time: mode.timer ? mode.timer.start : 0, streak: 0, bestStreak: 0, fastest: null, radar: mode.radar.start, misses: 0, levelT: 0, usedRadar: false, paused: false, lastTick: 99, nudged: false });
+    Object.assign(G, { levelMisses: 0, missRow: 0, medals: { gold: 0, silver: 0, bronze: 0 }, lv: lv0, score: 0, cows: 0, time: mode.timer ? mode.timer.start : 0, streak: 0, bestStreak: 0, fastest: null, radar: mode.radar.start, misses: 0, levelT: 0, usedRadar: false, paused: false, lastTick: 99, nudged: false });
     $("#title").hidden = true;
     $("#over").hidden = true;
     $("#pause").hidden = true;
@@ -5520,10 +5613,27 @@ body{
     });
   }
   var RATINGS = [[1.5, "Adlerauge!"], [3, "Blitzschnell!"], [6, "Gefunden!"], [12, "Da ist sie ja!"], [1e9, "Endlich!"]];
-  function onFound() {
+  function onFound(cow = live.scene.cow) {
+    const sc = live.scene, secs = G.levelT;
+    const { points: pts, bonus, mult, extraRadar, medal } = currentMode().found(G, { secs, golden: sc.golden });
+    if (sc.cows.length > 1) {
+      cow.found = true;
+      sc.cows = sc.cows.filter((c2) => c2 !== cow);
+      sc.cow = sc.cows[0];
+      cow.hopT = live.T;
+      cow.hopN = 3;
+      G.levelT = 0;
+      G.levelMisses = 0;
+      G.usedRadar = false;
+      const [bx, by] = cowCenter(live.T, cow);
+      burst(bx, by, RM ? 10 : 22, ["milk", "spot", "heart"]);
+      SND.moo(bx / W * 2 - 1);
+      SND.fanfare(G.streak);
+      const found = 3 - sc.cows.length;
+      praise(`${found} von 3!`, [medal && MEDALS[medal], pts != null && `+${fmtInt(pts)} Punkte`, bonus != null && `+${bonus} s`].filter(Boolean).join(" · "), medal === "gold");
+      return;
+    }
     G.state = "found";
-    const secs = G.levelT, cow = live.scene.cow;
-    const { points: pts, bonus, mult, extraRadar } = currentMode().found(G, { secs, golden: live.scene.golden });
     const [cx, cy] = cowCenter();
     cow.hopT = live.T;
     cow.hopN = 3;
@@ -5538,13 +5648,13 @@ body{
     MUSIC.duck(1.6);
     SND.moo(cx / W * 2 - 1, live.scene.golden ? 1.25 : 1);
     SND.fanfare(G.streak);
-    if (live.scene.golden) SND.gold();
-    const rating = live.scene.golden ? "Goldkuh!" : RATINGS.find(([lim]) => secs < lim)[1];
-    const parts = [pts != null && `+${fmtInt(pts)} Punkte`, mult > 1 && `Serie ×${fmt1(mult).replace(",0", "")}`, bonus != null && `+${bonus} s`, `${fmt1(secs)} s`].filter(Boolean);
+    if (live.scene.golden || medal === "gold") SND.gold();
+    const rating = sc.boss ? "Boss besiegt!" : medal ? `${MEDALS[medal]}!` : live.scene.golden ? "Goldkuh!" : RATINGS.find(([lim]) => secs < lim)[1];
+    const parts = [sc.boss && medal && MEDALS[medal], medal && sc.golden && "Goldkuh", pts != null && `+${fmtInt(pts)} Punkte`, mult > 1 && `Serie ×${fmt1(mult).replace(",0", "")}`, bonus != null && `+${bonus} s`, `${fmt1(secs)} s`].filter(Boolean);
     if (extraRadar) parts.push("+1 Radar");
     const fresh = REPLAY ? [] : collectStickers(stickersFor(live.scene));
     if (fresh.length) parts.push(fresh.length === 1 ? "Neuer Sticker!" : `${fresh.length} neue Sticker!`);
-    praise(rating, parts.join(" · "), live.scene.golden);
+    praise(rating, parts.join(" · "), live.scene.golden || medal === "gold");
     els.timer.classList.add("gain");
     setTimeout(() => els.timer.classList.remove("gain"), 500);
     els.radarBtn.classList.remove("nudge");
@@ -5556,7 +5666,12 @@ body{
     live.marks.push({ x, y, t0: live.T });
     if (penalty) floatText(x, y - 24, `−${penalty} s`, "#ff5a4e", clamp(U * 0.48, 18, 28), 0.9);
     let msg;
-    if (ent) {
+    if (ent && ent.decoy) {
+      msg = `Falsche Kuh! Gesucht ist die ${WANTED[live.scene.world]}.`;
+      ent.hopT = live.T;
+      ent.hopN = 1;
+      SND.animal("moo", x / W * 2 - 1);
+    } else if (ent) {
       const m = TYPES[ent.type].msg;
       msg = typeof m === "function" ? m(ent) : pick(m);
       ent.hopT = live.T;
@@ -5567,10 +5682,29 @@ body{
       SND.bonk();
     }
     say(msg, x, y);
+    if (live.scene.boss === "flee" && G.state === "play") flee();
     if (penalty) {
       els.timer.classList.add("flash");
       setTimeout(() => els.timer.classList.remove("flash"), 300);
     }
+  }
+  function flee() {
+    const sc = live.scene, cow = sc.cow, from = [cow.nx, cow.ny];
+    const others = sc.ents.filter((e) => e !== cow && !e.float === !cow.float && Math.hypot(e.nx - from[0], e.ny - from[1]) > 0.25);
+    for (let tries = 0; tries < 30 && others.length; tries++) {
+      const e = others.splice(Math.floor(Math.random() * others.length), 1)[0];
+      setPos(cow, e.nx, e.ny, sc);
+      const b = entBox(cow, live.T);
+      if (b[0] >= 8 && b[2] <= W - 8 && b[1] >= HUD_TOP() + 6 && b[3] <= H - 8 && !(b[2] > W - 220 && b[3] > H - 100) && Math.min(b[2] - b[0], b[3] - b[1]) >= COW_MIN) {
+        setPos(e, from[0], from[1], sc);
+        sc.ents.sort((a, z) => a.y - z.y);
+        cow.hopT = live.T;
+        cow.hopN = 2;
+        SND.moo(cow.x / W * 2 - 1, 1.15, 0.6);
+        return;
+      }
+    }
+    setPos(cow, from[0], from[1], sc);
   }
   function timeUp() {
     const timed = !!currentMode().timer;
@@ -5598,6 +5732,7 @@ body{
     light.y = H * 0.55;
     G.levelT = 0;
     G.usedRadar = false;
+    G.levelMisses = 0;
     updateLevelPills();
     showBanner();
     MUSIC.setWorld(live.scene.world);
@@ -5607,8 +5742,8 @@ body{
   function guess(x, y) {
     if (!live.scene) return;
     if (G.state === "title") {
-      const b2 = entBox(live.scene.cow, live.T), p2 = live.scene.cow.s * 0.12;
-      if (inBox([b2[0] - p2, b2[1] - p2, b2[2] + p2, b2[3] + p2], x, y)) {
+      const b = entBox(live.scene.cow, live.T), p = live.scene.cow.s * 0.12;
+      if (inBox([b[0] - p, b[1] - p, b[2] + p, b[3] + p], x, y)) {
         SND.unlock();
         SND.moo(x / W * 2 - 1);
         live.scene.cow.hopT = live.T;
@@ -5619,16 +5754,18 @@ body{
       return;
     }
     if (G.state !== "play" || G.paused) return;
-    const b = entBox(live.scene.cow, live.T), p = live.scene.cow.s * 0.1;
-    const tx = ptr.type === "mouse" ? p : Math.max(p, (TOUCH_TARGET - (b[2] - b[0])) / 2), ty = ptr.type === "mouse" ? p : Math.max(p, (TOUCH_TARGET - (b[3] - b[1])) / 2);
-    if (inBox([b[0] - tx, b[1] - ty, b[2] + tx, b[3] + ty], x, y)) {
-      onFound();
-      return;
+    for (const cow of live.scene.cows) {
+      const b = entBox(cow, live.T), p = cow.s * 0.1;
+      const tx = ptr.type === "mouse" ? p : Math.max(p, (TOUCH_TARGET - (b[2] - b[0])) / 2), ty = ptr.type === "mouse" ? p : Math.max(p, (TOUCH_TARGET - (b[3] - b[1])) / 2);
+      if (inBox([b[0] - tx, b[1] - ty, b[2] + tx, b[3] + ty], x, y)) {
+        onFound(cow);
+        return;
+      }
     }
     let hit = null;
     for (let i = live.scene.ents.length - 1; i >= 0; i--) {
       const e = live.scene.ents[i];
-      if (e !== live.scene.cow && inBox(entBox(e, live.T), x, y)) {
+      if (!live.scene.cows.includes(e) && !e.found && inBox(entBox(e, live.T), x, y)) {
         hit = e;
         break;
       }

@@ -7,10 +7,12 @@ import { collectStickers } from '../store/album.js';
 import { MUSIC } from '../audio/music.js';
 import { SND } from '../audio/sfx.js';
 import { TYPES } from '../content/entities/rig.js';
+import { WANTED } from '../content/catalog.js';
 import { stickersFor } from '../content/album.js';
-import { REPLAY, genScene, levelScene, paintBg, sceneId } from '../scene/generate.js';
+import { COW_MIN, HUD_TOP, REPLAY, entBox, genScene, levelScene, paintBg, sceneId, setPos } from '../scene/generate.js';
 import { G, after, light, live } from './state.js';
 import { classic } from '../modes/classic.js';
+import { MEDALS } from '../modes/challenge.js';
 import { currentMode } from '../modes/index.js';
 import { burst, floatText } from '../render/fx.js';
 import { cowCenter } from '../render/frame.js';
@@ -25,7 +27,7 @@ export function startGame() {
   SND.unlock(); SND.start();
   G.mode = REPLAY ? REPLAY.mode : settings.mode;
   const lv0 = REPLAY ? REPLAY.lv : 1, mode = currentMode();
-  Object.assign(G, { lv: lv0, score: 0, cows: 0, time: mode.timer ? mode.timer.start : 0, streak: 0, bestStreak: 0, fastest: null, radar: mode.radar.start, misses: 0, levelT: 0, usedRadar: false, paused: false, lastTick: 99, nudged: false });
+  Object.assign(G, { levelMisses: 0, missRow: 0, medals: { gold: 0, silver: 0, bronze: 0 }, lv: lv0, score: 0, cows: 0, time: mode.timer ? mode.timer.start : 0, streak: 0, bestStreak: 0, fastest: null, radar: mode.radar.start, misses: 0, levelT: 0, usedRadar: false, paused: false, lastTick: 99, nudged: false });
   $('#title').hidden = true; $('#over').hidden = true; $('#pause').hidden = true; $('#board').hidden = true; $('#album').hidden = true;
   $('#quitBtn').textContent = mode.timer ? 'Aufgeben' : 'Beenden';
   MUSIC.setCalm(!mode.timer); MUSIC.play();
@@ -50,22 +52,32 @@ function nextLevel() {
   runTransition(() => { G.lv++; loadLevel(G.lv); updateHud(); }, () => { G.state = 'play'; });
 }
 const RATINGS = [[1.5, 'Adlerauge!'], [3, 'Blitzschnell!'], [6, 'Gefunden!'], [12, 'Da ist sie ja!'], [1e9, 'Endlich!']];
-export function onFound() {
+export function onFound(cow = live.scene.cow) {
+  const sc = live.scene, secs = G.levelT;
+  const { points: pts, bonus, mult, extraRadar, medal } = currentMode().found(G, { secs, golden: sc.golden });
+  // Herd boss: more cows to go. Count this one and keep playing; the next cow is the radar's target.
+  if (sc.cows.length > 1) {
+    cow.found = true; sc.cows = sc.cows.filter(c => c !== cow); sc.cow = sc.cows[0];
+    cow.hopT = live.T; cow.hopN = 3; G.levelT = 0; G.levelMisses = 0; G.usedRadar = false;
+    const [bx, by] = cowCenter(live.T, cow);
+    burst(bx, by, RM ? 10 : 22, ['milk', 'spot', 'heart']); SND.moo((bx / W) * 2 - 1); SND.fanfare(G.streak);
+    const found = 3 - sc.cows.length;
+    praise(`${found} von 3!`, [medal && MEDALS[medal], pts != null && `+${fmtInt(pts)} Punkte`, bonus != null && `+${bonus} s`].filter(Boolean).join(' · '), medal === 'gold');
+    return;
+  }
   G.state = 'found';
-  const secs = G.levelT, cow = live.scene.cow;
-  const { points: pts, bonus, mult, extraRadar } = currentMode().found(G, { secs, golden: live.scene.golden });
   const [cx, cy] = cowCenter();
   cow.hopT = live.T; cow.hopN = 3;
   live.iris = { t0: live.T, r: Math.max(cow.s * 1.05, 60) };
   burst(cx, cy, RM ? 14 : 34, live.scene.golden ? ['star', 'spark', 'milk', 'heart'] : ['milk', 'spot', 'heart', 'milk']);
   if (!RM) for (const e of live.scene.ents) if (e !== cow && TYPES[e.type].walk) { e.hopT = live.T + Math.hypot(e.x - cx, e.y - cy) / Math.max(W, H) * .7 + .1; e.hopN = 1; }
-  MUSIC.duck(1.6); SND.moo((cx / W) * 2 - 1, live.scene.golden ? 1.25 : 1); SND.fanfare(G.streak); if (live.scene.golden) SND.gold();
-  const rating = live.scene.golden ? 'Goldkuh!' : RATINGS.find(([lim]) => secs < lim)[1];
-  const parts = [pts != null && `+${fmtInt(pts)} Punkte`, mult > 1 && `Serie ×${fmt1(mult).replace(',0', '')}`, bonus != null && `+${bonus} s`, `${fmt1(secs)} s`].filter(Boolean);
+  MUSIC.duck(1.6); SND.moo((cx / W) * 2 - 1, live.scene.golden ? 1.25 : 1); SND.fanfare(G.streak); if (live.scene.golden || medal === 'gold') SND.gold();
+  const rating = sc.boss ? 'Boss besiegt!' : medal ? `${MEDALS[medal]}!` : live.scene.golden ? 'Goldkuh!' : RATINGS.find(([lim]) => secs < lim)[1];
+  const parts = [sc.boss && medal && MEDALS[medal], medal && sc.golden && 'Goldkuh', pts != null && `+${fmtInt(pts)} Punkte`, mult > 1 && `Serie ×${fmt1(mult).replace(',0', '')}`, bonus != null && `+${bonus} s`, `${fmt1(secs)} s`].filter(Boolean);
   if (extraRadar) parts.push('+1 Radar');
   const fresh = REPLAY ? [] : collectStickers(stickersFor(live.scene));
   if (fresh.length) parts.push(fresh.length === 1 ? 'Neuer Sticker!' : `${fresh.length} neue Sticker!`);
-  praise(rating, parts.join(' · '), live.scene.golden);
+  praise(rating, parts.join(' · '), live.scene.golden || medal === 'gold');
   els.timer.classList.add('gain'); setTimeout(() => els.timer.classList.remove('gain'), 500);
   els.radarBtn.classList.remove('nudge');
   after(1.85, nextLevel);
@@ -74,10 +86,29 @@ export function onMiss(x, y, ent) {
   const { penalty } = currentMode().miss(G);
   live.shake = .3; live.marks.push({ x, y, t0: live.T }); if (penalty) floatText(x, y - 24, `−${penalty} s`, '#ff5a4e', clamp(U * .48, 18, 28), .9);
   let msg;
-  if (ent) { const m = TYPES[ent.type].msg; msg = typeof m === 'function' ? m(ent) : pick(m); ent.hopT = live.T; ent.hopN = 1; SND.animal(TYPES[ent.type].snd, (x / W) * 2 - 1); }
+  if (ent && ent.decoy) { msg = `Falsche Kuh! Gesucht ist die ${WANTED[live.scene.world]}.`; ent.hopT = live.T; ent.hopN = 1; SND.animal('moo', (x / W) * 2 - 1); }
+  else if (ent) { const m = TYPES[ent.type].msg; msg = typeof m === 'function' ? m(ent) : pick(m); ent.hopT = live.T; ent.hopN = 1; SND.animal(TYPES[ent.type].snd, (x / W) * 2 - 1); }
   else { msg = live.scene.mods.has('night') && Math.random() < .4 ? 'Im Dunkeln getappt.' : pick(live.scene.wd.empty); SND.bonk(); }
   say(msg, x, y);
+  if (live.scene.boss === 'flee' && G.state === 'play') flee();
   if (penalty) { els.timer.classList.add('flash'); setTimeout(() => els.timer.classList.remove('flash'), 300); }
+}
+// Flee boss: after a miss the cow swaps places with a figure somewhere else, as long as that spot is fair too.
+function flee() {
+  const sc = live.scene, cow = sc.cow, from = [cow.nx, cow.ny];
+  const others = sc.ents.filter(e => e !== cow && !e.float === !cow.float && Math.hypot(e.nx - from[0], e.ny - from[1]) > .25);
+  for (let tries = 0; tries < 30 && others.length; tries++) {
+    const e = others.splice(Math.floor(Math.random() * others.length), 1)[0];
+    setPos(cow, e.nx, e.ny, sc);
+    const b = entBox(cow, live.T);
+    if (b[0] >= 8 && b[2] <= W - 8 && b[1] >= HUD_TOP() + 6 && b[3] <= H - 8 && !(b[2] > W - 220 && b[3] > H - 100) && Math.min(b[2] - b[0], b[3] - b[1]) >= COW_MIN) {
+      setPos(e, from[0], from[1], sc);
+      sc.ents.sort((a, z) => a.y - z.y);
+      cow.hopT = live.T; cow.hopN = 2; SND.moo((cow.x / W) * 2 - 1, 1.15, .6);
+      return;
+    }
+  }
+  setPos(cow, from[0], from[1], sc);
 }
 export function timeUp() {
   const timed = !!currentMode().timer;
@@ -90,6 +121,6 @@ export function timeUp() {
 
 export function loadLevel(lv, seed) {
   live.scene = levelScene(lv, live.scene && live.scene.world, seed, currentMode()); paintBg(live.scene); live.fx = []; live.texts = []; live.marks = []; live.iris = null; live.radar = null; live.nightK = 1;
-  light.x = W / 2; light.y = H * .55; G.levelT = 0; G.usedRadar = false;
+  light.x = W / 2; light.y = H * .55; G.levelT = 0; G.usedRadar = false; G.levelMisses = 0;
   updateLevelPills(); showBanner(); MUSIC.setWorld(live.scene.world);
 }

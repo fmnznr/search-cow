@@ -26,6 +26,7 @@ import './content/worlds.js';
 import './scene/generate.js';
 import { G } from './game/state.js';
 import './modes/classic.js';
+import './modes/challenge.js';
 import './modes/chill.js';
 import './modes/index.js';
 import './render/world.js';

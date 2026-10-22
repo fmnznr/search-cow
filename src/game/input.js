@@ -17,12 +17,14 @@ export function guess(x, y) {
     return;
   }
   if (G.state !== 'play' || G.paused) return;
-  const b = entBox(live.scene.cow, live.T), p = live.scene.cow.s * .1;
-  // Fingers need a bigger target than the cow's box when it is small.
-  const tx = ptr.type === 'mouse' ? p : Math.max(p, (TOUCH_TARGET - (b[2] - b[0])) / 2), ty = ptr.type === 'mouse' ? p : Math.max(p, (TOUCH_TARGET - (b[3] - b[1])) / 2);
-  if (inBox([b[0] - tx, b[1] - ty, b[2] + tx, b[3] + ty], x, y)) { onFound(); return; }
+  for (const cow of live.scene.cows) {
+    const b = entBox(cow, live.T), p = cow.s * .1;
+    // Fingers need a bigger target than the cow's box when it is small.
+    const tx = ptr.type === 'mouse' ? p : Math.max(p, (TOUCH_TARGET - (b[2] - b[0])) / 2), ty = ptr.type === 'mouse' ? p : Math.max(p, (TOUCH_TARGET - (b[3] - b[1])) / 2);
+    if (inBox([b[0] - tx, b[1] - ty, b[2] + tx, b[3] + ty], x, y)) { onFound(cow); return; }
+  }
   let hit = null;
-  for (let i = live.scene.ents.length - 1; i >= 0; i--) { const e = live.scene.ents[i]; if (e !== live.scene.cow && inBox(entBox(e, live.T), x, y)) { hit = e; break; } }
+  for (let i = live.scene.ents.length - 1; i >= 0; i--) { const e = live.scene.ents[i]; if (!live.scene.cows.includes(e) && !e.found && inBox(entBox(e, live.T), x, y)) { hit = e; break; } }
   onMiss(x, y, hit);
 }
 cv.addEventListener('pointerdown', ev => {
