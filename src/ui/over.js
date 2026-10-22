@@ -5,6 +5,7 @@ import { MUSIC } from '../audio/music.js';
 import { SND } from '../audio/sfx.js';
 import { REPLAY, sceneId } from '../scene/generate.js';
 import { G, live } from '../game/state.js';
+import { currentMode } from '../modes/index.js';
 import { loadRecord, saveRecord } from '../store/records.js';
 import { showGameUi } from './hud.js';
 
@@ -23,12 +24,12 @@ export function showOver() {
   $('#rankName').textContent = rank[1]; $('#rankText').textContent = rank[2];
   $('#stCows').textContent = G.cows; $('#stScore').textContent = fmtInt(G.score); $('#stStreak').textContent = G.bestStreak;
   $('#stFast').textContent = G.fastest == null ? '–' : `${fmt1(G.fastest)} s`;
-  const rec = loadRecord(), isNew = !REPLAY && G.score > rec.score;
-  if (isNew) saveRecord({ score: G.score, cows: G.cows });
+  const mode = currentMode(), rec = loadRecord(mode.records), isNew = !REPLAY && G.score > rec.score;
+  if (isNew) saveRecord(mode.records, { score: G.score, cows: G.cows });
   $('#stamp').hidden = !isNew;
   $('#overRecord').innerHTML = isNew ? (rec.score > 0 ? `Alter Rekord <b>${fmtInt(rec.score)} Punkte</b>` : 'Dein erster Rekord. Den holst du dir nochmal.') : `Rekord <b>${fmtInt(rec.score)} Punkte</b> <b>${rec.cows} ${rec.cows === 1 ? 'Kuh' : 'Kühe'}</b>`;
   lastEntry = null; $('#entryMsg').textContent = ''; $('#entryBtn').disabled = false;
-  $('#entryForm').hidden = G.score <= 0 || !!REPLAY;
+  $('#entryForm').hidden = G.score <= 0 || !!REPLAY || !mode.leaderboard;
   $('#overScene').textContent = `Szene ${sceneId(live.scene)}`;
   if (G.score > 0 && !REPLAY) {
     let nick = ''; try { nick = localStorage.getItem('wdk-nick') || ''; } catch (_) {}

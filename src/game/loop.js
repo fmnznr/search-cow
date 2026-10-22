@@ -8,6 +8,7 @@ import { MUSIC } from '../audio/music.js';
 import { SND } from '../audio/sfx.js';
 import { HUD_TOP, entBox, layoutEnt, paintBg } from '../scene/generate.js';
 import { G, live, ptr } from './state.js';
+import { currentMode } from '../modes/index.js';
 import { render } from '../render/frame.js';
 import { updateTrans } from '../render/transition.js';
 import { els, updateHud } from '../ui/hud.js';
@@ -50,7 +51,7 @@ export function update(dt) {
     G.time -= dt; G.levelT += dt;
     if (G.time < 5.5) { const sec = Math.ceil(G.time); if (sec < G.lastTick && sec > 0) { G.lastTick = sec; SND.tick(sec); } } else G.lastTick = 99;
     if (G.lv === 1 && !G.nudged && G.levelT > 9 && G.radar > 0) { G.nudged = true; els.radarBtn.classList.add('nudge'); }
-    if (G.time <= 0) timeUp();
+    if (currentMode().isOver(G)) timeUp();
   }
   if (G.state !== 'title' && G.state !== 'boot' && G.state !== 'over') updateHud();
   MUSIC.setFast(G.state === 'play' && G.time < 10);

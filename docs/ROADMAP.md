@@ -207,6 +207,8 @@ Bevor Code verschoben wird, wird das heutige Verhalten eingefroren, sodass jede 
 
 ### 2.3 Regelwerk pro Modus
 
+**Umgesetzt:** `src/modes/classic.js` enthält Levelplan, Zeit (Start, Balken, Obergrenze, Strafe), Radar, Punkte, Serien-Multiplikator, Fehlklick und Spielende; `currentMode()` liefert den Modus des laufenden Spiels (`G.mode`). Ablauf, HUD, Endbildschirm und Rekord fragen nur noch das Regelwerk. Levelplan läuft auf der Seed-Folge, damit Szenen-Kennungen auch den Plan reproduzieren. 9 Unit-Tests (`npm run unit`) prüfen Zufall und Regeln direkt in Node; alle Schnappschüsse unverändert. Felder wie `between` und `hud` kommen mit den Modi, die sie brauchen (2.5/2.6).
+
 Kern des Umbaus. Alles, was ein Modus anders machen kann, steckt in einem Objekt; der Spielablauf fragt nur noch das Regelwerk.
 
 ```js

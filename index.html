@@ -446,8 +446,8 @@ body{
     const c1 = 1.70158, c3 = c1 + 1;
     return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2);
   };
-  var RM = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
-  var COARSE = window.matchMedia && matchMedia("(pointer: coarse)").matches;
+  var RM = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var COARSE = typeof matchMedia === "function" && matchMedia("(pointer: coarse)").matches;
   var fmtInt = (n) => Math.round(n).toLocaleString("de-DE");
   var fmt1 = (n) => n.toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
@@ -3497,6 +3497,15 @@ body{
     }
   });
 
+  // src/content/catalog.js
+  var ORDER = ["weide", "strand", "stadt", "winter", "meer", "all"];
+  var MODS = {
+    night: ["Nacht", "Stockdunkel. Deine Lupe wird zur Taschenlampe."],
+    move: ["Gewusel", "Alle laufen herum. Die Kuh auch."],
+    twins: ["Doppelgänger", "Viele Flecken, nur eine echte Kuh."],
+    tiny: ["Mini-Kuh", "Die Kuh ist geschrumpft."]
+  };
+
   // src/content/worlds.js
   function skyGrad(c2, W2, y0, y1, a, b) {
     const g = c2.createLinearGradient(0, y0, 0, y1);
@@ -4138,30 +4147,63 @@ body{
       }
     }
   };
-  var ORDER = ["weide", "strand", "stadt", "winter", "meer", "all"];
-  var MODS = {
-    night: ["Nacht", "Stockdunkel. Deine Lupe wird zur Taschenlampe."],
-    move: ["Gewusel", "Alle laufen herum. Die Kuh auch."],
-    twins: ["Doppelgänger", "Viele Flecken, nur eine echte Kuh."],
-    tiny: ["Mini-Kuh", "Die Kuh ist geschrumpft."]
+
+  // src/modes/classic.js
+  var classic = {
+    id: "classic",
+    name: "Klassisch",
+    timer: { start: 45, full: 60, max: 99, penalty: 3 },
+    radar: { start: 3, bonusEvery: 5 },
+    records: "wdk-record",
+    leaderboard: true,
+    // Level plan: world, modifiers, golden cow. Runs on the seeded sequence, so it may only draw from rnd.
+    plan(lv) {
+      let world = ORDER[(lv - 1) % 6];
+      if (lv > 12) world = pick(ORDER);
+      const mods = /* @__PURE__ */ new Set();
+      if (lv === 4) mods.add("twins");
+      if (lv === 7) mods.add("night");
+      if (lv === 8) mods.add("move");
+      if (lv === 9) mods.add("tiny");
+      if (lv >= 10) {
+        const pool = ["night", "move", "twins", "tiny"];
+        const n = lv < 14 ? 1 : rnd() < 0.5 ? 1 : 2;
+        while (mods.size < n) mods.add(pick(pool));
+      }
+      return { world, mods, golden: lv >= 3 && rnd() < 0.12 };
+    },
+    // Streak multiplier as shown in the HUD and used for points.
+    mult(run) {
+      return 1 + 0.5 * Math.min(run.streak - 1, 8);
+    },
+    // The cow was found after secs seconds: updates the run, returns what the player is told.
+    found(run, { secs, golden }) {
+      run.streak++;
+      run.bestStreak = Math.max(run.bestStreak, run.streak);
+      run.cows++;
+      const mult = this.mult(run), speed = 1 + clamp((8 - secs) / 8, 0, 1);
+      const points = Math.round((100 + 20 * run.lv) * speed * mult * (golden ? 3 : 1) * (run.usedRadar ? 0.5 : 1) / 5) * 5;
+      const bonus = Math.round(Math.max(6, 14 - run.lv * 0.5) + (golden ? 8 : 0));
+      run.score += points;
+      run.time = Math.min(run.time + bonus, this.timer.max);
+      run.fastest = run.fastest == null ? secs : Math.min(run.fastest, secs);
+      const extraRadar = run.cows % this.radar.bonusEvery === 0;
+      if (extraRadar) run.radar++;
+      return { points, bonus, mult, extraRadar };
+    },
+    miss(run) {
+      const penalty = this.timer.penalty;
+      run.time = Math.max(0, run.time - penalty);
+      run.streak = 0;
+      run.misses++;
+      return { penalty };
+    },
+    isOver(run) {
+      return run.time <= 0;
+    }
   };
 
   // src/scene/generate.js
-  function planFor(lv) {
-    let world = ORDER[(lv - 1) % 6];
-    if (lv > 12) world = pick(ORDER);
-    const mods = /* @__PURE__ */ new Set();
-    if (lv === 4) mods.add("twins");
-    if (lv === 7) mods.add("night");
-    if (lv === 8) mods.add("move");
-    if (lv === 9) mods.add("tiny");
-    if (lv >= 10) {
-      const pool = ["night", "move", "twins", "tiny"];
-      const n = lv < 14 ? 1 : rnd() < 0.5 ? 1 : 2;
-      while (mods.size < n) mods.add(pick(pool));
-    }
-    return { world, mods, golden: lv >= 3 && rnd() < 0.12 };
-  }
   function setPos(e, nx, ny, sc) {
     e.nx = nx;
     e.ny = ny;
@@ -4232,7 +4274,7 @@ body{
     return withSeed(seed, () => buildScene(lv, seed, opts));
   }
   function buildScene(lv, seed, opts) {
-    const plan = opts.plan || planFor(lv);
+    const plan = opts.plan || (opts.planner || classic.plan)(lv);
     const wd = WORLDS[plan.world];
     const sc = { lv, world: plan.world, wd, mods: plan.mods, golden: plan.golden, hy: wd.ground ? wd.horizon : 0, seed, ents: [], amb: {} };
     wd.initAmb && wd.initAmb(sc);
@@ -4291,11 +4333,11 @@ body{
     sc.ents.sort((a, b) => a.y - b.y);
     return sc;
   }
-  function levelScene(lv, prevWorld, seed) {
-    if (seed != null) return genScene(lv, { seed });
+  function levelScene(lv, prevWorld, seed, planner = classic.plan) {
+    if (seed != null) return genScene(lv, { seed, planner });
     let sc;
     for (let i = 0; i < 12; i++) {
-      sc = genScene(lv);
+      sc = genScene(lv, { planner });
       if (sc.cowPlaced && !(lv > 12 && sc.world === prevWorld)) break;
     }
     return sc;
@@ -4320,14 +4362,16 @@ body{
 
   // src/game/state.js
   var live = { scene: null, fx: [], texts: [], marks: [], iris: null, radar: null, trans: null, shake: 0, nightK: 1, timers: [], T: 0 };
-  var G = { state: "boot", lv: 1, score: 0, cows: 0, time: 45, streak: 0, bestStreak: 0, fastest: null, radar: 3, misses: 0, levelT: 0, usedRadar: false, paused: false, lastTick: 99, nudged: false };
-  var START_TIME = 45;
-  var MAX_TIME = 60;
+  var G = { state: "boot", mode: "classic", lv: 1, score: 0, cows: 0, time: 45, streak: 0, bestStreak: 0, fastest: null, radar: 3, misses: 0, levelT: 0, usedRadar: false, paused: false, lastTick: 99, nudged: false };
   function after(sec, fn) {
     live.timers.push({ at: live.T + sec, fn });
   }
   var ptr = { x: -999, y: -999, inside: false, type: "mouse", down: null, inspect: false, lp: 0 };
   var light = { x: 0, y: 0 };
+
+  // src/modes/index.js
+  var MODES = { classic };
+  var currentMode = () => MODES[G.mode] || classic;
 
   // src/render/world.js
   function drawEnt(c2, e, t) {
@@ -4680,16 +4724,16 @@ body{
   }
 
   // src/store/records.js
-  function loadRecord() {
+  function loadRecord(key) {
     try {
-      return JSON.parse(localStorage.getItem("wdk-record") || "null") || { score: 0, cows: 0 };
+      return JSON.parse(localStorage.getItem(key) || "null") || { score: 0, cows: 0 };
     } catch (_) {
       return { score: 0, cows: 0 };
     }
   }
-  function saveRecord(r) {
+  function saveRecord(key, r) {
     try {
-      localStorage.setItem("wdk-record", JSON.stringify(r));
+      localStorage.setItem(key, JSON.stringify(r));
     } catch (_) {
     }
   }
@@ -4711,7 +4755,7 @@ body{
     setText(els.score, "score", fmtInt(G.score));
     setText(els.cows, "cows", String(G.cows));
     setText(els.secs, "secs", String(Math.max(0, Math.ceil(G.time))));
-    const f = clamp(G.time / MAX_TIME, 0, 1).toFixed(3);
+    const f = clamp(G.time / currentMode().timer.full, 0, 1).toFixed(3);
     if (hudCache.bar !== f) {
       hudCache.bar = f;
       els.barFill.style.transform = `scaleX(${f})`;
@@ -4721,7 +4765,7 @@ body{
     els.radarBtn.disabled = G.radar <= 0 || G.state !== "play";
     if (G.streak >= 2) {
       els.combo.hidden = false;
-      setText(els.combo, "combo", `Serie ×${fmt1(1 + 0.5 * Math.min(G.streak - 1, 8)).replace(",0", "")}`);
+      setText(els.combo, "combo", `Serie ×${fmt1(currentMode().mult(G)).replace(",0", "")}`);
     } else els.combo.hidden = true;
   }
   function updateLevelPills() {
@@ -4776,14 +4820,14 @@ body{
     $("#stScore").textContent = fmtInt(G.score);
     $("#stStreak").textContent = G.bestStreak;
     $("#stFast").textContent = G.fastest == null ? "–" : `${fmt1(G.fastest)} s`;
-    const rec = loadRecord(), isNew = !REPLAY && G.score > rec.score;
-    if (isNew) saveRecord({ score: G.score, cows: G.cows });
+    const mode = currentMode(), rec = loadRecord(mode.records), isNew = !REPLAY && G.score > rec.score;
+    if (isNew) saveRecord(mode.records, { score: G.score, cows: G.cows });
     $("#stamp").hidden = !isNew;
     $("#overRecord").innerHTML = isNew ? rec.score > 0 ? `Alter Rekord <b>${fmtInt(rec.score)} Punkte</b>` : "Dein erster Rekord. Den holst du dir nochmal." : `Rekord <b>${fmtInt(rec.score)} Punkte</b> <b>${rec.cows} ${rec.cows === 1 ? "Kuh" : "Kühe"}</b>`;
     lastEntry = null;
     $("#entryMsg").textContent = "";
     $("#entryBtn").disabled = false;
-    $("#entryForm").hidden = G.score <= 0 || !!REPLAY;
+    $("#entryForm").hidden = G.score <= 0 || !!REPLAY || !mode.leaderboard;
     $("#overScene").textContent = `Szene ${sceneId(live.scene)}`;
     if (G.score > 0 && !REPLAY) {
       let nick = "";
@@ -5035,7 +5079,7 @@ body{
         G.nudged = true;
         els.radarBtn.classList.add("nudge");
       }
-      if (G.time <= 0) timeUp();
+      if (currentMode().isOver(G)) timeUp();
     }
     if (G.state !== "title" && G.state !== "boot" && G.state !== "over") updateHud();
     MUSIC.setFast(G.state === "play" && G.time < 10);
@@ -5114,8 +5158,8 @@ body{
   function startGame() {
     SND.unlock();
     SND.start();
-    const lv0 = REPLAY ? REPLAY.lv : 1;
-    Object.assign(G, { lv: lv0, score: 0, cows: 0, time: START_TIME, streak: 0, bestStreak: 0, fastest: null, radar: 3, misses: 0, levelT: 0, usedRadar: false, paused: false, lastTick: 99, nudged: false });
+    const lv0 = REPLAY ? REPLAY.lv : 1, mode = currentMode();
+    Object.assign(G, { lv: lv0, score: 0, cows: 0, time: mode.timer.start, streak: 0, bestStreak: 0, fastest: null, radar: mode.radar.start, misses: 0, levelT: 0, usedRadar: false, paused: false, lastTick: 99, nudged: false });
     $("#title").hidden = true;
     $("#over").hidden = true;
     $("#pause").hidden = true;
@@ -5148,7 +5192,7 @@ body{
     live.marks = [];
     live.iris = null;
     live.radar = null;
-    const rec = loadRecord();
+    const rec = loadRecord(currentMode().records);
     if (REPLAY) $("#record").textContent = `Wiederholung von Szene ${REPLAY.lv}-${REPLAY.seed}. Zählt nicht für Rekord und Bestenliste.`;
     else $("#record").innerHTML = rec.score > 0 ? `Dein Rekord <b>${fmtInt(rec.score)} Punkte</b> <b>${rec.cows} ${rec.cows === 1 ? "Kuh" : "Kühe"}</b>` : "Noch kein Rekord. Zeit, das zu ändern.";
     $("#title").hidden = false;
@@ -5167,17 +5211,7 @@ body{
   function onFound() {
     G.state = "found";
     const secs = G.levelT, cow = live.scene.cow;
-    G.streak++;
-    G.bestStreak = Math.max(G.bestStreak, G.streak);
-    G.cows++;
-    const mult = 1 + 0.5 * Math.min(G.streak - 1, 8), speed = 1 + clamp((8 - secs) / 8, 0, 1);
-    const pts = Math.round((100 + 20 * G.lv) * speed * mult * (live.scene.golden ? 3 : 1) * (G.usedRadar ? 0.5 : 1) / 5) * 5;
-    const bonus = Math.round(Math.max(6, 14 - G.lv * 0.5) + (live.scene.golden ? 8 : 0));
-    G.score += pts;
-    G.time = Math.min(G.time + bonus, 99);
-    G.fastest = G.fastest == null ? secs : Math.min(G.fastest, secs);
-    const extraRadar = G.cows % 5 === 0;
-    if (extraRadar) G.radar++;
+    const { points: pts, bonus, mult, extraRadar } = currentMode().found(G, { secs, golden: live.scene.golden });
     const [cx, cy] = cowCenter();
     cow.hopT = live.T;
     cow.hopN = 3;
@@ -5204,12 +5238,10 @@ body{
     after(1.85, nextLevel);
   }
   function onMiss(x, y, ent) {
-    G.time = Math.max(0, G.time - 3);
-    G.streak = 0;
-    G.misses++;
+    const { penalty } = currentMode().miss(G);
     live.shake = 0.3;
     live.marks.push({ x, y, t0: live.T });
-    floatText(x, y - 24, "−3 s", "#ff5a4e", clamp(U * 0.48, 18, 28), 0.9);
+    floatText(x, y - 24, `−${penalty} s`, "#ff5a4e", clamp(U * 0.48, 18, 28), 0.9);
     let msg;
     if (ent) {
       const m = TYPES[ent.type].msg;
@@ -5238,7 +5270,7 @@ body{
     after(2.7, showOver);
   }
   function loadLevel(lv, seed) {
-    live.scene = levelScene(lv, live.scene && live.scene.world, seed);
+    live.scene = levelScene(lv, live.scene && live.scene.world, seed, currentMode().plan);
     paintBg(live.scene);
     live.fx = [];
     live.texts = [];

@@ -9,9 +9,10 @@
     "og-image": "node scripts/og-image.mjs",
     "smoke": "node scripts/smoke.mjs",
     "fairness": "node scripts/fairness.mjs",
-    "test": "npm run lint && npm run smoke && npm run fairness && npm run snapshots",
+    "test": "npm run lint && npm run unit && npm run smoke && npm run fairness && npm run snapshots",
     "snapshots": "node scripts/snapshots.mjs",
-    "lint": "eslint src"
+    "lint": "eslint src",
+    "unit": "node --test \"test/unit/*.test.js\""
   },
   "devDependencies": {
     "esbuild": "0.25.11",
